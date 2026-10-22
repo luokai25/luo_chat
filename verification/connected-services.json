@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-23",
+  "applicationCommit": "16038c6bdd220c0a783d752799581b8302d00d5d",
+  "ci": "https://github.com/luokai25/luo_chat/actions/runs/39870377155",
+  "ciResult": "success",
+  "releaseTests": 309,
+  "cleanBuild": {
+    "matchingFiles": 97,
+    "result": "pass"
+  },
+  "browserNavigation": {
+    "result": "pass",
+    "checks": 9,
+    "requests": 74
+  },
+  "nativeCallChrome155": "pass",
+  "nativeCallLocalChromium141": "timeout before connected; remote Chrome CI passed",
+  "dependencyAudit": "zero known production vulnerabilities",
+  "liveHealth": {
+    "status": 200,
+    "auth": "reachable"
+  },
+  "liveTelemetrySelfTest": {
+    "status": 204,
+    "event": "luo_integration_check",
+    "ingestion": "confirmed: 1 event in PostHog fresh two-hour query",
+    "redisDailyAccepted": 1
+  },
+  "cloudflare": {
+    "worker": "luo-chat-uptime",
+    "schedule": "*/5 * * * *",
+    "statusUrl": "https://luo-chat-uptime.luo-chat-ops.workers.dev/status.json",
+    "note": "Initial unsupported redirect mode corrected; subsequent real scheduled check passed both fixed targets.",
+    "latestScheduledCheck": {
+      "checkedAt": "2026-10-22T23:20:07.675Z",
+      "status": "up",
+      "webHttp": 200,
+      "authHttp": 200
+    },
+    "sourceSha256": "6512a8dcf2ca214662b5e401b2763068dc80985794eeb9e3c54e23ab4b049ec9"
+  },
+  "blocked": {
+    "Render": "Automatic approval review rejected repository access and public auto-deploy site; explicit approval needed.",
+    "Resend": "No verified sending domain. Draft security notice only; no messages sent.",
+    "Sentry": "Installed skill; no authenticated tool or read-only token.",
+    "Amplitude": "Connected empty project; ingestion key unavailable through connector.",
+    "MongoDB": "Connected project without clusters; no application need to duplicate relational chat data."
+  },
+  "neon": "Synthetic SQL lab, not full Supabase staging or backup; compute suspended after verification.",
+  "privacy": "Fixed codes and release only; no raw error, stack, URL, user identifier, chat text or media; GPC/DNT respected.",
+  "remainingGates": [
+    "Full Supabase staging",
+    "Provider database and Storage backups",
+    "Restore drill",
+    "Alert delivery destination",
+    "Physical-device and real hosted email tests"
+  ],
+  "liveTelemetryValidation": {
+    "wrongOrigin": 403,
+    "extraPrivateField": 400
+  },
+  "productionDeployment": "dpl_2E2knb8yNdFqg1pwgRHp6xJEJHAc",
+  "productionState": "READY",
+  "postDeployErrorScan": "No error/fatal logs returned in initial ten-minute deployment query",
+  "liveSignedOutCallConfig": 401
+}

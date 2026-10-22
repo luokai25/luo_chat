@@ -14,6 +14,7 @@ Production remains on Supabase and Vercel. Connector access does not mean every 
 | Amplitude | Account and empty source project verified. | Analysis connector does not expose an ingestion key. Not installed into browser alongside PostHog. Define a separate use and configure a secure key before enabling product analytics. |
 | MongoDB Atlas | Account/project access verified; no clusters. | Available for future document-specific needs. Not provisioned merely to duplicate the working relational chat database. |
 | Render | Workspace access verified. Public static status page prepared in `integrations/status`. | Deployment blocked by automatic approval review: publishing an auto-deploying site would grant Render repository access and requires explicit approval. No site was created. |
+| Sentry | Skill package installed; no authenticated tool or read-only token available. | Account inspection cannot run until read-only credentials are configured securely. Never paste the token into chat. |
 
 ## Public status
 

@@ -33,9 +33,10 @@ test('health endpoint reports dependency failure and never returns provider data
  const r=res();await createHealthHandler()({method:'POST'},r);assert.equal(r.statusCode,405);
 });
 test('uptime distinguishes wrong HTML, invalid health and network failure',async()=>{
- let result=await checkTargets(async url=>({status:200,text:async()=>'<title>Luo Chat</title><meta name="luo-version">',json:async()=>({status:'ok',checks:{auth:'reachable'}})}));assert.equal(result.status,'up');
+ let result=await checkTargets(async(url,options)=>{assert.equal(options.redirect,'manual','Workers does not implement redirect:error');return{status:200,text:async()=>'<title>Luo Chat</title><meta name="luo-version">',json:async()=>({status:'ok',checks:{auth:'reachable'}})}});assert.equal(result.status,'up');
  result=await checkTargets(async()=>({status:200,text:async()=>'Login page',json:async()=>({status:'degraded'})}));assert.equal(result.status,'degraded');assert.equal(result.checks.every(x=>x.status==='down'),true);
  result=await checkTargets(async()=>{throw Error('timeout')});assert.equal(result.status,'degraded');assert.equal(result.checks[0].httpStatus,0);
+ result=await checkTargets(async()=>({status:302}));assert.equal(result.status,'degraded');
 });
 test('public uptime serves bounded stored results, rejects writes and marks stale samples unknown',async()=>{
  const sample={checkedAt:new Date().toISOString(),status:'up',checks:[]};const env={STATUS:{get:async()=>[sample]}};

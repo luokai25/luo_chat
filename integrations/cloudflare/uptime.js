@@ -3,7 +3,7 @@ export const TARGETS=[['web','https://luo-chat-luokai25.vercel.app/'],['auth','h
 export async function checkTargets(fetcher=fetch,now=Date.now){
  const checks=await Promise.all(TARGETS.map(async([name,url])=>{
   const started=now();try{
-   const response=await fetcher(url,{redirect:'error',signal:AbortSignal.timeout(8000),headers:{'Cache-Control':'no-cache'}});
+   const response=await fetcher(url,{redirect:'manual',signal:AbortSignal.timeout(8000),headers:{'Cache-Control':'no-cache'}});
    let ok=response.status===200;
    if(ok&&name==='auth'){const data=await response.json();ok=data.status==='ok'&&data.checks?.auth==='reachable';}
    if(ok&&name==='web'){const html=await response.text();ok=html.includes('Luo Chat')&&html.includes('luo-version');}
