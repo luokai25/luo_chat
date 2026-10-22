@@ -1,0 +1,52 @@
+{
+  "version": "14.1.1",
+  "checkedAt": "2026-10-21T04:40:55.753Z",
+  "deploymentId": "dpl_EyFdTT4grUMtdChngWq7GtNWZwyz",
+  "state": "READY",
+  "localTests": {
+    "pass": 113,
+    "fail": 0
+  },
+  "remoteTests": {
+    "pass": 113,
+    "fail": 0
+  },
+  "liveAssets": [
+    {
+      "path": "/index.html",
+      "status": 200,
+      "sha256": "09087df1ef1f6a55d1ace3892262cc9d03265f9f496679d662acf8f36d343883",
+      "matchesLocal": true
+    },
+    {
+      "path": "/sw.js",
+      "status": 200,
+      "sha256": "e395fe5d754888b23c13f22d5b7b66fba2bc5a274b26801a04fcf259ee165183",
+      "matchesLocal": true
+    },
+    {
+      "path": "/app-Z2PQ7C3X.js",
+      "status": 200,
+      "sha256": "3473c69edfc974cf38aed84dd257c4295c332a79d5d44ff963ac5f6561a0e51f",
+      "matchesLocal": true
+    }
+  ],
+  "liveHeaders": {
+    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://byjixqwpjvsgmqilmzbm.supabase.co; connect-src 'self' https://byjixqwpjvsgmqilmzbm.supabase.co wss://byjixqwpjvsgmqilmzbm.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; media-src 'self' blob: https://byjixqwpjvsgmqilmzbm.supabase.co; frame-src https://byjixqwpjvsgmqilmzbm.supabase.co",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "no-referrer",
+    "cross-origin-opener-policy": "same-origin",
+    "x-dns-prefetch-control": "off",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload"
+  },
+  "databaseAccessSuites": {
+    "v12": "PASS (rolled back)",
+    "v12Social": "PASS (rolled back)"
+  },
+  "npmProductionAudit": {
+    "knownVulnerabilities": 0
+  },
+  "safeBrowsingClearance": "not established",
+  "verificationPassed": true
+}

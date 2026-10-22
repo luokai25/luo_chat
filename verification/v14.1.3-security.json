@@ -1,0 +1,49 @@
+{
+  "version": "14.1.3",
+  "checkedAt": "2026-10-21T04:58:01.876Z",
+  "deploymentId": "dpl_GMp1YUrDyCSxFXgHApt956nHKBhs",
+  "state": "READY",
+  "localTests": {
+    "pass": 115,
+    "fail": 0
+  },
+  "remoteTests": {
+    "pass": 115,
+    "fail": 0
+  },
+  "liveAssets": [
+    {
+      "path": "/index.html",
+      "status": 200,
+      "sha256": "01ffecba2ba7d2d841ec3c17ad211984e57fc0493d2cc51922205954024a6434",
+      "matchesLocal": true
+    },
+    {
+      "path": "/sw.js",
+      "status": 200,
+      "sha256": "4981587b05ddca3bd98a7a7b4697e9a3286696e05d93729e6e93da2c71273425",
+      "matchesLocal": true
+    },
+    {
+      "path": "/app-UEOZWRYO.js",
+      "status": 200,
+      "sha256": "c96f93fbc60ebc2f5108f7ba9880b24e6dfd57ad8d6a00f1841b89e433319e6b",
+      "matchesLocal": true
+    }
+  ],
+  "appliedMigration": "20261021045541_require_verified_attachment_metadata",
+  "databaseChecks": {
+    "attachmentAdversarial": "PASS after application, rolled back",
+    "v12Access": "PASS after application, rolled back",
+    "vaultIsolation": "PASS after application, rolled back",
+    "settingsAccess": "PASS after application, rolled back",
+    "privileges": {
+      "directAttachmentInsert": false,
+      "directAttachmentUpdate": false,
+      "directAttachmentDelete": false,
+      "anonymousRecall": false
+    }
+  },
+  "safeBrowsingClearance": "not established",
+  "verificationPassed": true
+}

@@ -1,0 +1,35 @@
+{
+  "release": "14.3.1",
+  "deployment": "dpl_8PYfGsrFSuMXX3rfRKJ3DAGymiY2",
+  "state": "READY",
+  "checked_at": "2026-10-21T05:34:37.962Z",
+  "tests_local": 138,
+  "tests_clean": 138,
+  "tests_hosted": 138,
+  "clean_matching_files": 213,
+  "permissions_policy": "camera=(self), microphone=(self), geolocation=()",
+  "live_matching_files": [
+    {
+      "path": "index.html",
+      "sha256": "e5ea8288daa081aacbf59f863e972f42f2fbf7cc6cb9e7bb3ab4138306f04c15"
+    },
+    {
+      "path": "app-EVXED6F6.js",
+      "sha256": "01469147fcd2c717280fbd8573448f8da2d30aa181a701605b2398cccd37d7a5"
+    },
+    {
+      "path": "style-b4b75f1a10c0.css",
+      "sha256": "b4b75f1a10c0660ac6607b50ae7be9bd7e220c8183415d043d95dcd5027b83bb"
+    },
+    {
+      "path": "sw.js",
+      "sha256": "981e925a94ac2b5ec5c09657fc84dd46de8693682cdcfcdb3b4aeae6e345897c"
+    }
+  ],
+  "limits": [
+    "No physical Android/iOS camera, microphone or notification acceptance test.",
+    "No real hosted two-account media send in this run.",
+    "This is not Google Safe Browsing clearance.",
+    "Notifications still require an open running app; no closed-app push."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "release": "15.0.1",
+  "deployment": "dpl_4eEWDsrjo3Nga7maspZfQRRaaMza",
+  "target": "production",
+  "state": "READY",
+  "checked_at": "2026-10-21T07:14:47.463Z",
+  "tests_local": 170,
+  "tests_clean": 170,
+  "tests_hosted": 170,
+  "matching_clean_frontend_outputs": 213,
+  "live_files": [
+    {
+      "path": "index.html",
+      "sha256": "9853417defd750534d99c8c5b96c874d40b52833cf50bb95938cbae7aa971590"
+    },
+    {
+      "path": "app-BC2ERZHJ.js",
+      "sha256": "0f5d2005ff4947b0ef16290e69d8c515e88a3e4825194810afaebd7a90c8474e"
+    },
+    {
+      "path": "style-3a3ca742b411.css",
+      "sha256": "3a3ca742b41100d283e821e71c96a814a3217dbdb8253e8d6653239cd708e3b3"
+    },
+    {
+      "path": "sw.js",
+      "sha256": "f39046b9e5457d50a96b632a89f8a8dcd7872f34b65ea60f564f7b86c8a4e43a"
+    }
+  ],
+  "permissions_policy": "camera=(self), microphone=(self), geolocation=()",
+  "call_config_without_auth": 401,
+  "call_config_wrong_method": 405,
+  "baseline_1500_regressions_reproduced": 9,
+  "new_regression_tests": 11,
+  "backend_schema_changed": false,
+  "service_configuration_changed": false,
+  "limits": [
+    "No physical-device closed-app push or two-device call acceptance in this run.",
+    "TURN relay not provisioned.",
+    "No Google Safe Browsing clearance evidence.",
+    "Full database/media restoration and hosted account recovery/deletion gates remain open."
+  ],
+  "runtime_error_log_scan": {
+    "deployment": "dpl_4eEWDsrjo3Nga7maspZfQRRaaMza",
+    "window": "15m",
+    "levels": [
+      "error",
+      "fatal"
+    ],
+    "returned_groups": 0,
+    "scope": "Vercel function/daemon log query only; not browser or Supabase monitoring"
+  }
+}

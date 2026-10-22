@@ -1,0 +1,18 @@
+{
+  "version": "10.1.0",
+  "deployment": "dpl_21z89Y4FPNv1368fHiCzXnw8dGdV",
+  "state": "READY",
+  "frontend_tests_passed": 20,
+  "build_asset_check": "PASS",
+  "service_worker_syntax": "PASS",
+  "browser": {
+    "signed_out_desktop": "observed",
+    "background_rgb": "7,7,9",
+    "hashed_wordmark": "icon-ce9a9f552603.svg",
+    "horizontal_overflow": false
+  },
+  "contacts_transaction_test": "PASS",
+  "extended_pin_transaction_test": "interrupted; not claimed",
+  "authenticated_browser": "not verified",
+  "real_mobile_launcher_refresh": "not verified"
+}

@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-21T04:57:51.187Z",
+  "results": [
+    {
+      "path": "/rest/v1/chat_messages?select=id&limit=1",
+      "method": "GET",
+      "status": 401,
+      "denied": true
+    },
+    {
+      "path": "/rest/v1/chat_vault_files?select=id&limit=1",
+      "method": "GET",
+      "status": 401,
+      "denied": true
+    },
+    {
+      "path": "/functions/v1/luo-delete-account",
+      "method": "POST",
+      "status": 401,
+      "denied": true
+    },
+    {
+      "path": "/functions/v1/cleanup-chat-media",
+      "method": "POST",
+      "status": 403,
+      "denied": true
+    },
+    {
+      "path": "/rest/v1/rpc/recall_own_message",
+      "method": "POST",
+      "status": 401,
+      "denied": true
+    }
+  ]
+}

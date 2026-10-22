@@ -1,0 +1,14 @@
+/* Luo Chat all-pages navigation fixes with unchanged core functionality. */
+(()=>{'use strict';const $=id=>document.getElementById(id);const tab=k=>document.querySelector('.workspace-nav [data-tab="'+k+'"]')?.click();
+function init(){const app=document.querySelector('.app'),home=$('home');if(!app||!home||document.documentElement.dataset.luoSuite154)return;document.documentElement.dataset.luoSuite154='1';
+ for(const id of ['new','group','saved','scheduled','profile']){const page=$(id);if(!page||page.querySelector(':scope>.luo-back-to-chat'))continue;const b=document.createElement('button');b.type='button';b.className='luo-back-to-chat';b.textContent='‹  Chats';b.setAttribute('aria-label','Back to Chats');b.addEventListener('click',()=>tab('chats'));page.prepend(b)}
+ for(const node of home.querySelectorAll('#luoWaTop,#luoWaFilters,.luo-wa-filters'))node.remove();
+ const more=$('luoModernMore');more?.addEventListener('click',()=>queueMicrotask(()=>{const d=$('luoMoreDialog');if(!d||d.querySelector('[data-luo-route]'))return;for(const [label,dest] of [['Find people','new'],['New group','group'],['Search all messages','search']]){const b=document.createElement('button');b.type='button';b.className='ghost';b.dataset.luoRoute=dest;b.textContent=label;b.onclick=()=>{if(d.open)d.close();if(dest==='search'){tab('chats');const t=$('globalSearchToggle');if(t)t.click();else $('search')?.focus()}else tab(dest)};const close=[...d.querySelectorAll('button')].find(x=>x.textContent.trim()==='Close');if(close)d.insertBefore(b,close);else d.append(b)}}));
+ const ids=['new','group','saved','scheduled','profile'];function sync(){for(const id of ids){const e=$(id);if(e)e.setAttribute('aria-hidden',String(app.dataset.screen!=='home'||e.classList.contains('hidden')))}}
+ const observer=new MutationObserver(sync);for(const id of ids){const e=$(id);if(e)observer.observe(e,{attributes:true,attributeFilter:['class']})}observer.observe(app,{attributes:true,attributeFilter:['data-screen']});sync();
+ function labelDialog(d){if(!d||d.dataset.suite154)return;d.dataset.suite154='1';if(!d.hasAttribute('aria-label')&&!d.hasAttribute('aria-labelledby')){const heading=d.querySelector('h2,h3');if(heading){if(!heading.id)heading.id='luoDialogTitle'+(d.id||'modal');d.setAttribute('aria-labelledby',heading.id)}else d.setAttribute('aria-label','Luo Chat dialog')}}
+ for(const d of document.querySelectorAll('dialog'))labelDialog(d);
+ new MutationObserver(rs=>{for(const r of rs)for(const node of r.addedNodes){if(node.nodeType!==1)continue;if(node.tagName==='DIALOG')labelDialog(node);for(const d of node.querySelectorAll?.('dialog')||[])labelDialog(d)}}).observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();

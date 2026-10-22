@@ -1,0 +1,34 @@
+{
+  "version": "14.0.3",
+  "deployment": "dpl_AJ22hA394TZxvvp9uUgLF11T2HuS",
+  "deployment_state": "READY",
+  "automated_checks": 99,
+  "local_test_failures": 0,
+  "remote_test_failures": 0,
+  "production_asset_checks": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "matches": true
+    },
+    {
+      "file": "sw.js",
+      "status": 200,
+      "matches": true
+    },
+    {
+      "file": "app-P5IBA6LE.js",
+      "status": 200,
+      "matches": true
+    }
+  ],
+  "build_configuration_guard": "passes for current publishable key and CSP; rejects privileged key types and mismatched origins before replacing assets",
+  "visible_release_version": true,
+  "google_warning": "unresolved; no verified clearance",
+  "limitations": [
+    "Auth tests use controlled mocks; hosted recovery email not verified end-to-end",
+    "Physical device behavior not verified",
+    "Clean-room backend restore not demonstrated",
+    "Not every requested feature is built; see FEATURES.md"
+  ]
+}

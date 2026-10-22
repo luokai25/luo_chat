@@ -1,0 +1,22 @@
+{
+  "version": "14.0.0",
+  "date": "2026-10-21",
+  "deployment": "dpl_GZJ4GGYpPacJKCoMrUnEyQdH3Fer",
+  "deploymentState": "READY",
+  "automatedChecks": 74,
+  "remoteFailures": 0,
+  "build": "passed",
+  "bundle": "app-CK6X75OY.js",
+  "features": [
+    "swipe to select reply",
+    "long press and tap message action sheet",
+    "drag down dismissal",
+    "account scoped gesture settings and optional haptics",
+    "pinch image zoom and bounded panning",
+    "keyboard and button alternatives"
+  ],
+  "newSchemaMigrations": false,
+  "publicBrowser": "Matching bundle and new interaction controls loaded; no overflow or observed application-origin errors",
+  "physicalTouchscreen": "not verified",
+  "authenticatedPhysicalDevice": "not verified"
+}

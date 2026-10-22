@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
+test('approval release protects signed-out screen and calls FAB visibility',async()=>{const css=await readFile('scripts/apply-approved-ui.mjs','utf8');assert.match(css,/data-screen=home/);assert.match(css,/luo-calls-open/);assert.match(css,/luoModernMore/);assert.match(css,/Google verification/);assert.match(css,/y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w/);});

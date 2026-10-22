@@ -1,0 +1,13 @@
+{
+  "version": "9.0.0",
+  "frontend_tests_passed": 9,
+  "build_asset_checks": "passed",
+  "live_extended_checks_passed": 8,
+  "live_core_completed_checks": 20,
+  "vercel_deployment_id": "dpl_HbXkEeojLL12GqNDbhcCrCmbkFXV",
+  "public_url": "https://luo-chat-luokai25.vercel.app/",
+  "remaining_gates": [
+    "Hosted email redirects and delivery require dashboard authorization",
+    "Authenticated browser end-to-end flows and mobile device checks are not complete"
+  ]
+}

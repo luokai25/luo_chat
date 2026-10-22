@@ -1,0 +1,26 @@
+{
+  "checks": [
+    "Three real Supabase password sessions",
+    "Signup trigger preserves selected username",
+    "Exact contact lookup",
+    "Message retries are idempotent",
+    "Nonmembers cannot read or send messages",
+    "Unread count and server read marker",
+    "Edit propagates through backend",
+    "Per-conversation previews",
+    "Group roles enforced and admin rename works",
+    "Ownership transfer and safe owner exit",
+    "Atomic attachment retries create exactly one message and one metadata row",
+    "Attachment size mismatch is rejected",
+    "Private media accessible only to conversation members",
+    "Reactions toggle correctly and reject nonmembers",
+    "Saved messages are private to their owner",
+    "Private reads clear own unread without exposing receipts or another user\u2019s read marker",
+    "Disabled typing preference suppresses presence rows",
+    "Accessibility preferences persist",
+    "Pin and archive preferences persist",
+    "Scheduled message cancellation is idempotent"
+  ],
+  "note": "These core checks passed. The first scheduler fixture used a lead time shorter than request latency; scheduling and blocking were then verified in the completed extended integration run.",
+  "completed_checks_only": true
+}

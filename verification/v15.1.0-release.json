@@ -1,0 +1,71 @@
+{
+  "release": "15.1.0",
+  "deployment": "dpl_8PVeVyZM59nNTtirSxJfQ8Jf8Nrr",
+  "state": "READY",
+  "target": "production",
+  "checked_at": "2026-10-21T07:39:13.427Z",
+  "tests_local": 189,
+  "tests_clean": 189,
+  "tests_hosted": 189,
+  "matching_clean_frontend_outputs": 213,
+  "live_files": [
+    {
+      "path": "index.html",
+      "sha256": "f34f1452eba69c7c1596daf0bc4a20c34f5948f467fb402c7f7ac540e5f751fa"
+    },
+    {
+      "path": "app-YV4ZEPJN.js",
+      "sha256": "f1dd0638300f67f155895740b67305ac05bb828a634d4ee1290a3ff872191b52"
+    },
+    {
+      "path": "style-457d3d8cd191.css",
+      "sha256": "457d3d8cd1911a95fd578b3558e91c549ea9f06421632fe2f00c4b13c867d873"
+    },
+    {
+      "path": "sw.js",
+      "sha256": "6775f14d643f3df89a05b07330bda3ab7b2f21eda012240e303e1c6bd7be838f"
+    }
+  ],
+  "call_config_unauthenticated": 401,
+  "call_config_wrong_method": 405,
+  "browser_views": 42,
+  "browser_widths": [
+    320,
+    390,
+    768,
+    1440
+  ],
+  "browser_page_errors": 0,
+  "axe_surfaces": [
+    {
+      "surface": "axe-settings",
+      "violations": 0
+    },
+    {
+      "surface": "axe-chat",
+      "violations": 0
+    },
+    {
+      "surface": "axe-tools",
+      "violations": 0
+    }
+  ],
+  "frontend_production_audit_known_vulnerabilities": 0,
+  "backend_schema_changed": false,
+  "service_configuration_changed": false,
+  "limits": [
+    "Browser uses synthetic backend; not hosted account verification.",
+    "No physical-device calls, push, OS keyboard or assistive-technology acceptance.",
+    "No Google Safe Browsing clearance evidence.",
+    "Existing auth/provider, full database/media restore and security gates remain open."
+  ],
+  "runtime_error_log_scan": {
+    "window": "15m",
+    "levels": [
+      "error",
+      "fatal"
+    ],
+    "returned_groups": 0,
+    "scope": "Available Vercel function/daemon logs only; no browser/Supabase monitoring certification"
+  }
+}

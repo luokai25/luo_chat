@@ -1,0 +1,11 @@
+import {readFile,writeFile} from 'node:fs/promises';import {createHash} from 'node:crypto';
+const js=await readFile('public/luo-approved.js'),css=await readFile('public/luo-approved.css');
+const d=createHash('sha256').update(js).update(css).digest('hex').slice(0,12);
+let sw=await readFile('dist/sw.js','utf8');if(!/const CACHE='luo-chat-[^']+'/.test(sw))throw Error('Unexpected service worker');
+sw=sw.replace(/const CACHE='luo-chat-[^']+'/, "const CACHE='luo-chat-"+d+"'");
+await writeFile('dist/sw.js',sw);
+let html=await readFile('dist/index.html','utf8');
+for(const file of ['luo-modern.css','luo-approved.js','luo-wa-mobile.js','luo-wa-visible.js'])if(html.includes('/'+file))html=html.replaceAll('/'+file,'/'+file+'?v='+d);
+html=html.replace('</head>','<meta name="luo-approved-revision" content="'+d+'"></head>');
+if(!html.includes('<meta name="google-site-verification" content="y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w" />'))throw Error('Google verification meta missing');
+await writeFile('dist/index.html',html);console.log('Luo approved UI cache revision '+d);

@@ -1,0 +1,36 @@
+-- Fixture transaction never sends any push; pg_net requests roll back with it.
+begin;
+insert into auth.users(id,email,raw_user_meta_data) values
+('ad111111-1111-4111-8111-111111111111','push-a@example.invalid','{"username":"luo_push_a"}'),('ad222222-2222-4222-8222-222222222222','push-b@example.invalid','{"username":"luo_push_b"}');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"ad111111-1111-4111-8111-111111111111","role":"authenticated"}',true);
+select set_config('push.room',public.start_direct_chat('luo_push_b')::text,true);
+select set_config('request.jwt.claims','{"sub":"ad222222-2222-4222-8222-222222222222","role":"authenticated"}',true);
+insert into public.chat_push_subscriptions(user_id,endpoint,p256dh,auth_key)values(auth.uid(),'https://fcm.googleapis.com/fcm/send/push-fixture-b',repeat('A',87),repeat('A',22));
+select set_config('request.jwt.claims','{"sub":"ad111111-1111-4111-8111-111111111111","role":"authenticated"}',true);
+do $$declare m public.chat_messages;begin m=public.send_chat_message_idempotent(current_setting('push.room')::uuid,'push-queue-fixture-one','Push fixture','text',null);perform set_config('push.message',m.id::text,true);end$$;
+reset role;
+do $$begin if(select count(*) from luo_internal.push_queue where message_id=current_setting('push.message')::uuid)<>1 then raise exception 'Push not enqueued for subscribed recipient';end if;end$$;
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"ad222222-2222-4222-8222-222222222222","role":"authenticated"}',true);
+update public.conversation_members set muted=true where conversation_id=current_setting('push.room')::uuid and user_id=auth.uid();
+select set_config('request.jwt.claims','{"sub":"ad111111-1111-4111-8111-111111111111","role":"authenticated"}',true);
+do $$declare m public.chat_messages;begin m=public.send_chat_message_idempotent(current_setting('push.room')::uuid,'push-queue-fixture-two','Muted push fixture','text',null);perform set_config('push.muted',m.id::text,true);perform public.recall_own_message(current_setting('push.message')::uuid);end$$;
+reset role;
+do $$begin if exists(select 1 from luo_internal.push_queue where message_id=current_setting('push.muted')::uuid)then raise exception 'Muted message enqueued';end if;
+ if has_function_privilege('authenticated','public.claim_luo_push_work()','execute') or has_function_privilege('anon','public.claim_luo_push_work()','execute') then raise exception 'Worker queue publicly callable';end if;
+ if luo_internal.push_allowed('ad222222-2222-4222-8222-222222222222',current_setting('push.room')::uuid) then raise exception 'Muted recipient allowed';end if;end$$;
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"ad222222-2222-4222-8222-222222222222","role":"authenticated"}',true);
+update public.conversation_members set muted=false where conversation_id=current_setting('push.room')::uuid and user_id=auth.uid();
+select set_config('request.jwt.claims','{"sub":"ad111111-1111-4111-8111-111111111111","role":"authenticated"}',true);
+select set_config('push.call',public.start_luo_call(current_setting('push.room')::uuid,'audio','{"type":"offer","sdp":"fixture"}')::text,true);
+reset role;
+do $$begin if(select count(*) from luo_internal.push_queue where call_id=current_setting('push.call')::uuid)<>1 then raise exception 'Incoming call push missing';end if;end$$;
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"ad222222-2222-4222-8222-222222222222","role":"authenticated"}',true);
+delete from public.chat_push_subscriptions where user_id=auth.uid();
+reset role;
+do $$begin if exists(select 1 from luo_internal.push_queue where user_id='ad222222-2222-4222-8222-222222222222')then raise exception 'Unsubscribe retained queued sends';end if;end$$;
+rollback;
+select 'PASS: message/call enqueue, mute suppression, worker-only claim privilege, and unsubscribe cascade; no push sent' as verification;

@@ -1,0 +1,31 @@
+
+require('fs').mkdirSync('test-results',{recursive:true});
+const {chromium}=require('playwright');const http=require('http'),fs=require('fs'),assert=require('assert/strict');let call=null;
+const copy=x=>x==null?x:JSON.parse(JSON.stringify(x));
+const server=http.createServer((req,res)=>{if(req.url.endsWith('.js')){res.setHeader('Content-Type','text/javascript');return res.end(fs.readFileSync(require('path').join(__dirname,'../src',req.url)))}res.setHeader('Content-Type','text/html');res.end(`<p id="note"></p><style>video{width:320px;height:180px}</style><script type="module">
+import{installCalls}from'/calls.js';
+const actor=new URL(location.href).searchParams.get('actor');
+const Native=window.RTCPeerConnection;window.qaPeers=[];window.RTCPeerConnection=class extends Native{constructor(c){super(c);window.qaPeers.push(this)}};
+const $=id=>document.getElementById(id);
+const db={auth:{getSession:async()=>({data:{session:{access_token:'fixture'}}})},rpc:async(name,args)=>window.rpc({actor,name,args}),from(){const q={filters:{},select(){return q},eq(k,v){q.filters[k]=v;return q},order(){return q},limit(){return q},maybeSingle:async()=>({data:await window.rows({actor,filters:q.filters,single:true})}),then:resolve=>window.rows({actor,filters:q.filters}).then(data=>resolve({data}))};return q}};
+window.api=installCalls({win:window,db,$,getUser:()=>({id:actor}),getCurrent:()=>({id:'room',kind:'direct'}),note:s=>$('note').textContent=s,getRoomLabel:()=> 'Test peer'});window.ready=true;
+<\/script>`)}); 
+(async()=>{await new Promise(r=>server.listen(8123,'127.0.0.1',r));const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream','--autoplay-policy=no-user-gesture-required']});try{
+ const context=await browser.newContext({permissions:['camera','microphone']});
+ await context.route('**/api/call-config',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({iceServers:[],relayConfigured:true})}));
+ await context.exposeBinding('rpc',(_,request)=>{const {actor,name,args}=request;if(name==='start_luo_call'){call={id:'c',conversation_id:'room',caller_id:actor,callee_id:'b',kind:args.call_kind,status:'ringing',offer:args.offer_sdp,created_at:new Date().toISOString(),caller_ice:[],callee_ice:[]};return{data:'c'}}if(name==='signal_luo_call'){if(args.signal_kind==='answer'){call.answer=args.signal_data;call.status='active'}if(args.signal_kind==='ice')call[actor===call.caller_id?'caller_ice':'callee_ice'].push(JSON.parse(args.signal_data));if(args.signal_kind==='end')call.status='ended';return{data:true}}return{data:null}});
+ await context.exposeBinding('rows',(_,request)=>{if(request.single)return copy(call);return call&&request.filters.callee_id===call.callee_id&&call.status==='ringing'?[copy(call)]:[]});
+ const a=await context.newPage(),b=await context.newPage(),errors=[];for(const page of[a,b])page.on('pageerror',e=>{errors.push(e.message);console.log('PAGE ERROR',e.message)});
+ await Promise.all([a.goto('http://localhost:8123/?actor=a'),b.goto('http://localhost:8123/?actor=b')]);await Promise.all([a.waitForFunction(()=>window.ready),b.waitForFunction(()=>window.ready)]);console.log('Fixture pages ready');
+ await a.evaluate(()=>api.open('video'));await a.locator('#beginCall').click();for(let i=0;!call&&i<200;i++)await new Promise(r=>setTimeout(r,20));if(!call)throw Error('Outgoing start: '+await a.locator('#callStatus').textContent());
+ console.log('Offer signaled');await b.evaluate(()=>api.accountReady());await b.locator('.incoming-call button').click();await b.locator('#acceptCall').click();
+ for(const p of[a,b])await p.waitForFunction(()=>qaPeers[0]?.connectionState==='connected'&&document.getElementById('callRemote').readyState>=2,{timeout:30000});
+ await a.waitForFunction(()=>document.getElementById('callRemote').currentTime>1);
+ const details=await a.evaluate(async()=>{const p=qaPeers[0],reports=[...(await p.getStats()).values()],local=document.getElementById('callLocal').srcObject;const video=local.getVideoTracks()[0].getSettings();const outbound=reports.find(r=>r.type==='outbound-rtp'&&r.kind==='video'),inbound=reports.find(r=>r.type==='inbound-rtp'&&r.kind==='video'),audio=reports.find(r=>r.type==='inbound-rtp'&&r.kind==='audio');return{capture:{width:video.width,height:video.height,frameRate:video.frameRate},outbound:{width:outbound.frameWidth,height:outbound.frameHeight,frames:outbound.framesEncoded},inbound:{width:inbound.frameWidth,height:inbound.frameHeight,frames:inbound.framesDecoded},audioPackets:audio.packetsReceived,videoEncoding:p.getSenders().find(s=>s.track?.kind==='video').getParameters().encodings[0]}});
+ assert.ok(details.capture.width>=1280&&details.capture.height>=720);assert.ok(details.outbound.frames>0&&details.inbound.frames>0);assert.ok(details.audioPackets>0);assert.equal(details.videoEncoding.maxBitrate,4500000);
+ await a.locator('#muteCall').click();assert.equal(await a.evaluate(()=>document.getElementById('callLocal').srcObject.getAudioTracks()[0].enabled),false);await a.locator('#muteCall').click();
+ await a.locator('#switchCallCamera').click();await a.waitForFunction(()=>!document.getElementById('switchCallCamera').disabled);assert.ok(await a.evaluate(()=>document.getElementById('callLocal').srcObject.getVideoTracks()[0].getSettings().width>=1280));
+ await a.locator('#endCall').click();await b.waitForFunction(()=>qaPeers[0].connectionState==='closed');assert.equal(await a.evaluate(()=>qaPeers[0].connectionState),'closed');assert.deepEqual(errors,[]);
+ fs.writeFileSync('test-results/call-quality-browser.json',JSON.stringify({passed:true,...details,checks:['two peers connect','HD capture','real video encoding and decoding','audio RTP received','encoding budget applied','mute','HD camera switch','both peers end cleanly']},null,2));console.log(fs.readFileSync('test-results/call-quality-browser.json','utf8'));await context.close();
+ }finally{await browser.close();await new Promise(r=>server.close(r))}})().catch(e=>{console.error(e.message);process.exit(1)});
+

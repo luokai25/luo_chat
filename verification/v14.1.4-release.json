@@ -1,0 +1,61 @@
+{
+  "version": "14.1.4",
+  "checkedAt": "2026-10-21T05:10:13.466Z",
+  "deploymentId": "dpl_BSYSuX5RorpXFRnT7q9H5CExZxNg",
+  "state": "READY",
+  "localTests": {
+    "pass": 122,
+    "fail": 0
+  },
+  "cleanInstallTests": {
+    "pass": 122,
+    "fail": 0
+  },
+  "remoteTests": {
+    "pass": 122,
+    "fail": 0
+  },
+  "cleanInstall": {
+    "node": "v24.19.0",
+    "installCommand": "npm ci --ignore-scripts --no-audit --no-fund",
+    "productionFilesCompared": 13,
+    "byteIdentical": true
+  },
+  "deploymentConfiguration": {
+    "runtime": "24.x",
+    "install": "npm ci --ignore-scripts",
+    "build": "npm run release:check"
+  },
+  "liveAssets": [
+    {
+      "path": "/index.html",
+      "status": 200,
+      "sha256": "183c7391820510b10377d06d98c06a25b14a8d75bb54b6fe50c750a767aef48e",
+      "matchesLocal": true
+    },
+    {
+      "path": "/sw.js",
+      "status": 200,
+      "sha256": "e88b541615d8b6a570f253c2ba58e8f2ff43a6e3b7573c0c0b47692cc7f56a64",
+      "matchesLocal": true
+    },
+    {
+      "path": "/app-WEREUXIL.js",
+      "status": 200,
+      "sha256": "92c07887749eef021e029fe1a1965e9455dc4a8580c997fcbcdc51b64d7ce597",
+      "matchesLocal": true
+    }
+  ],
+  "databaseChanges": false,
+  "runtimeLogInspection": "15-minute Vercel error/fatal query returned no entries; excludes browser and Supabase logs",
+  "openGates": [
+    "Safe Browsing clearance",
+    "hosted recovery/deletion acceptance",
+    "leaked-password protection",
+    "full database backup/restore",
+    "real-device acceptance",
+    "comprehensive monitoring",
+    "E2EE and malware scanning"
+  ],
+  "verificationPassed": true
+}

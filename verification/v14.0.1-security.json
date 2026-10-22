@@ -1,0 +1,20 @@
+{
+  "version": "14.0.1",
+  "test_count": 80,
+  "status": "production READY; local and Vercel tests passed",
+  "confirmed_defects": [
+    "Unvalidated URL recovery hints opened password-change UI for existing sessions",
+    "Successful authentication left passwords in hidden input fields",
+    "Recovery cancellation and signout did not consistently clear password inputs or recovery state"
+  ],
+  "limitations": [
+    "No evidence these defects triggered Google Safe Browsing",
+    "Google phishing warning unresolved",
+    "No Search Console Security issues access",
+    "Real recovery email delivery not tested"
+  ],
+  "deployment": "dpl_8CtZP7r8vZfc5UbYxDL4yj8NZt8x",
+  "bundle": "app-3NUF36SK.js",
+  "browser": "Expected bundle and new authentication guidance loaded; one browser-extension error, no observed app-origin errors",
+  "runtime_limits": "Real-user sign-in/recovery email not exercised; automated auth tests use mocks; Safe Browsing warning unresolved"
+}

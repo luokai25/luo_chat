@@ -1,0 +1,13 @@
+import {readFile,writeFile} from 'node:fs/promises';import {createHash} from 'node:crypto';
+const [js,css]=await Promise.all([readFile('public/luo-phone-polish.js'),readFile('public/luo-phone-polish.css')]);
+const revision=createHash('sha256').update(js).update(css).digest('hex').slice(0,12);
+let worker=await readFile('dist/sw.js','utf8');
+if(!/const CACHE='luo-chat-[^']+'/.test(worker))throw Error('Cache marker missing');
+worker=worker.replace(/const CACHE='luo-chat-[^']+'/, "const CACHE='luo-chat-"+revision+"'");
+await writeFile('dist/sw.js',worker);
+let index=await readFile('dist/index.html','utf8');
+for(const name of ['luo-modern.css','luo-phone-polish.js'])index=index.replace(new RegExp('/'+name.replace('.','\\.')+'(?:\\?v=[a-f0-9]{12})*','g'),'/'+name+'?v='+revision);
+index=index.replace('</head>','<meta name="luo-phone-polish" content="'+revision+'"></head>');
+if(!index.includes('<meta name="google-site-verification" content="y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w" />'))throw Error('Google verification tag removed');
+await writeFile('dist/index.html',index);
+console.log('Phone polish cache revision '+revision);

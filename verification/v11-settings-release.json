@@ -1,0 +1,10 @@
+{
+  "version": "11.0.0",
+  "deployment": "dpl_C3CTbGge6u6woS9TuxFte6hJqz9g",
+  "state": "READY",
+  "frontend_tests_passed": 35,
+  "live_settings_access_test": "PASS: own appearance and alert saves, avatar removal RPC, cross-user read/write isolation; transaction rolled back",
+  "browser": "signed-out startup observed without app errors; authenticated settings rendering not verified",
+  "email_delivery": "unverified",
+  "real_mobile": "unverified"
+}

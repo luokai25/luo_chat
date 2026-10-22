@@ -1,0 +1,16 @@
+{
+  "release": "15.1.1",
+  "deployment": "dpl_9Si9j6eYFHhe7Sj91eW7RRg98KHF",
+  "state": "READY",
+  "target": "production",
+  "tests_local": 195,
+  "tests_clean": 195,
+  "tests_hosted": 195,
+  "matching_clean_frontend_outputs": 213,
+  "new_regression_tests": 6,
+  "previous_source_regressions_reproduced": 6,
+  "build_duration_seconds": 44,
+  "live_version_observed": "15.1.1",
+  "live_asset_hash_comparison": "Not established: local index comparison differed; subsequent 15.2.0 verification is tracked separately.",
+  "safe_browsing_clearance": "unverified"
+}

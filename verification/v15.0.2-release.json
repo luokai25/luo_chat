@@ -1,0 +1,50 @@
+{
+  "release": "15.0.2",
+  "deployment": "dpl_9kFUxVinHaUjJzik4i7e32n8FTWr",
+  "target": "production",
+  "state": "READY",
+  "checked_at": "2026-10-21T07:20:37.847Z",
+  "tests_local": 177,
+  "tests_clean": 177,
+  "tests_hosted": 177,
+  "matching_clean_frontend_outputs": 213,
+  "live_files": [
+    {
+      "path": "index.html",
+      "sha256": "4b6af2415f79073c7fda5008590cf8a667301c3e3c23386fd542b4d44d8316f5"
+    },
+    {
+      "path": "app-CCAPFOHL.js",
+      "sha256": "aa7b4671e557b78a3a23db45e4b3a79270a97bbbd0e17f701633b8599f29d2f6"
+    },
+    {
+      "path": "style-3a3ca742b411.css",
+      "sha256": "3a3ca742b41100d283e821e71c96a814a3217dbdb8253e8d6653239cd708e3b3"
+    },
+    {
+      "path": "sw.js",
+      "sha256": "b04f0984351db1a68da7020c71cf44e613a86d7c5d5267e99c7c21d6f0561758"
+    }
+  ],
+  "call_config_without_auth": 401,
+  "call_config_wrong_method": 405,
+  "new_call_checks": 7,
+  "previous_1501_baseline_failures": 7,
+  "backend_schema_changed": false,
+  "service_configuration_changed": false,
+  "limits": [
+    "Call media uses mocks in automated tests; physical two-device voice/video acceptance not performed.",
+    "TURN relay not provisioned.",
+    "No Google Safe Browsing clearance evidence.",
+    "Closed-app push, full database/media restore and hosted account recovery/deletion acceptance remain open."
+  ],
+  "runtime_error_log_scan": {
+    "window": "15m",
+    "levels": [
+      "error",
+      "fatal"
+    ],
+    "returned_groups": 0,
+    "scope": "Available Vercel function/daemon logs, not browser or Supabase monitoring"
+  }
+}

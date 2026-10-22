@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Poll creation and retry are atomic and idempotent",
+    "Changing a poll vote replaces the old choice",
+    "Poll results and voting reject nonmembers",
+    "Recalled polls no longer accept votes",
+    "Blocking prevents direct sends in both directions",
+    "Background cron sends valid messages and isolates blocked-message failures",
+    "Unblocking restores direct messaging",
+    "All three disposable accounts and their media deleted"
+  ],
+  "at": "2026-10-20T19:22:31.092Z"
+}

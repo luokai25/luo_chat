@@ -1,0 +1,7 @@
+/* Only authentication belongs on the signed-out surface. */
+.app:is([data-screen="auth"],[data-screen="recovery"]) main{display:block!important;overflow-y:auto!important;min-height:0!important}
+.app:is([data-screen="auth"],[data-screen="recovery"]) :is(.workspace-nav,#home,#room,#desktopWelcome,#luoApprovedNav,#luoApprovedFab,#luoApprovedHeader,#luoModernMore,.quick-compose,#state,#luoStatusPage,#luoCommunityPage){display:none!important;pointer-events:none!important}
+.app[data-screen="auth"] #recovery,.app[data-screen="recovery"] #auth{display:none!important}
+html:not(.luo-restoring-session) .app[data-screen="auth"] #auth{visibility:visible!important;pointer-events:auto!important}
+.app[data-screen="auth"] #auth{width:100%;max-width:100%;box-sizing:border-box}
+body:has(.app[data-screen="auth"]) :is(#luoNotificationToast,#luoMoreDialog:not([open])){display:none!important}

@@ -1,0 +1,57 @@
+{
+  "release": "15.3.0",
+  "deployment": "dpl_AN3mvoLh42kJAb5iRFixsdMbkfyj",
+  "state": "READY",
+  "target": "production",
+  "framework": "vanilla JavaScript PWA",
+  "build_duration_seconds": 50,
+  "checked_at": "2026-10-21T08:20:32.906Z",
+  "tests_local": 215,
+  "tests_clean": 215,
+  "tests_hosted": 215,
+  "matching_clean_frontend_outputs": 213,
+  "live_files": [
+    {
+      "path": "index.html",
+      "sha256": "6d00d937cf1bd560d277728db8bd311fdb08907fd37906c43f07212201eb7ceb"
+    },
+    {
+      "path": "app-AZZF2V5J.js",
+      "sha256": "cb71cacf3e45b7c278f225780fde8d747b164cac7cb638b924ad5c00d55eb877"
+    },
+    {
+      "path": "style-457d3d8cd191.css",
+      "sha256": "457d3d8cd1911a95fd578b3558e91c549ea9f06421632fe2f00c4b13c867d873"
+    },
+    {
+      "path": "sw.js",
+      "sha256": "e6999448eb42684cbd08ffc020a50aa262b229f667f0f4b86906da42f996ab08"
+    }
+  ],
+  "index_migration": "20261021081306_chat_scaling_foreign_key_indexes",
+  "new_valid_ready_indexes": 17,
+  "unindexed_foreign_key_advisor_findings": 0,
+  "unused_index_advisor_findings": 55,
+  "actual_app_burst": {
+    "events": 21,
+    "membership_requests_before": 21,
+    "membership_requests_after": 2,
+    "backend": "synthetic"
+  },
+  "refresh_gate_fixture": {
+    "signals_during_request": 200,
+    "reads": 2,
+    "maximum_concurrency": 1
+  },
+  "cache_browser": {
+    "deltaWrites": true,
+    "unrelated_file_record_writes_during_text_save": 0,
+    "backend": "synthetic",
+    "indexedDB": "real"
+  },
+  "production_load_test_run": false,
+  "maximum_users": "not established",
+  "safe_browsing_clearance": "unverified",
+  "recent_runtime_error_groups": 0,
+  "runtime_log_scope": "Deployment-specific function/daemon error/fatal groups over 15 minutes; not browser/Supabase monitoring"
+}

@@ -1,0 +1,42 @@
+{
+  "version": "14.1.2",
+  "checkedAt": "2026-10-21T04:50:10.597Z",
+  "deploymentId": "dpl_8SJyDmdMjC74fcBDwiZCYBmEcw9o",
+  "state": "READY",
+  "localTests": {
+    "pass": 115,
+    "fail": 0
+  },
+  "remoteTests": {
+    "pass": 115,
+    "fail": 0
+  },
+  "liveAssets": [
+    {
+      "path": "/index.html",
+      "status": 200,
+      "sha256": "79ee481366cb245a9d8c1eb6370d276968bc851ac1212d2eb978ae073b4d79a5",
+      "matchesLocal": true
+    },
+    {
+      "path": "/sw.js",
+      "status": 200,
+      "sha256": "92a60bf4056339edd3e6277781c484bb9897492464d9454fcb7869846e5983eb",
+      "matchesLocal": true
+    },
+    {
+      "path": "/app-UEOZWRYO.js",
+      "status": 200,
+      "sha256": "c96f93fbc60ebc2f5108f7ba9880b24e6dfd57ad8d6a00f1841b89e433319e6b",
+      "matchesLocal": true
+    }
+  ],
+  "appliedMigration": "20261021044753_restrict_vault_metadata_updates",
+  "databaseChecks": {
+    "vaultIsolation": "PASS after application, transaction rolled back",
+    "existingSocialAccess": "PASS after application, transaction rolled back",
+    "columnPrivileges": "Only collection and note client-updatable on vault tables"
+  },
+  "safeBrowsingClearance": "not established",
+  "verificationPassed": true
+}

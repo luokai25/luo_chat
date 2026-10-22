@@ -1,0 +1,37 @@
+{
+  "release": "15.2.0",
+  "deployment": "dpl_6bB7Gd5cUd5vRBdZpUNpQ1HL6pgX",
+  "state": "READY",
+  "target": "production",
+  "checked_at": "2026-10-21T08:09:15.290Z",
+  "build_duration_seconds": 37,
+  "tests_local": 207,
+  "tests_clean": 207,
+  "matching_clean_frontend_outputs": 213,
+  "live_files": [
+    {
+      "path": "index.html",
+      "sha256": "ee032f181b1a677b6b166683fdf8e68c5fbae20c56a63ff30c8ac242a80ae6ef"
+    },
+    {
+      "path": "app-NUZ4VV2G.js",
+      "sha256": "0124d2f7a96c0922a0c31b811c1720a1770104c421bc3144ca00ab06d70a8952"
+    },
+    {
+      "path": "style-457d3d8cd191.css",
+      "sha256": "457d3d8cd1911a95fd578b3558e91c549ea9f06421632fe2f00c4b13c867d873"
+    },
+    {
+      "path": "sw.js",
+      "sha256": "ab6c5313fe4997e0a1375aea66679fcf4a4bfc337deae5f70ae494c39de19bbc"
+    }
+  ],
+  "cache_browser_checks": 5,
+  "cache_browser_page_errors": 0,
+  "backend_changes": false,
+  "safe_browsing_clearance": "unverified",
+  "tests_hosted": 207,
+  "recent_runtime_error_groups": 0,
+  "runtime_scan_window": "15 minutes, deployment-scoped function/daemon logs only",
+  "monitoring": "Browser/Supabase persistent monitoring and drain configuration not newly established"
+}

@@ -1,0 +1,36 @@
+/* Luo Voice Lux: functional microphone-reactive signal + ceremonial midnight/gold visual treatment */
+:root{--luo-voice-royal:#e8bf70;--luo-voice-champagne:#ffe4a9;--luo-voice-obsidian:#080809;--luo-voice-coal:#171410}
+#room #luoVoiceInline{position:relative;isolation:isolate;gap:10px;padding:14px 15px 12px;overflow:hidden;background:radial-gradient(ellipse at 80% -30%,rgba(231,190,116,.13),transparent 55%),linear-gradient(155deg,#15120e,#080808 78%)!important;border:1px solid rgba(240,194,108,.34);border-radius:21px 21px 0 0;box-shadow:inset 0 1px 0 rgba(255,225,154,.12),0 -9px 35px rgba(0,0,0,.27)}
+#room #luoVoiceInline:before{content:"";position:absolute;pointer-events:none;inset:0 0 auto;height:2px;background:linear-gradient(90deg,transparent,rgba(255,226,161,.75),transparent)}
+#room #luoVoiceInline:after{content:"";position:absolute;pointer-events:none;right:-27px;top:-38px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(235,180,72,.14);box-shadow:0 0 0 13px rgba(235,180,72,.033),0 0 0 29px rgba(235,180,72,.021)}
+#room #sendform #luoInlineMic{position:relative;background:radial-gradient(circle at 36% 30%,#ffe1a2,#c79135 84%);box-shadow:0 0 0 4px rgba(230,185,91,.095),0 6px 20px rgba(202,135,30,.18),inset 0 1px 0 #ffeac2;color:#150e05;transition:transform 170ms ease,box-shadow 170ms ease;outline-offset:4px}
+#room #sendform #luoInlineMic:active{transform:scale(.93);box-shadow:0 0 0 8px rgba(230,185,91,.18),0 3px 16px rgba(202,135,30,.2)}
+#room #luoVoiceCrest{display:flex;align-items:center;gap:10px;width:100%;min-height:38px;z-index:1}
+#room #luoVoiceCrest .luo-voice-sigil{width:35px;height:35px;flex:0 0 35px;display:grid;place-items:center;font:italic 800 19px Georgia,serif;background:linear-gradient(135deg,#383022,#18130d);color:var(--luo-voice-champagne);border:1px solid rgba(255,224,160,.55);border-radius:10px;box-shadow:inset 0 0 8px rgba(233,176,71,.14),0 0 12px rgba(230,183,84,.1)}
+#room #luoVoiceCrest .luo-voice-brandname{display:flex;flex:1;align-items:baseline;gap:5px;flex-wrap:wrap;min-width:0;color:#f3dfb7;font-size:12px;font-weight:860;letter-spacing:.145em}
+#room #luoVoiceCrest .luo-voice-brandname b{color:var(--luo-voice-royal);font-weight:850}
+#room #luoVoiceCrest .luo-voice-brandname small{flex-basis:100%;font-size:8px;letter-spacing:.11em;font-weight:650;color:#aa987b;white-space:nowrap}
+#room #luoVoiceCrest .luo-voice-stage{font-size:9px;font-weight:900;white-space:nowrap;letter-spacing:.06em;padding:7px 9px;border:1px solid rgba(232,191,112,.27);border-radius:999px;background:rgba(220,171,78,.11);color:#e8c889}
+#room.luo-voice-recording #luoVoiceCrest .luo-voice-stage{background:rgba(222,94,82,.13);border-color:rgba(235,104,92,.38);color:#ffc3ac}
+#room.luo-voice-paused #luoVoiceCrest .luo-voice-stage{color:#f0d193;background:rgba(231,190,116,.12)}
+#room.luo-voice-ready #luoVoiceCrest .luo-voice-stage{background:rgba(143,213,154,.09);border-color:rgba(143,213,154,.25);color:#d0e6bc}
+#room #luoVoiceInline .luo-voice-dot{box-shadow:0 0 0 3px rgba(240,111,112,.11);z-index:1}
+#room #luoVoiceInline #luoVoiceTimer{font-size:16px;letter-spacing:.02em;color:#ffe0a1;min-width:48px}
+#room #luoVoiceInline .luo-waveform{height:38px;gap:3px;padding:2px 5px;border-left:1px solid rgba(230,180,90,.15);border-right:1px solid rgba(230,180,90,.15);border-radius:8px;background:linear-gradient(90deg,rgba(228,185,99,.04),rgba(228,185,99,.01))}
+#room #luoVoiceInline .luo-waveform span{width:3px;min-width:2px;background:linear-gradient(180deg,#ffe7ae,#ae7d2b);box-shadow:0 0 5px rgba(238,175,73,.19);transform-origin:center;transition:height 70ms linear,opacity 90ms ease}
+#room.luo-voice-live-meter .luo-waveform span{animation:none!important}
+#room.luo-voice-paused .luo-waveform span,#room.luo-voice-ready .luo-waveform span{animation:none!important}
+#room #luoVoiceInline .luo-voice-buttons{z-index:1;gap:9px}
+#room #luoVoiceInline .luo-voice-buttons button{border:1px solid rgba(231,184,102,.21);background:#282117;color:#efdfc5;box-shadow:inset 0 1px 0 rgba(255,226,162,.05);padding:10px 13px;min-height:43px}
+#room #luoVoiceInline .luo-voice-buttons button:focus-visible{outline:2px solid var(--luo-voice-champagne);outline-offset:2px}
+#room #luoVoiceInline #luoVoiceSend{background:linear-gradient(145deg,#ffe1a1,#cf9b48);color:#1c1307;border-color:#f3cb85;box-shadow:0 3px 19px rgba(223,171,77,.23)}
+#room #luoVoiceInline #luoVoiceDiscard{background:rgba(132,31,38,.13);color:#ffafac;border-color:rgba(223,94,102,.24)}
+#room #luoVoiceInline #luoVoiceLock{color:#f6cd82}
+#room #luoVoiceInline #luoVoiceAudio{accent-color:var(--luo-voice-royal);filter:drop-shadow(0 4px 12px rgba(0,0,0,.28));background:#201a12;border-radius:999px}
+#room #luoVoiceInline .luo-voice-hint{color:#b9a483;letter-spacing:.01em;font-size:10px}
+#room #luoVoiceInline #luoVoiceFeedback{color:#e5c288;font-size:11px}
+#room #luoVoiceActivity{color:#aa8040;font-size:14px;line-height:1;opacity:.6;margin-left:auto}
+#room.luo-voice-recording #luoVoiceActivity{color:#e8bb6b;animation:luo-lux-rotate 9s linear infinite}
+@keyframes luo-lux-rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@media(max-width:390px){#room #luoVoiceInline{padding:12px 10px 10px;gap:8px}#room #luoVoiceCrest .luo-voice-brandname small{font-size:7px}#room #luoVoiceCrest .luo-voice-stage{font-size:8px;padding:6px 7px}#room #luoVoiceInline .luo-voice-buttons{gap:5px}#room #luoVoiceInline .luo-voice-buttons button{padding:9px 10px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){#room.luo-voice-recording #luoVoiceActivity{animation:none}#room #luoVoiceInline .luo-waveform span,#room #sendform #luoInlineMic{transition:none}}

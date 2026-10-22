@@ -1,0 +1,122 @@
+{
+  "checked_at": "2026-10-21T08:05:20.380Z",
+  "browser": "141.0.7390.0",
+  "scope": "Real IndexedDB, actual frontend and synthetic backend; no hosted user data.",
+  "pageErrors": [],
+  "evidence": [
+    {
+      "label": "native-indexeddb",
+      "blobRoundTrip": true,
+      "accountIsolation": true,
+      "keptCleanup": true,
+      "signoutCleanup": true
+    },
+    {
+      "label": "storage-320",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "horizontalOverflow": false,
+      "modal": {
+        "id": "luoTools",
+        "x": 17,
+        "y": 59.078125,
+        "width": 286,
+        "height": 725.828125,
+        "right": 303,
+        "bottom": 784.90625,
+        "scrollWidth": 284,
+        "clientWidth": 284
+      },
+      "clippedContainers": [],
+      "smallTargets": [],
+      "menu": null
+    },
+    {
+      "label": "storage-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "horizontalOverflow": false,
+      "modal": {
+        "id": "luoTools",
+        "x": 17,
+        "y": 59.078125,
+        "width": 356,
+        "height": 725.828125,
+        "right": 373,
+        "bottom": 784.90625,
+        "scrollWidth": 354,
+        "clientWidth": 354
+      },
+      "clippedContainers": [],
+      "smallTargets": [],
+      "menu": null
+    },
+    {
+      "label": "offline-chat",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "horizontalOverflow": false,
+      "modal": null,
+      "clippedContainers": [
+        {
+          "id": "roomtitle",
+          "tag": "STRONG",
+          "cls": "",
+          "clientWidth": 103,
+          "scrollWidth": 317,
+          "overflow": "hidden",
+          "x": 92,
+          "y": 81.75,
+          "width": 102.5,
+          "height": 19.5,
+          "right": 194.5,
+          "bottom": 101.25
+        },
+        {
+          "id": "composerHelp",
+          "tag": "P",
+          "cls": "sr-only",
+          "clientWidth": 1,
+          "scrollWidth": 387,
+          "overflow": "hidden",
+          "x": -1,
+          "y": 65,
+          "width": 1,
+          "height": 1,
+          "right": 0,
+          "bottom": 66
+        }
+      ],
+      "smallTargets": [],
+      "menu": null
+    },
+    {
+      "label": "offline-saved-file",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "horizontalOverflow": false,
+      "modal": {
+        "id": "mediaViewer",
+        "x": 17,
+        "y": 260.109375,
+        "width": 356,
+        "height": 323.78125,
+        "right": 373,
+        "bottom": 583.890625,
+        "scrollWidth": 354,
+        "clientWidth": 354
+      },
+      "clippedContainers": [],
+      "smallTargets": [],
+      "menu": null
+    }
+  ]
+}

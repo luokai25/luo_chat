@@ -1,0 +1,7 @@
+create or replace function public.get_chat_polls(target_message_ids uuid[]) returns table(message_id uuid,poll_id uuid,question text,options jsonb,closed boolean) language plpgsql stable security definer set search_path='' as $$
+begin
+ if auth.uid() is null or coalesce(cardinality(target_message_ids),0)>200 then raise exception 'Invalid request';end if;
+ return query select m.id,p.id,p.question,
+ coalesce((select jsonb_agg(jsonb_build_object('id',o.id,'text',o.option_text,'kind',p.poll_kind,'count',(select count(*) from public.chat_poll_votes v where v.poll_id=p.id and v.option_id=o.id),'mine',exists(select 1 from public.chat_poll_votes v where v.poll_id=p.id and v.option_id=o.id and v.user_id=auth.uid()),'correct',case when p.poll_kind='quiz' and(p.created_by=auth.uid() or exists(select 1 from public.chat_poll_votes v where v.poll_id=p.id and v.user_id=auth.uid())) then exists(select 1 from public.chat_poll_correct_answers a where a.poll_id=p.id and a.option_id=o.id) else null end) order by o.sort_order) from public.chat_poll_options o where o.poll_id=p.id),'[]'::jsonb),p.closes_at is not null and p.closes_at<=now()
+ from public.chat_polls p join public.chat_messages m on m.id=p.message_id where m.id=any(target_message_ids) and public.is_conversation_member(m.conversation_id) and m.deleted_at is null and m.recalled_at is null and(m.expires_at is null or m.expires_at>now());
+end;$$;

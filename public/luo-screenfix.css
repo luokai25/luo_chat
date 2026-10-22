@@ -1,0 +1,20 @@
+/* Luo mobile single-panel state fix 2026-10-22. Loaded last. */
+@media (max-width: 999px), (hover: none) and (pointer: coarse) {
+html,body{max-width:100%;overflow-x:hidden}
+.app{width:100%!important;max-width:100%!important;overflow:hidden!important}
+.app[data-screen="home"] main,.app[data-screen="room"] main{display:flex!important;flex-direction:column!important;grid-template-columns:none!important;grid-template-rows:none!important;width:100%!important;min-width:0!important;overflow:hidden!important}
+.app[data-screen="home"] main>#room,.app[data-screen="home"] main>#desktopWelcome,.app[data-screen="room"] main>#home,.app[data-screen="room"] main>#desktopWelcome{display:none!important;visibility:hidden!important}
+.app[data-screen="home"] main>#home{display:flex!important;flex:1 1 100%!important;min-height:0!important;min-width:0!important;width:100%!important;max-width:100%!important;grid-column:auto!important;grid-row:auto!important;overflow:hidden!important}
+.app[data-screen="room"] main>#room{display:flex!important;flex:1 1 100%!important;flex-direction:column!important;min-height:0!important;min-width:0!important;width:100%!important;max-width:100%!important;grid-column:auto!important;grid-row:auto!important;overflow:hidden!important}
+.app:not([data-screen="room"]) main>#room,.app:not([data-screen="home"]) main>#home,.app:not([data-screen="home"]) main>#desktopWelcome{display:none!important}
+.app[data-screen="home"] main>.workspace-nav,.app[data-screen="room"] main>.workspace-nav{display:none!important}
+.app[data-screen="home"] #chats{flex:1 1 auto!important;width:100%!important;max-width:100%!important;min-width:0!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.app[data-screen="home"] #chatlist{flex:1 1 auto;min-height:0;overflow-y:auto}
+.app[data-screen="home"] #chats>.suite-toolbar,.app[data-screen="home"] #chats>#luoUpdatesStrip,.app[data-screen="home"] #chats>#globalSearchPanel,.app[data-screen="home"] #chats>.toolbar:not(:has(#search)),.app[data-screen="home"] #chats>.inbox-heading{display:none!important}
+.app[data-screen="home"] #luoApprovedHeader,.app[data-screen="home"] #luoApprovedFilters,.app[data-screen="home"] #luoApprovedNav{flex-shrink:0}
+.app[data-screen="home"] #luoApprovedFab{display:grid!important}
+.app.luo-calls-open #luoApprovedFab{display:none!important}
+.app[data-screen="room"] #luoApprovedNav,.app[data-screen="room"] #luoApprovedFab{display:none!important}
+.app[data-screen="room"] #messages{flex:1 1 auto!important;min-height:0!important}
+.app[data-screen="room"] #sendform{flex:0 0 auto!important}
+}

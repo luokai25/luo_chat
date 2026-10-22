@@ -1,0 +1,12 @@
+import {readFile,writeFile} from 'node:fs/promises';import {createHash} from 'node:crypto';
+const parts=await Promise.all(['public/luo-voice-lux.css','public/luo-inline-voice.js'].map(f=>readFile(f)));
+const rev=createHash('sha256').update(Buffer.concat(parts)).digest('hex').slice(0,12);
+let worker=await readFile('dist/sw.js','utf8');
+if(!/const CACHE='luo-chat-[^']+'/.test(worker))throw Error('Existing cache marker changed');
+worker=worker.replace(/const CACHE='luo-chat-[^']+'/, "const CACHE='luo-chat-"+rev+"'");
+await writeFile('dist/sw.js',worker);
+let html=await readFile('dist/index.html','utf8');
+for(const f of ['luo-modern.css','luo-inline-voice.js'])html=html.replace(new RegExp('/'+f.replace(/\./g,'\\.')+'(?:\\?v=[a-z0-9]+)*','g'),'/'+f+'?v='+rev);
+html=html.replace('</head>','<meta name="luo-voice-lux" content="'+rev+'"></head>');
+if(!html.includes('<meta name="google-site-verification" content="y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w" />'))throw Error('Google site verification missing');
+await writeFile('dist/index.html',html);console.log('Luo Voice Lux revision '+rev);

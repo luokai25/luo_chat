@@ -1,0 +1,14 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const patch=await readFile('public/luo-screenfix.css');
+const rev=createHash('sha256').update(patch).digest('hex').slice(0,12);
+let sw=await readFile('dist/sw.js','utf8');
+if(!/const CACHE='luo-chat-[^']+'/.test(sw))throw Error('Unexpected service worker');
+sw=sw.replace(/const CACHE='luo-chat-[^']+'/, "const CACHE='luo-chat-"+rev+"'");
+await writeFile('dist/sw.js',sw);
+let html=await readFile('dist/index.html','utf8');
+html=html.replace(/\/luo-modern\.css(?:\?v=[a-f0-9]{12})*/g,'/luo-modern.css?v='+rev);
+html=html.replace('</head>','<meta name="luo-mobile-screenfix" content="'+rev+'"></head>');
+if(!html.includes('<meta name="google-site-verification" content="y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w" />'))throw Error('Google ownership verification missing');
+await writeFile('dist/index.html',html);
+console.log('Luo mobile cache revision '+rev);

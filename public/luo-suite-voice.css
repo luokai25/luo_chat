@@ -1,0 +1,68 @@
+/* Luo Chat full-suite and inline voice UI v15.4: gold on midnight black. */
+@media(max-width:999px){
+.app[data-screen=home] #home>.sub.hidden{display:none!important;visibility:hidden!important}
+.app[data-screen=home] #home>.sub:not(#chats):not(.hidden){display:flex!important;flex:1 1 100%!important;flex-direction:column!important;min-width:0!important;max-width:100%!important;width:100%!important;min-height:0!important;box-sizing:border-box;overflow-x:hidden!important;overflow-y:auto!important;padding:14px 15px calc(105px + env(safe-area-inset-bottom,0px))!important}
+.app[data-screen=home] #home>#chats:not(.hidden){display:flex!important;min-width:0!important;width:100%!important;flex:1 1 100%!important}
+#home .luo-back-to-chat{display:inline-flex;align-items:center;align-self:flex-start;gap:7px;padding:8px 11px;min-height:43px;background:transparent;border:0;border-radius:12px;color:var(--g);font-size:14px;font-weight:750}
+#home .luo-back-to-chat:hover{background:rgba(220,169,80,.13)}
+#home>.sub:not(#chats) h2{letter-spacing:-.035em}
+#home #new .field,#home #group .field,#home #saved .field{width:100%;min-width:0;max-width:100%;box-sizing:border-box;min-height:44px;border-radius:12px}
+#home #new button,#home #group button,#home #saved button,#home #scheduled button{min-height:43px;border-radius:12px}
+#home #new #lookupResult,#home #new #contactList,#home #saved #savedList,#home #scheduled #scheduledList{max-width:100%;min-width:0;overflow-wrap:anywhere}
+#home #group #members{min-height:105px;resize:vertical}
+#home #saved .toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0}
+#home #saved .toolbar>*{flex:1 1 150px;min-width:0}
+#home #profile.settings-hub{padding:12px 11px calc(110px + env(safe-area-inset-bottom,0px))!important;gap:12px}
+#home #profile .settings-layout{display:flex!important;flex-direction:column!important;grid-template-columns:none!important;gap:13px!important;min-width:0;width:100%}
+#home #profile .settings-layout>*{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+#home #profile .settings-profile-card{border-radius:18px;padding:15px;background:var(--p2);border:1px solid var(--l)}
+#home #profile .settings-content{min-width:0;overflow-wrap:anywhere}
+#home #profile input,#home #profile textarea,#home #profile select{max-width:100%;box-sizing:border-box;min-height:42px;border-radius:12px}
+#home #profile textarea{min-height:90px;resize:vertical}
+#auth{overflow-y:auto;min-height:0}
+#auth .auth-story{display:none}
+#auth .auth-card{box-sizing:border-box;min-width:0;width:min(100%,480px);max-width:100%;padding:18px 15px;margin:8px auto 22px;border-radius:18px;border:1px solid var(--l);background:var(--p)}
+#auth .auth-card input:not([type=checkbox]){max-width:100%;min-height:44px;width:100%;box-sizing:border-box;border-radius:12px}
+#auth .auth-card button{min-height:43px;border-radius:12px}
+dialog:is(#workspaceDialog,#messageActionDialog,#personalizeDialog,#sharedDialog,#pollDialog,#scheduleDialog,#avatarDialog,#shortcutDialog,#deleteDialog,#mediaViewer,#luoTools,#luoMoreDialog,#deviceCaptureDialog)[open]{box-sizing:border-box!important;width:calc(100vw - 20px)!important;max-width:100vw!important;max-height:calc(100dvh - 20px)!important;margin:auto!important;padding:15px!important;border-radius:20px!important;border:1px solid var(--l)!important;background:var(--p)!important;color:var(--text)!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain}
+#workspaceDialog .dialog-heading,#luoMoreDialog .dialog-heading{position:sticky;top:-15px;z-index:2;background:var(--p);padding:12px 0}
+dialog button,dialog input,dialog textarea,dialog select{max-width:100%;box-sizing:border-box}
+dialog button{min-height:40px}
+dialog input:not([type=checkbox]):not([type=file]),dialog select,dialog textarea{min-height:41px;border-radius:12px}
+dialog textarea{min-height:80px;resize:vertical}
+#luoMoreDialog button{width:100%;min-height:52px;border-radius:12px;text-align:left}
+#workspaceBody,#savedList,#scheduledList{min-width:0;overflow-wrap:anywhere}
+#workspaceBody table,#luoTools table{display:block;overflow-x:auto;max-width:100%}
+#mediaViewer img,#mediaViewer video{max-width:100%;height:auto;object-fit:contain}
+#scheduleDialog input[type=datetime-local],#pollDialog input{width:100%}
+}
+#room #luoApprovedMic{display:none!important}
+#room #sendform #luoInlineMic{display:grid;align-items:center;justify-content:center;min-width:45px;width:45px;height:45px;border:0;border-radius:50%;background:var(--g);color:#22170c;padding:9px;flex-shrink:0;touch-action:pan-y}
+#room #sendform #luoInlineMic svg{height:25px;width:25px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#room #sendform.luo-voice-has-text #luoInlineMic{display:none!important}
+#room #sendform:not(.luo-voice-has-text) .send{display:none!important}
+#room #sendform.luo-voice-has-text .send{display:grid!important}
+#room.luo-voice-open #sendform{border-top:0;padding:0!important;min-height:0!important}
+#room.luo-voice-open #sendform #body,#room.luo-voice-open #sendform #attach,#room.luo-voice-open #sendform #scheduleText,#room.luo-voice-open #sendform .send,#room.luo-voice-open #sendform #luoInlineMic{display:none!important}
+#luoVoiceInline{display:none;align-items:center;flex-wrap:wrap;gap:9px;padding:12px 10px;min-height:63px;box-sizing:border-box;border-top:1px solid var(--l);background:var(--p);color:var(--text);width:100%}
+#room.luo-voice-open #luoVoiceInline{display:flex}
+#luoVoiceInline .luo-voice-dot{width:11px;min-width:11px;height:11px;border-radius:50%;background:#e86168}
+#room.luo-voice-recording .luo-voice-dot{animation:luo-record-glow 1.1s infinite}
+#luoVoiceInline #luoVoiceTimer{font:750 14px ui-monospace,Consolas,monospace;min-width:43px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#luoVoiceInline .luo-waveform{height:28px;min-width:45px;flex:1;display:flex;align-items:center;justify-content:space-between;gap:2px;overflow:hidden}
+#luoVoiceInline .luo-waveform span{display:block;min-width:2px;width:3px;height:var(--h);border-radius:4px;background:var(--g);opacity:.8}
+#room.luo-voice-recording .luo-waveform span{animation:luo-record-bar var(--period) ease-in-out infinite alternate;animation-delay:var(--delay)}
+#luoVoiceInline .luo-voice-buttons{display:flex;gap:7px;align-items:center;justify-content:space-around;flex-wrap:wrap}
+#luoVoiceInline button{border-radius:999px;min-height:40px;padding:8px 12px;border:1px solid var(--l);background:var(--p2);color:var(--text);font-size:12px;font-weight:720}
+#luoVoiceInline button[hidden],#luoVoiceInline audio[hidden],#luoVoiceInline .luo-voice-hint[hidden]{display:none!important}
+#luoVoiceInline #luoVoiceDiscard{color:#ee8989}
+#luoVoiceInline #luoVoiceSend{background:var(--g);color:#24180b;border-color:var(--g);font-weight:820}
+#luoVoiceInline #luoVoiceLock{color:var(--g)}
+#luoVoiceInline #luoVoiceAudio{width:100%;height:43px;accent-color:var(--g)}
+#luoVoiceInline .luo-voice-hint{font-size:11px;color:var(--m);flex-basis:100%;line-height:1.4}
+#luoVoiceInline #luoVoiceFeedback{font-size:11px;color:var(--g);flex-basis:100%;min-height:0;line-height:1.5;overflow-wrap:anywhere}
+#luoVoiceInline #luoVoiceFeedback:empty{display:none}
+@keyframes luo-record-glow{0%,100%{box-shadow:0 0 0 0 rgba(224,89,93,.35)}60%{box-shadow:0 0 0 8px rgba(224,89,93,0)}}
+@keyframes luo-record-bar{0%{transform:scaleY(.6)}100%{transform:scaleY(1.55)}}
+@media(max-width:590px){#luoVoiceInline{gap:7px;padding:10px 8px}#luoVoiceInline .luo-voice-buttons{width:100%}#luoVoiceInline button{min-height:42px}}
+@media(prefers-reduced-motion:reduce){#room.luo-voice-recording .luo-waveform span,#room.luo-voice-recording .luo-voice-dot{animation:none!important}}

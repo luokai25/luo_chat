@@ -1,0 +1,91 @@
+/* Luo Chat mobile 2026: WhatsApp-inspired arrangement, Luo brand retained. */
+@media (max-width:999px){
+.app{width:100%;max-width:100%;height:100dvh;min-height:0;background:var(--bg)}
+.app-header{height:65px;min-height:65px;padding:0 16px;gap:10px;background:var(--p);border-bottom:0;box-shadow:none}
+.app-header .logo,.app-header .logo img{width:39px;height:39px;border-radius:11px}
+.app-header h1{font-size:23px;letter-spacing:-.06em;font-weight:820}
+.app-header small{display:none}
+.app-header .quick-compose{display:none!important}
+.app-header .pill{border-radius:99px;background:var(--p2);font-size:10px}
+.app main{position:relative;min-height:0}
+#home{position:relative;min-width:0;background:var(--p);border:0}
+#home #chats{min-height:0;flex:1}
+.inbox-heading{padding:4px 17px 8px;align-items:center}
+.inbox-heading .eyebrow{display:none}
+.inbox-heading h2{font-size:26px;font-weight:800;letter-spacing:-.055em;line-height:1.3}
+#inboxCompose{width:40px;min-width:40px;height:40px;border-radius:50%;border:1px solid var(--l);background:transparent}
+#inboxCompose:focus-visible{outline:2px solid var(--g)}
+#chats .toolbar{padding:7px 12px 6px;display:flex;flex-wrap:nowrap;gap:8px;min-height:54px}
+#chats .toolbar #search{flex:1;min-width:0;min-height:44px;border-radius:28px;padding:11px 17px;background:var(--p2);border:1px solid transparent;font-size:15px}
+#chats .toolbar #search:focus{border-color:var(--g);outline-offset:1px}
+#chats .toolbar #inboxFilter{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}
+#chats .luo-wa-filters{display:flex;gap:7px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:5px 13px 12px;min-height:48px;flex-shrink:0}
+#chats .luo-wa-filters::-webkit-scrollbar{display:none}
+#chats .luo-wa-filter{appearance:none;border:1px solid transparent;border-radius:22px;white-space:nowrap;padding:7px 14px;min-height:34px;font-size:12px;font-weight:690;color:var(--m);background:var(--p2);transition:background .16s}
+#chats .luo-wa-filter[aria-pressed="true"]{background:rgba(228,188,108,.22);color:var(--g);border-color:rgba(228,188,108,.23)}
+#chats .luo-wa-filter:focus-visible{outline:2px solid var(--g)}
+#chatlist{min-height:0;padding:2px 4px 20px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(222,180,96,.3) transparent}
+.chatrow{min-height:77px;padding:10px 12px;margin:1px 0;border-radius:7px;gap:12px;align-items:center;border:0;background:transparent}
+.chatrow:hover,.chatrow:focus-visible{background:var(--p2)}
+.chatrow.selected,.chatrow[aria-current="true"]{background:rgba(225,186,107,.12);border-color:transparent}
+.chatrow .avatar{width:53px;height:53px;min-width:53px;min-height:53px;border-radius:50%;border:1px solid var(--l);object-fit:cover}
+.chatrow .chatinfo{min-width:0;flex:1}
+.chatrow .chatinfo strong{font-size:15px;font-weight:760;letter-spacing:-.017em;line-height:1.45}
+.chatrow .preview{font-size:12.5px;line-height:1.38;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--m)}
+.chatrow>small{font-size:10px;align-self:flex-start;margin-top:5px}
+.chatrow .unread{background:var(--g);color:#1b150b;border-radius:50%;min-width:19px;height:19px;display:inline-grid;place-items:center;font-size:10px;font-weight:800}
+.app[data-screen=home] #home{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+.workspace-nav{position:absolute;bottom:0;left:0;right:0;width:100%;height:calc(72px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;flex-direction:row;align-items:stretch;gap:0;background:var(--p);border-top:1px solid var(--l);border-right:0;box-shadow:0 -4px 18px rgba(0,0,0,.12);padding:3px 4px max(6px,env(safe-area-inset-bottom,0px))}
+.workspace-nav .tab,.workspace-nav .luo-ux-tab{flex:1 1 20%;width:auto;min-width:0;min-height:54px;padding:7px 2px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0!important;border-radius:12px;background:transparent;line-height:1.1;color:var(--m);font-size:10px;font-weight:650}
+.workspace-nav .tab[data-tab="new"],.workspace-nav .tab[data-tab="saved"],.workspace-nav .tab[data-tab="scheduled"]{display:none!important}
+.workspace-nav .tab .nav-icon,.workspace-nav .tab .ui-icon,.workspace-nav .luo-nav-symbol{display:grid;place-items:center;min-width:34px;min-height:31px;border-radius:19px;font-size:19px;transition:background .15s}
+.workspace-nav .tab.active,.workspace-nav .tab[aria-selected="true"],.workspace-nav .luo-ux-tab.active{color:var(--g);background:transparent!important}
+.workspace-nav .tab.active .nav-icon,.workspace-nav .tab.active .ui-icon,.workspace-nav .tab[aria-selected="true"] .nav-icon,.workspace-nav .luo-ux-tab.active .luo-nav-symbol{background:rgba(229,193,122,.22);color:var(--g)}
+.workspace-nav .tab:focus-visible,.workspace-nav .luo-ux-tab:focus-visible{outline:2px solid var(--g);outline-offset:-2px}
+#luoWaComposeFab{display:none!important;position:absolute;bottom:calc(91px + env(safe-area-inset-bottom,0px));right:19px;z-index:11;width:53px;height:53px;min-width:53px;min-height:53px;place-items:center;border:0;border-radius:16px;background:var(--g);box-shadow:0 7px 25px rgba(0,0,0,.3);color:#241b0e;font-size:25px;font-weight:700;cursor:pointer}
+.app[data-screen=home][data-tab="chats"] #luoWaComposeFab{display:grid!important}
+#luoWaComposeFab:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.app[data-screen=room] .app-header,.app[data-screen=room] .workspace-nav{display:none!important}
+.app[data-screen=room] #home{display:none!important}
+.app[data-screen=room] main{display:flex;min-height:0}
+.app[data-screen=room] #room{height:100%;max-height:100%;min-width:0;width:100%;display:flex;flex-direction:column;overflow:hidden}
+#room{background:#0e1215}
+#room .roomhead{height:60px;min-height:60px;flex-shrink:0;padding:0 8px;gap:7px;background:var(--p);border-bottom:1px solid var(--l)}
+#room .roomhead #back{display:inline-grid!important;place-items:center;width:35px;min-width:35px;height:40px;padding:0;font-size:23px}
+#room .roomhead .avatar{width:39px;min-width:39px;height:39px;min-height:39px;border-radius:50%;margin:0}
+#room .room-identity{flex:1;min-width:0;max-width:none}
+#room #roomtitle{font-size:14px;max-width:100%;font-weight:760;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#room #roomsub{font-size:10px}
+#room .roomtools{display:flex;gap:1px;flex-shrink:0}
+#room .roomtools .icon-button{min-width:36px;min-height:39px;width:36px;height:39px;border-radius:50%;padding:5px}
+#room #messages{flex:1;min-height:0;overscroll-behavior:contain;overflow-y:auto;padding:12px 10px 16px;gap:7px;background-image:radial-gradient(rgba(205,170,104,.055) .6px,transparent .6px);background-size:25px 25px}
+#room #messages .bubble{max-width:min(88%,480px);padding:8px 10px;border-radius:10px 10px 10px 3px;box-shadow:0 2px 8px rgba(0,0,0,.11);border:1px solid rgba(250,218,157,.05)}
+#room #messages .bubble.mine{border-radius:10px 10px 3px 10px}
+#room #messages .bubble-body{font-size:13.5px;line-height:1.43;overflow-wrap:anywhere}
+#room #messages .stamp{font-size:10px;text-align:right;margin-top:3px}
+#room #replyBar,#room #fileBar{padding:9px 11px;flex-shrink:0}
+#room #sendform{display:flex;flex-shrink:0;align-items:flex-end;gap:6px;padding:8px 8px max(9px,env(safe-area-inset-bottom,0px));background:var(--p);border-top:1px solid var(--l)}
+#room #sendform #attach,#room #sendform #scheduleText{width:35px;min-width:35px;height:42px;min-height:42px;padding:4px;flex-shrink:0;border-radius:50%}
+#room #sendform #body{flex:1 1 auto;min-width:0;min-height:43px;max-height:156px;border-radius:23px;padding:11px 14px;background:var(--p2);border:1px solid var(--l);resize:none;font-size:16px;line-height:1.32}
+#room #sendform .send{flex-shrink:0;min-width:44px;width:44px;min-height:44px;height:44px;border-radius:50%;background:var(--g);color:#23190e;display:grid;place-items:center}
+#room #sendform .send:hover{filter:brightness(1.04)}
+}
+@media(max-width:370px){
+.app-header{padding:0 12px}
+.app-header h1{font-size:21px}
+.app-header .pill{display:none}
+#chats .toolbar{padding-inline:10px}
+#chats .luo-wa-filters{padding-inline:9px;gap:5px}
+#chats .luo-wa-filter{padding:6px 11px;font-size:11px}
+.workspace-nav{padding-inline:2px}
+.workspace-nav .tab,.workspace-nav .luo-ux-tab{font-size:9px}
+#room .roomhead{gap:4px;padding-inline:5px}
+#room .roomhead .avatar{width:35px;min-width:35px;height:35px;min-height:35px}
+#room #roomtitle{font-size:13px}
+#room #sendform{gap:3px;padding-inline:5px}
+#room #sendform #attach,#room #sendform #scheduleText{min-width:32px;width:32px}
+#room #sendform .send{min-width:40px;width:40px}
+}
+@media(prefers-reduced-motion:reduce){
+#chats .luo-wa-filter,.workspace-nav .tab .nav-icon,#luoWaComposeFab{transition:none!important}
+}

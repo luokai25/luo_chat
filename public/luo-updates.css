@@ -1,0 +1,82 @@
+/* WhatsApp-style updates + Instagram-inspired polish in Luo Chat's own black/gold theme. */
+:root{--luo-gold:#e1b95f;--luo-warm:#f8e6b9;--luo-midnight:#101016;--luo-panel:#1a1720;--luo-stroke:rgba(230,192,117,.20)}
+.app-header{background:linear-gradient(113deg,#100f16 0%,#1b1620 62%,#211a21 100%);border-bottom:1px solid var(--luo-stroke);box-shadow:0 4px 20px rgba(0,0,0,.16)}
+.app-header .logo img{border-radius:16px;box-shadow:0 3px 18px rgba(216,164,77,.13)}
+.workspace-nav{gap:5px;scrollbar-width:thin;scrollbar-color:#806134 transparent}
+.workspace-nav .tab{border-radius:15px;transition:background .18s,transform .18s,color .18s}
+.workspace-nav .tab:hover{background:rgba(226,187,100,.09);transform:translateY(-1px)}
+.workspace-nav .luo-updates-nav{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:700}
+.luo-updates-nav-icon{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:23px;height:23px;border:2px solid #e5c374;border-radius:50%;color:#f5dfae;box-shadow:0 0 0 2px rgba(225,185,95,.09);font-size:23px;line-height:17px}
+#chats .inbox-heading{margin-bottom:14px}
+#chats .inbox-heading h2{letter-spacing:-.035em}
+#chatlist{scrollbar-color:#654a34 transparent}
+#chatlist > *{transition:background .15s,border-color .15s}
+#chatlist > *:hover{background-color:rgba(227,195,117,.055)}
+.roomhead{background:linear-gradient(100deg,rgba(16,15,23,.98),rgba(33,26,35,.96));border-bottom:1px solid var(--luo-stroke)}
+#sendform{border:1px solid rgba(225,184,99,.20);background:rgba(24,21,30,.93);border-radius:24px;padding:7px 9px;box-shadow:0 4px 24px rgba(0,0,0,.16)}
+#sendform:focus-within{border-color:rgba(232,192,98,.55);box-shadow:0 0 0 2px rgba(225,184,99,.09)}
+.luo-updates-strip{border-radius:20px;border:1px solid var(--luo-stroke);background:radial-gradient(circle at 93% 9%,rgba(231,192,101,.10),transparent 36%),linear-gradient(120deg,#1b1921,#121118);padding:15px 16px;margin:0 0 16px;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.luo-updates-strip-heading{font:700 11px/1.4 system-ui,sans-serif;letter-spacing:.13em;color:#dcc38b;margin:0 0 12px}
+.luo-updates-strip-actions{display:flex;flex-wrap:wrap;gap:9px}
+.luo-updates-strip button,.luo-story-watch,.luo-story-rail button{cursor:pointer;font:600 14px/1.2 system-ui,sans-serif}
+.luo-story-new,.luo-story-explore{min-height:43px;border-radius:13px;padding:10px 14px;border:1px solid #695030;color:#f8e4af;background:#33271e}
+.luo-story-new{background:linear-gradient(115deg,#b38a3a,#e4bd69);color:#171111;font-weight:800;border-color:#edc878}
+.luo-story-explore{background:#24202a;border-color:#4d3e32}
+.luo-story-new:hover,.luo-story-explore:hover{filter:brightness(1.12)}
+.luo-updates-small{color:#b5aa9a;font:13px/1.5 system-ui,sans-serif;margin:10px 0 0}
+.luo-updates-dialog{width:min(780px,calc(100vw - 22px));max-width:780px;max-height:88dvh;overflow-y:auto;border:1px solid #6e5637;border-radius:23px;background:linear-gradient(165deg,#201b23,#100f16 62%);color:#f7eada;padding:23px;box-shadow:0 26px 90px rgba(0,0,0,.70)}
+.luo-updates-dialog::backdrop,.luo-status-viewer::backdrop{background:rgba(2,2,5,.82);backdrop-filter:blur(7px)}
+.luo-updates-dialog .dialog-heading{position:sticky;top:-23px;z-index:5;padding:11px 0;background:linear-gradient(#201b23 87%,rgba(32,27,35,.02));margin-top:-11px}
+.luo-updates-dialog #storiesDialogHeading{font-size:25px;letter-spacing:-.035em;color:#ffe3a7}
+.luo-story-intro{margin:3px 0 16px;color:#b9aeab;line-height:1.5;font-size:14px}
+.luo-story-subhead{font-size:16px;letter-spacing:-.02em;color:#eed4a1;margin:17px 0 12px}
+.luo-story-detail-heading{padding-top:15px;border-top:1px solid rgba(240,195,117,.15)}
+.luo-story-rail{display:flex;align-items:start;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;padding:5px 2px 14px;scrollbar-width:thin;scrollbar-color:#8d6e40 transparent}
+.luo-story-bubble{scroll-snap-align:start;flex:0 0 84px;max-width:84px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0;border:none;background:transparent;color:#eae0cf}
+.luo-bubble-avatar{width:65px;height:65px;display:flex;justify-content:center;align-items:center;border:3px solid #ecbf68;border-radius:50%;outline:2px solid #483d38;outline-offset:3px;background:radial-gradient(circle at 32% 30%,#65527b,#2d2036 75%);font-size:27px;font-weight:800;color:#fce2ba;text-transform:uppercase}
+.luo-story-bubble:nth-child(3n) .luo-bubble-avatar{background:radial-gradient(circle at 28% 25%,#887241,#2a2535 70%)}
+.luo-story-bubble:nth-child(4n) .luo-bubble-avatar{background:radial-gradient(circle at 28% 25%,#615b69,#30252a 75%)}
+.luo-bubble-name{font:600 12px/1.25 system-ui,sans-serif;max-width:84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luo-create-bubble{font-size:0}.luo-create-bubble::before{content:'+';display:flex;align-items:center;justify-content:center;width:65px;height:65px;box-sizing:border-box;border-radius:50%;border:2px dashed #d6b167;background:rgba(220,177,88,.08);font:400 33px system-ui,sans-serif;color:#eac879}.luo-create-bubble::after{content:'Your story';font:600 12px system-ui,sans-serif;color:#e9dfd1}
+.luo-story-bubble:hover .luo-bubble-avatar,.luo-create-bubble:hover::before{transform:scale(1.045);box-shadow:0 0 18px rgba(239,192,101,.20)}
+.luo-story-bubble:focus-visible,.luo-story-watch:focus-visible,.luo-status-viewer button:focus-visible{outline:3px solid #ffdfa0;outline-offset:4px}
+.luo-updates-dialog #storyFeed{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:13px;align-items:start}
+.luo-updates-dialog #storyFeed .story-card{min-width:0;border-radius:17px;border:1px solid rgba(223,185,98,.22);background:#19161e;padding:16px;box-shadow:0 3px 15px rgba(0,0,0,.10)}
+.luo-updates-dialog #storyFeed .story-card h3{font-size:15px;color:#f3ddb0;line-height:1.35;margin:0 0 7px}
+.luo-updates-dialog #storyFeed .story-card p{line-height:1.45;max-height:5.8em;overflow-wrap:anywhere;overflow:hidden;color:#ded2c1}
+.luo-updates-dialog #storyFeed .story-card button{margin:4px 6px 0 0;min-height:36px;border-radius:11px}
+.luo-updates-dialog #storyFeed .story-card .luo-story-watch{width:100%;background:#322920;border:1px solid #695337;color:#f1dba9;margin:12px 0 0}
+.luo-updates-dialog #storyFeed .story-card > .story-media{max-width:100%;max-height:200px;object-fit:contain;border-radius:12px}
+#storyComposer{max-height:92dvh;overflow-y:auto;border:1px solid rgba(230,194,106,.35);border-radius:23px;background:#151219;color:#eee1cf}
+#storyComposer .dialog-heading h2{color:#f5d9a1;font-size:23px}
+#storyComposer label{display:block;margin-top:14px;margin-bottom:6px;font-weight:600;color:#eed5a5}
+#storyComposer input.field,#storyComposer textarea.field,#storyComposer select.field{border-radius:12px;background:#201b25;border-color:rgba(229,186,111,.25)}
+.luo-upload-preview{padding:14px;margin:10px 0;background:#211b26;border:1px solid rgba(230,195,112,.25);border-radius:17px}
+.luo-upload-preview[hidden]{display:none}
+.luo-upload-preview strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f1d7a3}
+.luo-upload-preview-media{display:flex;align-items:center;justify-content:center;padding:8px;background:#100e14;border-radius:12px;margin-top:8px;min-height:100px}
+.luo-upload-preview-media img,.luo-upload-preview-media video{max-width:100%;max-height:280px;object-fit:contain;border-radius:9px}
+.luo-upload-preview-media audio{max-width:100%;width:100%}
+.luo-upload-preview-hint{display:block;font-size:12px;color:#c4b8a7;padding:7px 0 3px}
+.luo-upload-clear{min-height:34px}
+.luo-status-viewer{position:fixed;inset:0;width:min(510px,100vw);height:min(94dvh,860px);max-width:none;max-height:none;margin:auto;box-sizing:border-box;background:#0d0c12;color:#fff;border:1px solid rgba(240,197,117,.32);border-radius:22px;padding:0;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.8)}
+.luo-status-viewer:not([open]){display:none}
+.luo-viewer-head{padding:16px 17px 12px;background:linear-gradient(#26202c,#151118);position:relative;z-index:2}
+.luo-viewer-progress{display:flex;gap:4px;margin-bottom:13px}
+.luo-viewer-bar{flex:1;height:3px;border-radius:10px;background:rgba(255,255,255,.25);overflow:hidden}
+.luo-viewer-bar i{height:100%;width:0%;background:#edc67c;display:block;transition:width 80ms linear}
+.luo-viewer-identity{display:flex;align-items:center;gap:10px;padding-right:45px;min-height:42px}
+.luo-viewer-identity strong{font-size:16px;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.luo-viewer-avatar{width:40px;height:40px;border:2px solid #e3be72;border-radius:50%;display:grid;place-items:center;background:#403141;color:#ffdfa0;font-weight:800}
+.luo-viewer-close{position:absolute;right:12px;bottom:16px;border:none;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;width:40px;height:40px;cursor:pointer}
+.luo-viewer-body{min-height:0;height:calc(100% - 167px);overflow:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:17px 22px;background:radial-gradient(ellipse at 30% 30%,rgba(106,74,112,.26),transparent 55%),#0b0b0e}
+.luo-viewer-media{max-width:100%;max-height:75%;display:flex;align-items:center;justify-content:center;min-height:0}
+.luo-viewer-media img,.luo-viewer-media video{max-width:100%;max-height:62dvh;object-fit:contain;border-radius:10px}
+.luo-viewer-media audio{width:min(400px,80vw)}
+.luo-viewer-message{font:500 19px/1.45 system-ui,sans-serif;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;text-align:center;color:#f9e9cd}
+.luo-viewer-status{font-size:13px;color:#d0b994;margin:0;text-align:center}
+.luo-viewer-controls{height:69px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;border-top:1px solid rgba(235,192,111,.20);background:#17131c}
+.luo-viewer-controls button{border:1px solid rgba(235,192,111,.26);background:#2d2430;color:#f4e3c2;border-radius:12px;min-height:40px;min-width:72px;cursor:pointer;font-weight:600}
+.luo-viewer-controls button:disabled{opacity:.35;cursor:default}
+@media(max-width:620px){.luo-updates-dialog{width:calc(100vw - 12px);max-height:94dvh;padding:15px;border-radius:18px}.luo-updates-dialog .dialog-heading{top:-15px}.luo-status-viewer{width:100vw;height:100dvh;border-radius:0;border:0}.luo-viewer-media img,.luo-viewer-media video{max-height:64dvh}.luo-updates-strip{border-radius:16px}.workspace-nav .luo-updates-nav{gap:4px}.luo-story-bubble{flex-basis:75px;max-width:75px}.luo-bubble-avatar,.luo-create-bubble::before{width:58px;height:58px}}
+@media(prefers-reduced-motion:reduce){.workspace-nav .tab,.luo-viewer-bar i,.luo-story-bubble .luo-bubble-avatar{transition:none!important}}

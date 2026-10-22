@@ -1,0 +1,8 @@
+project_id = "luo-chat"
+[functions.luo-auth]
+verify_jwt = false
+[functions.luo-delete-account]
+verify_jwt = true
+[functions.cleanup-chat-media]
+# Authenticated by a scoped server-generated token (or service-role token) inside the handler.
+verify_jwt = false

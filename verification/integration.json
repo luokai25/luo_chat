@@ -1,0 +1,19 @@
+{
+  "checks": [
+    "Three real Supabase password sessions",
+    "Signup trigger preserves selected username",
+    "Exact contact lookup",
+    "Message retries are idempotent",
+    "Nonmembers cannot read or send messages",
+    "Unread count and server read marker",
+    "Edit propagates through backend",
+    "Per-conversation previews",
+    "Group roles enforced and admin rename works",
+    "Ownership transfer and safe owner exit",
+    "Private media accessible only to conversation members",
+    "Password-confirmed account and media deletion",
+    "Deleting creator preserves the other participant’s conversation",
+    "Temporary accounts cleaned up"
+  ],
+  "at": "2026-10-20T18:43:14.209Z"
+}

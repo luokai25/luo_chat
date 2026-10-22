@@ -1,0 +1,47 @@
+{
+  "release": "15.0.0",
+  "deployment": "dpl_2G34jFELaQezEBbSUu3ozXLNAump",
+  "state": "READY",
+  "checked_at": "2026-10-21T06:54:32.951Z",
+  "tests_local": 159,
+  "tests_clean": 159,
+  "tests_hosted": 159,
+  "matching_clean_frontend_outputs": 213,
+  "live_files": [
+    {
+      "path": "index.html",
+      "sha256": "561572e0a8e844b331d964fc0fab39164a38af1d7010c9268a1f506b9ec7606e"
+    },
+    {
+      "path": "app-GZRPA73K.js",
+      "sha256": "38205b2bc7c3eb5e8eb9bbf686f36de3296d87a763db0938cbf358f061eedc53"
+    },
+    {
+      "path": "style-3a3ca742b411.css",
+      "sha256": "3a3ca742b41100d283e821e71c96a814a3217dbdb8253e8d6653239cd708e3b3"
+    },
+    {
+      "path": "sw.js",
+      "sha256": "592129b3702818905b141c3d7bdeb3f8fbb29cb9bf98bbb67834f9174d5c4840"
+    }
+  ],
+  "permissions_policy": "camera=(self), microphone=(self), geolocation=()",
+  "call_config_without_auth": 401,
+  "call_config_wrong_method": 405,
+  "push_worker_without_auth": 401,
+  "hosted_rollback_suites": [
+    "suite-access.sql",
+    "albums-access.sql",
+    "push-queue-access.sql",
+    "attachment-adversarial.sql"
+  ],
+  "new_public_tables_rls": true,
+  "anon_executable_public_definers": 0,
+  "limits": [
+    "TURN relay not provisioned by this run; restrictive network call connectivity unverified.",
+    "Physical phone / screen reader / two-device calls / closed-app push acceptance not performed.",
+    "Backup scope is accessible selected-chat text and private organization documents, not media/database disaster recovery.",
+    "Frontend byte reproducibility does not certify backend restore or function bundler reproducibility.",
+    "No Google Safe Browsing clearance evidence in this run."
+  ]
+}

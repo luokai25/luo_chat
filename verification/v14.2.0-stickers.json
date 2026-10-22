@@ -1,0 +1,14 @@
+{
+  "release": "14.2.0",
+  "checked_at": "2026-10-21T05:23:22.838Z",
+  "deployment": "dpl_FQLGRS734MMWce1284S4PPTa2nr5",
+  "files_checked": 203,
+  "matches": 203,
+  "errors": [],
+  "tests": 127,
+  "clean_outputs": 213,
+  "limits": [
+    "Not a Safe Browsing clearance check.",
+    "Physical device acceptance and real hosted send not performed."
+  ]
+}

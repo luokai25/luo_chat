@@ -1,0 +1,26 @@
+{
+  "version": "12.0.0",
+  "frontendChecks": 46,
+  "build": "passed",
+  "liveSQL": [
+    "v12-access.sql",
+    "v12-social-access.sql"
+  ],
+  "sqlFixturesRolledBack": true,
+  "authenticatedBrowser": "not completed",
+  "physicalDevice": "not completed",
+  "cleanupScheduler": "active every five minutes",
+  "featureLedger": "FEATURES.md",
+  "cleanupWorkerChecks": 3,
+  "cleanupVerification": {
+    "processed": 2,
+    "removed": 2,
+    "failed": 0,
+    "pending": 0,
+    "unauthorizedStatus": 403
+  },
+  "deployment": "dpl_Dnpvh8V6Z24XnvBS7ctX5eGtRanR",
+  "deploymentState": "READY",
+  "publicBrowser": "matching bundle loaded; no observed application-origin console errors",
+  "remoteBuildChecks": 49
+}

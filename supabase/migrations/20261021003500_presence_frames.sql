@@ -1,0 +1,22 @@
+alter table public.profiles add column profile_frame text not null default 'none' check(profile_frame in('none','gold','halo','double'));
+create or replace function public.set_my_chat_frame(frame_name text) returns void language plpgsql security definer set search_path='' as $$begin if auth.uid() is null or frame_name is null or frame_name not in('none','gold','halo','double') then raise exception 'Choose a supported frame';end if;update public.profiles set profile_frame=frame_name where id=auth.uid();end;$$;
+create table public.chat_presence_rules(user_id uuid primary key references auth.users(id) on delete cascade,audience text not null default 'everyone' check(audience in('everyone','contacts','selected','nobody')),viewer_ids uuid[] not null default '{}'::uuid[]);
+alter table public.chat_presence_rules enable row level security;revoke all on public.chat_presence_rules from anon,authenticated;grant select on public.chat_presence_rules to authenticated;
+create policy presence_rules_own on public.chat_presence_rules for select to authenticated using(user_id=(select auth.uid()));
+create or replace function public.can_view_chat_presence(subject_user_id uuid) returns boolean language sql stable security definer set search_path='' as $$select auth.uid() is not null and(subject_user_id=auth.uid() or(coalesce((select typing_indicators from public.user_chat_settings where user_id=subject_user_id),true) and case coalesce((select audience from public.chat_presence_rules where user_id=subject_user_id),'everyone') when 'everyone' then true when 'contacts' then exists(select 1 from public.chat_contacts where owner_id=subject_user_id and contact_id=auth.uid()) when 'selected' then auth.uid()=any(coalesce((select viewer_ids from public.chat_presence_rules where user_id=subject_user_id),'{}'::uuid[])) else false end));$$;
+create policy presence_selected_audience on public.conversation_presence as restrictive for select to authenticated using(public.can_view_chat_presence(user_id));
+create or replace function public.set_my_chat_presence_audience(audience_name text,viewer_usernames text[]) returns void language plpgsql security definer set search_path='' as $$declare ids uuid[];begin
+ if auth.uid() is null or audience_name is null or audience_name not in('everyone','contacts','selected','nobody') or coalesce(cardinality(viewer_usernames),0)>100 then raise exception 'Choose a valid presence audience';end if;
+ if audience_name='selected' and exists(select 1 from unnest(viewer_usernames) u where not exists(select 1 from public.profiles p where p.username=u)) then raise exception 'An exact username was not found';end if;
+ select array_agg(id) into ids from public.profiles where audience_name='selected' and username=any(viewer_usernames);
+ insert into public.chat_presence_rules(user_id,audience,viewer_ids) values(auth.uid(),audience_name,coalesce(ids,'{}'::uuid[])) on conflict(user_id) do update set audience=excluded.audience,viewer_ids=excluded.viewer_ids;
+end;$$;
+revoke all on function public.set_my_chat_frame(text),public.can_view_chat_presence(uuid),public.set_my_chat_presence_audience(text,text[]) from public,anon;
+grant execute on function public.set_my_chat_frame(text),public.can_view_chat_presence(uuid),public.set_my_chat_presence_audience(text,text[]) to authenticated;
+create index chat_bot_rules_conversation_idx on public.chat_bot_rules(conversation_id);
+create index chat_group_digests_due_idx on public.chat_group_digests(next_run) where cadence<>'off';
+create index chat_stories_expiry_idx on public.chat_stories(expires_at);
+create index chat_living_conversation_idx on public.chat_living_messages(conversation_id);
+create index chat_tictactoe_conversation_idx on public.chat_tictactoe(conversation_id);
+create index chat_group_tasks_conversation_idx on public.chat_group_tasks(conversation_id,created_at);
+create index chat_milestones_conversation_idx on public.chat_friendship_milestones(conversation_id,happened_at);

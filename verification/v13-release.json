@@ -1,0 +1,29 @@
+{
+  "version": "13.0.0",
+  "date": "2026-10-21",
+  "deployment": "dpl_FKyQSiN9bG89sHuTBtgF4LLXb7RD",
+  "checks": 59,
+  "localBuild": "passed",
+  "bundle": "app-ZT7LXHJR.js",
+  "iconSourceName": "IMG-20261020-WA0134.jpg",
+  "iconSourceSHA256": "2fefc57fbea8526f73c9b1d89af67ab6f6f23ec4c8975826c0850602a56d72c3",
+  "iconScope": [
+    "favicon",
+    "Apple home screen",
+    "standard PWA",
+    "maskable PWA",
+    "header/login/install preview"
+  ],
+  "profileFix": "inbox/room shared renderer; failed-image fallback; group identity isolation",
+  "newFeatures": [
+    "reviewed English reminder-time suggestions and quick dates",
+    "manual app-update checks with launcher-icon guidance"
+  ],
+  "newDatabaseMigrations": false,
+  "installedLauncherRefresh": "not physically verified; cannot be universally forced",
+  "authenticatedMobileFlow": "not completed",
+  "deploymentState": "READY",
+  "remoteChecks": 59,
+  "remoteFailures": 0,
+  "publicBrowser": "New gold L visibly rendered, matching app-ZT7LXHJR.js, no viewport overflow, no observed application-origin console errors"
+}

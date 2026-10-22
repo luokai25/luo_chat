@@ -1,0 +1,23 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {JSDOM} from 'jsdom';
+test('Luo signature, genuine microphone meter and lifecycle cleanup exist',async()=>{const j=await readFile('public/luo-inline-voice.js','utf8'),c=await readFile('public/luo-voice-lux.css','utf8');
+for(const x of ['luoVoiceCrest','LUO <b>VOICE</b>','startMeter(live)','createMediaStreamSource(live)','getByteTimeDomainData','closeMeter()','recorder.start(250)','file.dispatchEvent','form.requestSubmit'])assert.ok(j.includes(x),x);
+for(const x of ['#080809','--luo-voice-royal','#luoVoiceInline','#luoVoiceCrest','.luo-voice-stage','luo-voice-live-meter','prefers-reduced-motion'])assert.ok(c.includes(x),x);
+});
+test('audio amplitude meter is populated from recorded stream without broadcasting audio',async()=>{
+const html='<html><body><div class="app" data-screen="room"><section id="room"><span id="roomtitle">Friend</span><div id="fileBar" class="hidden"></div><form id="sendform"><textarea id="body"></textarea><button class="send" type="submit">Send</button></form><input id="mediaFile" type="file"></section></div></body></html>';
+const dom=new JSDOM(html,{runScripts:'dangerously',url:'https://luo-chat-luokai25.vercel.app'}),w=dom.window,d=w.document;
+const st={getTracks:()=>[{stop(){}}]};Object.defineProperty(w.navigator,'mediaDevices',{configurable:true,value:{getUserMedia:async()=>st}});
+let metre=0,closed=0,sourceConnected=0;
+w.AudioContext=class{createMediaStreamSource(given){assert.equal(given,st);return{connect(to){sourceConnected++;assert.ok(to)}}}createAnalyser(){return{fftSize:256,smoothingTimeConstant:.77,getByteTimeDomainData(arr){metre++;for(let i=0;i<arr.length;i++)arr[i]=(i%2)?190:66}}}close(){closed++;return Promise.resolve()}};
+let frame=null;w.requestAnimationFrame=cb=>(frame=cb,42);w.cancelAnimationFrame=()=>{};
+w.MediaRecorder=class{static isTypeSupported(){return true}constructor(st,opts){this.mimeType=opts.mimeType;this.state='inactive'}start(){this.state='recording'}stop(){this.state='inactive';this.ondataavailable?.({data:new w.Blob(['audio'],{type:'audio/webm'})});this.onstop?.()}};
+w.URL.createObjectURL=()=> 'blob:voice-preview';w.URL.revokeObjectURL=()=>{};
+w.eval(await readFile('public/luo-inline-voice.js','utf8'));d.dispatchEvent(new w.Event('DOMContentLoaded'));
+assert.ok(d.getElementById('luoVoiceCrest'));d.getElementById('luoInlineMic').click();
+await new Promise(r=>setTimeout(r,0));assert.equal(d.getElementById('luoVoiceStage').textContent,'RECORDING');
+assert.equal(sourceConnected,1);assert.ok(d.getElementById('room').classList.contains('luo-voice-live-meter'));assert.equal(typeof frame,'function');frame();
+assert.ok(metre>0);assert.match(d.querySelector('.luo-waveform span').style.height,/px/);
+d.getElementById('luoVoiceStop').click();assert.equal(d.getElementById('luoVoiceStage').textContent,'READY TO SEND');assert.ok(closed>0);
+d.getElementById('luoVoiceDiscard').click();assert.equal(d.getElementById('luoVoiceStage').textContent,'READY');w.close();
+});
+test('new finish runs after prior revision and Google ownership tag stays',async()=>{const p=JSON.parse(await readFile('package.json','utf8'));const b=p.scripts.build;assert.ok(b.indexOf('apply-voice-lux.mjs')<b.indexOf('node build.mjs'));assert.ok(b.indexOf('revision-voice-lux.mjs')>b.indexOf('revision-suite-and-voice.mjs'));const h=await readFile('public/index.html','utf8');assert.ok(h.includes('<meta name="google-site-verification" content="y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w" />'))});

@@ -1,0 +1,11 @@
+import {readFile,appendFile,writeFile} from 'node:fs/promises';
+const owner='<meta name="google-site-verification" content="y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w" />';
+const [base,extra,html,boot,js]=await Promise.all([readFile('public/luo-modern.css','utf8'),readFile('public/luo-mobile-stability.css','utf8'),readFile('public/index.html','utf8'),readFile('public/luo-session-boot.js','utf8'),readFile('public/luo-mobile-stability.js','utf8')]);
+if(!html.includes(owner)||!extra.includes('Luo Chat v15.5')||!boot.includes('luo-restoring-session')||!js.includes('luo-video-layout'))throw Error('Luo UI patch or ownership check failed');
+if(!base.includes('/* Luo Chat v15.5:'))await appendFile('public/luo-modern.css','\n'+extra);
+const pre='<script src="/luo-session-boot.js"></script>';
+const critical='<style id="luo-session-critical">html.luo-restoring-session .app[data-screen="auth"] #auth{visibility:hidden!important;pointer-events:none!important}html.luo-restoring-session body::before{content:"";position:fixed;inset:0;z-index:9995;background:radial-gradient(circle at 50% 35%,#332513,#080809 58%)}html.luo-restoring-session body::after{content:"LUO  CHAT";position:fixed;top:46%;left:50%;transform:translate(-50%,-50%);color:#e8bf70;z-index:9996;letter-spacing:.27em;font:700 25px Georgia,serif}</style>';
+let output=html;if(!output.includes(pre))output=output.replace('<head>','<head>'+pre+critical);
+const client='<script defer src="/luo-mobile-stability.js"></script>';if(!output.includes(client))output=output.replace('</body>',client+'</body>');
+if(!output.includes(owner)||!output.includes(pre)||!output.includes('</body>'))throw Error('Invalid index HTML');
+await writeFile('public/index.html',output);console.log('Luo 15.5: recorder, session restore, calls and route fixes installed');

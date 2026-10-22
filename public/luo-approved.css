@@ -1,0 +1,103 @@
+/* Luo Chat approved WhatsApp-like mobile design / gold-on-black edition */
+:root{--luo-approved-black:#09090a;--luo-approved-surface:#121213;--luo-approved-second:#1e1d1b;--luo-approved-gold:#e6be72;--luo-approved-muted:#aaa7a2;--luo-approved-stroke:rgba(218,181,108,.13)}
+@media(max-width:999px){
+body:not(.light):not(.luo-high-contrast){--bg:#09090a;--p:#101011;--p2:#1a1a1b;--p3:#29251e;--bubble:#222222;--g:#e6be72;--text:#f5f3ef;--m:#aaa7a2;--l:rgba(218,181,108,.13);--luo-content:#0b0b0c;--luo-raised:#171718;--luo-divider:rgba(218,181,108,.13)}
+.app{max-width:none;height:100dvh;width:100%;min-height:0;overflow:hidden}
+.app[data-screen=home] .app-header{display:none!important}
+.app[data-screen=room] .app-header{display:none!important}
+.app[data-screen=home] main,.app[data-screen=room] main{min-height:0;overflow:hidden}
+.app[data-screen=home] .workspace-nav,.app[data-screen=room] .workspace-nav{display:none!important}
+#home{position:relative;min-width:0;background:var(--p)!important;border-right:0!important}
+#home #chats{background:var(--p);min-height:0;display:flex;flex-direction:column}
+#luoApprovedHeader{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:13px 15px 8px;gap:12px;min-height:69px}
+#luoApprovedHeader .luo-brand{display:flex;align-items:center;gap:9px;min-width:0}
+#luoApprovedHeader .luo-brand img{width:39px;height:39px;border-radius:12px;object-fit:contain;border:1px solid var(--luo-approved-stroke)}
+#luoApprovedHeader .luo-brand span{font-size:28px;font-weight:830;letter-spacing:-.065em;white-space:nowrap;color:var(--text)}
+#luoApprovedHeader .luo-brand b{font-weight:830;color:var(--g)}
+.luo-approved-actions{display:flex;align-items:center;gap:5px}
+.luo-approved-icon{min-width:43px;width:43px;height:43px;display:grid;place-items:center;border:0;background:transparent;border-radius:50%;color:var(--text);cursor:pointer}
+.luo-approved-icon:hover{background:var(--p2)}
+.luo-approved-icon svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linejoin:round;stroke-linecap:round}
+#chats .inbox-heading{display:none!important}
+#chats .toolbar{padding:9px 14px 7px;gap:6px;min-height:59px;display:flex}
+#chats .toolbar #search{height:48px;min-height:48px;max-width:none;flex:1;padding:0 18px;background:var(--p2);border-radius:26px;border:1px solid transparent;font-size:15px}
+#chats .toolbar #search:focus-visible{border-color:var(--g);outline-offset:2px}
+#chats .toolbar #inboxFilter{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;opacity:0!important;overflow:hidden!important;clip-path:inset(50%)!important}
+#luoApprovedFilters{display:flex;gap:8px;min-height:50px;flex-shrink:0;padding:7px 14px 12px;overflow-x:auto;scrollbar-width:none}
+#luoApprovedFilters::-webkit-scrollbar{display:none}
+.luo-approved-chip{border:0;border-radius:23px;padding:7px 15px;background:var(--p2);color:var(--m);font-size:12px;white-space:nowrap;min-height:35px;font-weight:690}
+.luo-approved-chip[aria-pressed=true]{background:rgba(191,138,52,.32);color:#f6daa2}
+.luo-approved-chip:focus-visible{outline:2px solid var(--g)}
+#luoApprovedArchive{flex-shrink:0;display:flex;align-items:center;gap:14px;width:100%;min-height:52px;padding:5px 21px 9px;border:0;background:transparent;text-align:left;color:var(--text);font-size:14px;font-weight:680}
+#luoApprovedArchive svg{width:22px;height:22px;stroke:var(--g);stroke-width:2;fill:none}
+#luoApprovedArchive .luo-archive-indicator{margin-left:auto;color:var(--g);font-size:12px}
+#chatlist{flex:1;min-height:0;overflow-y:auto;padding:0 5px 20px;scrollbar-width:thin}
+#chatlist .chatrow{width:100%;display:flex;align-items:center;min-height:78px;border:0!important;background:transparent;padding:12px 11px;margin:0;border-radius:8px;gap:13px}
+#chatlist .chatrow:hover,#chatlist .chatrow:focus-visible{background:rgba(245,211,148,.065)}
+#chatlist .chatrow.selected{background:rgba(215,168,83,.12)!important}
+#chatlist .chatrow .avatar{border-radius:50%!important;width:53px;height:53px;min-width:53px;border:1px solid var(--luo-approved-stroke);font-size:18px}
+#chatlist .chatrow .chatinfo{flex:1;min-width:0}
+#chatlist .chatrow .chatinfo strong{font-size:15px;line-height:1.4;font-weight:730}
+#chatlist .chatrow .preview{font-size:12.5px;color:var(--m);margin-top:4px;line-height:1.42;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#chatlist .chatrow>small{font-size:10.5px;color:var(--m);align-self:flex-start;margin-top:5px}
+#chatlist .chatrow .unread{background:var(--g);color:#1b150c;min-width:20px;height:20px;border-radius:50%;font-weight:800}
+#luoApprovedFab{position:absolute;bottom:calc(89px + env(safe-area-inset-bottom,0px));right:19px;z-index:15;display:grid;place-items:center;border:0;width:56px;height:56px;border-radius:17px;background:var(--g);color:#211809;box-shadow:0 8px 25px #0007}
+#luoApprovedFab svg{height:27px;width:27px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#luoApprovedNav{position:absolute;bottom:0;left:0;right:0;height:calc(73px + env(safe-area-inset-bottom,0px));display:flex;align-items:stretch;gap:0;padding:6px 7px max(8px,env(safe-area-inset-bottom,0px));background:var(--p);border-top:1px solid var(--luo-approved-stroke);z-index:25}
+#luoApprovedNav button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;border-radius:10px;background:transparent;color:var(--m);font-size:10px;font-weight:660}
+#luoApprovedNav button[aria-current=page]{color:var(--g)}
+#luoApprovedNav .luo-nav-icon{min-width:48px;height:31px;display:grid;place-items:center;border-radius:20px}
+#luoApprovedNav button[aria-current=page] .luo-nav-icon{background:rgba(195,143,53,.25)}
+#luoApprovedNav svg{width:22px;height:22px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#home{padding-bottom:calc(75px + env(safe-area-inset-bottom,0px))}
+#luoApprovedCalls{position:absolute;inset:0 0 calc(75px + env(safe-area-inset-bottom,0px)) 0;background:var(--p);z-index:8;display:none;flex-direction:column;overflow:hidden}
+.app.luo-calls-open #luoApprovedCalls{display:flex}
+#luoApprovedCalls .luo-calls-title{padding:22px 20px 14px;font-size:29px;font-weight:800}
+#luoApprovedCalls .luo-calls-explain{padding:3px 20px 16px;font-size:12px;color:var(--m)}
+#luoApprovedCalls .luo-calls-list{min-height:0;overflow-y:auto;padding:4px 13px}
+.luo-call-contact{width:100%;display:flex;align-items:center;gap:11px;padding:12px 7px;border:0;border-bottom:1px solid var(--luo-approved-stroke);background:transparent;text-align:left;color:var(--text)}
+.luo-call-contact .luo-call-person{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:690}
+.luo-call-contact .luo-call-kind{color:var(--g);font-size:12px}
+.app[data-screen=room] #luoApprovedNav,.app[data-screen=room] #luoApprovedFab,.app[data-screen=room] #luoApprovedHeader{display:none!important}
+.app[data-screen=room] main{display:flex}
+.app[data-screen=room] #home{display:none!important}
+#room{height:100%;width:100%;min-height:0;display:flex;flex-direction:column;background:#090909}
+#room .roomhead{flex-shrink:0;min-height:62px;height:62px;padding:4px 7px;gap:5px;background:var(--p);border-bottom:1px solid var(--luo-approved-stroke)}
+#room .roomhead #back{display:grid!important;place-items:center;min-width:33px;width:33px;height:40px;padding:0}
+#room .roomhead #roomavatar{width:39px;min-width:39px;height:39px;border-radius:50%!important}
+#room .roomhead .room-identity{flex:1;min-width:0}
+#room #roomtitle{font-size:14px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#room #roomsub{font-size:10px}
+#room .roomhead .spacer{display:none}
+#room .roomtools{display:flex;align-items:center;gap:0;flex-shrink:0}
+#room .roomtools #createPoll,#room .roomtools #openPins,#room .roomtools #openMedia{display:none!important}
+#room .roomtools .icon-button,#room .roomtools summary{min-width:35px;width:35px;height:39px;display:grid;place-items:center;padding:5px;border-radius:50%}
+#luoApprovedVoiceCall,#luoApprovedVideoCall{min-width:38px;width:38px;height:39px}
+#room #messages{flex:1;min-height:0;padding:16px 11px 18px;gap:8px;overflow-y:auto;background-color:#0a0a0b;background-image:radial-gradient(rgba(205,162,85,.06) .55px,transparent .55px);background-size:26px 26px}
+#room #messages .bubble{max-width:88%;padding:8px 11px;border-radius:11px 11px 11px 3px;box-shadow:0 2px 8px #0003;border:1px solid rgba(233,194,118,.05)}
+#room #messages .bubble.mine{background:linear-gradient(132deg,#4a3820,#35291a);border-radius:11px 11px 3px 11px}
+#room #messages .bubble-body{font-size:13.5px;line-height:1.48;white-space:pre-wrap;overflow-wrap:anywhere}
+#room #messages .stamp{font-size:10px;text-align:right}
+#room #messages .chat-sticker{max-width:min(230px,62vw);height:auto;background:transparent;box-shadow:none}
+#room #messages .attachment-link[hidden],#room #messages .bubble-body[hidden]{display:none!important}
+#room #sendform{flex-shrink:0;display:flex;align-items:flex-end;gap:4px;padding:8px 7px max(9px,env(safe-area-inset-bottom,0px));background:var(--p);border-top:1px solid var(--luo-approved-stroke)}
+#room #sendform #body{flex:1;min-width:0;min-height:45px;max-height:160px;padding:11px 13px;font-size:16px;line-height:1.35;border-radius:25px;border:1px solid var(--luo-approved-stroke);background:var(--p2)}
+#room #sendform #attach,#room #sendform #scheduleText{flex-shrink:0;width:36px;min-width:36px;height:43px;min-height:43px;padding:5px;border-radius:50%}
+#room #sendform .send,#luoApprovedMic{flex-shrink:0;min-width:45px;width:45px;height:45px;min-height:45px;border-radius:50%;background:var(--g);color:#231b10;display:grid;place-items:center;border:0}
+#luoApprovedMic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+#room #sendform.luo-can-record .send{display:none!important}
+#room #sendform:not(.luo-can-record) #luoApprovedMic{display:none!important}
+#luoApprovedMic:not(:disabled):active{transform:scale(.93)}
+/* Preserve the real built-in voice recorder while making recording unmistakable */
+#deviceCaptureDialog,#luoDeviceCapture{border-radius:20px!important;border-color:rgba(232,190,108,.4)!important}
+#startDeviceVoice,#stopDeviceVoice,#holdDeviceVoice{border-radius:24px!important;min-height:45px}
+#holdDeviceVoice:not([hidden]){background:rgba(227,173,86,.13);border:1px solid var(--g);animation:luoRecordBreath 1.3s ease-in-out infinite}
+#stopDeviceVoice:not([hidden]){background:rgba(194,66,66,.16);border:1px solid #e78080}
+#deviceAudioPreview:not([hidden]){width:100%;accent-color:var(--g)}
+@keyframes luoRecordBreath{0%,100%{box-shadow:0 0 0 0 rgba(232,189,104,.27)}50%{box-shadow:0 0 0 9px rgba(232,189,104,0)}}
+#luoCall{border-radius:22px;border-color:var(--luo-approved-stroke);background:var(--p);color:var(--text)}
+#luoCall .call-video-grid{border-radius:13px;overflow:hidden}
+}
+@media(max-width:365px){#luoApprovedHeader{padding-inline:10px}#luoApprovedHeader .luo-brand span{font-size:24px}#luoApprovedHeader .luo-brand img{width:33px;height:33px}#room .roomhead{gap:2px}#room .roomtools #roomSearchToggle{display:none}#room #sendform{gap:2px;padding-inline:4px}#room #sendform #attach,#room #sendform #scheduleText{width:32px;min-width:32px}}
+@media(min-width:1000px){#luoApprovedHeader,#luoApprovedNav,#luoApprovedFab,#luoApprovedArchive,#luoApprovedFilters,#luoApprovedCalls,#luoApprovedMic,#luoApprovedVoiceCall,#luoApprovedVideoCall{display:none!important}}
+@media(prefers-reduced-motion:reduce){#holdDeviceVoice:not([hidden]){animation:none!important}#luoApprovedMic{transition:none!important}}

@@ -1,0 +1,12 @@
+import {readFile,writeFile} from 'node:fs/promises';import {createHash} from 'node:crypto';
+const data=await Promise.all(['public/luo-suite-voice.css','public/luo-suite-fixes.js','public/luo-inline-voice.js'].map(x=>readFile(x)));
+const version=createHash('sha256').update(Buffer.concat(data)).digest('hex').slice(0,12);
+let sw=await readFile('dist/sw.js','utf8');if(!/const CACHE='luo-chat-[^']+'/.test(sw))throw Error('Missing service-worker version');
+sw=sw.replace(/const CACHE='luo-chat-[^']+'/, "const CACHE='luo-chat-"+version+"'");await writeFile('dist/sw.js',sw);
+let html=await readFile('dist/index.html','utf8');
+html=html.replace(/<script\b[^>]*src="\/luo-wa-(?:mobile|visible)\.js(?:\?[^"]*)?"[^>]*><\/script>\s*/g,'');
+for(const f of ['luo-modern.css','luo-suite-fixes.js','luo-inline-voice.js'])html=html.replace(new RegExp('/'+f.replace(/\./g,'\\.')+'(?:\\?v=[a-z0-9]+)*','g'),'/'+f+'?v='+version);
+html=html.replace('</head>','<meta name="luo-suite-voice-revision" content="'+version+'"></head>');
+if(!html.includes('<meta name="google-site-verification" content="y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w" />'))throw Error('Google tag missing');
+if(/src="\/luo-wa-(?:mobile|visible)\.js/.test(html))throw Error('Duplicate UI assets remain');
+await writeFile('dist/index.html',html);console.log('Luo suite and voice final revision '+version);

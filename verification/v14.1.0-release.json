@@ -1,0 +1,41 @@
+{
+  "version": "14.1.0",
+  "checkedAt": "2026-10-21T04:10:17.706Z",
+  "deploymentId": "dpl_7pS44mMshaceEBBZeYPyW6bY2sPb",
+  "deploymentState": "READY",
+  "localTests": {
+    "passed": 107,
+    "failed": 0
+  },
+  "vercelTests": {
+    "passed": 107,
+    "failed": 0
+  },
+  "assets": [
+    {
+      "path": "/index.html",
+      "status": 200,
+      "sha256": "99dafa32ff6d357c9750a228c024c7ed22076b847a0783dd028a7929a328682b",
+      "matchesLocal": true
+    },
+    {
+      "path": "/sw.js",
+      "status": 200,
+      "sha256": "4be71e7c74bc3f79f531825f24c40071e8d45bd7195669e6259d95848a7c69e5",
+      "matchesLocal": true
+    },
+    {
+      "path": "/app-2KZSPK5E.js",
+      "status": 200,
+      "sha256": "c503ba80ff01dab5b0d35e57dd6ce5560d35a2aec327bf93733ce0f36e2d9d8d",
+      "matchesLocal": true
+    }
+  ],
+  "providerSettings": {
+    "status": 200,
+    "googleEnabled": false
+  },
+  "googleEndToEnd": "not tested: provider disabled",
+  "profileTriggerTest": "passed in a rolled-back transaction; no retained test account",
+  "safeBrowsingClearance": "not established"
+}
