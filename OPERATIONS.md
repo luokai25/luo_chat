@@ -1,5 +1,7 @@
 # Luo Chat operations
 
+Current evidence and remaining gates: [HARDENING_REPORT.md](HARDENING_REPORT.md), [STAGING.md](STAGING.md), [BACKUP_RESTORE.md](BACKUP_RESTORE.md). Run the read-only owner checks in `scripts/check-runtime-health.sql` without printing cron commands or private payloads.
+
 ## Before a release
 
 Use Node 24. Install with `npm ci --ignore-scripts`, then run `npm run release:check`. For build-input or dependency changes, run `npm run release:reproduce` and retain its result. Run `npm run audit:production`; if the advisory service is inaccessible, record the result as unknown. Never use a stale successful result to excuse a failed current check.

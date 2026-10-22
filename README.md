@@ -4,6 +4,8 @@ Black-and-gold chat PWA using Supabase and Vercel.
 
 Live app: https://luo-chat-luokai25.vercel.app/
 
+See [HARDENING_REPORT.md](HARDENING_REPORT.md), [STAGING.md](STAGING.md) and [BACKUP_RESTORE.md](BACKUP_RESTORE.md) for the checked reliability/security controls and open operational gates.
+
 See [CURRENT_RELEASE.md](CURRENT_RELEASE.md) for the current auth/navigation and call-quality fixes, verification evidence and remaining limits. Historical version notes below describe their original releases.
 
 This release adds the 15 requested feature areas: calls, server-backed Web Push, albums, private folders, sticker/voice tools, encrypted text snapshots, dashboard, reading bookmarks, shared drawing, occasions, private imports, accessibility, diagnostics and storage tools. See `RELEASE_15.md` for exact behavior and limits, `PROJECT_CHECKLIST.md` for engineering gates, and `src/feature-status.js` for the in-app capability ledger. Optional TURN relay configuration and real-device call/push acceptance remain open.

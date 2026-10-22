@@ -3,8 +3,9 @@ const projectUrl=Deno.env.get('SUPABASE_URL')!;
 const serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const headers={apikey:serviceKey,authorization:`Bearer ${serviceKey}`,'content-type':'application/json'};
 const reply=(status:number,data:unknown)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json'}});
-async function rows(table:string,query:string){const r=await fetch(`${projectUrl}/rest/v1/${table}?${query}`,{headers});if(!r.ok)throw Error('Database request failed');return await r.json()}
-async function acknowledge(id:number){const r=await fetch(`${projectUrl}/rest/v1/storage_cleanup_queue?id=eq.${id}`,{method:'DELETE',headers});if(!r.ok)throw Error('Queue acknowledgement failed')}
+const deadlineFetch=(input:string,init:RequestInit={})=>fetch(input,{...init,signal:AbortSignal.timeout(8000)});
+async function rows(table:string,query:string){const r=await deadlineFetch(`${projectUrl}/rest/v1/${table}?${query}`,{headers});if(!r.ok)throw Error('Database request failed');return await r.json()}
+async function acknowledge(id:number){const r=await deadlineFetch(`${projectUrl}/rest/v1/storage_cleanup_queue?id=eq.${id}`,{method:'DELETE',headers});if(!r.ok)throw Error('Queue acknowledgement failed')}
 Deno.serve(async(req:Request)=>{
  if(req.method!=='POST')return reply(405,{error:'POST required'});
  try{
@@ -16,9 +17,9 @@ Deno.serve(async(req:Request)=>{
   }
   if(!allowed)return reply(403,{error:'Forbidden'});
   const cutoff=new Date(Date.now()-300000).toISOString();
-  const jobs=await rows('storage_cleanup_queue','select=id,bucket_id,object_path,attempts&order=queued_at.asc&limit=100&queued_at=lt.'+encodeURIComponent(cutoff));
-  let removed=0,failed=0,retained=0;
-  for(const job of jobs){try{
+  const jobs=await rows('storage_cleanup_queue','select=id,bucket_id,object_path,attempts&attempts=lt.10&order=queued_at.asc,id.asc&limit=25&queued_at=lt.'+encodeURIComponent(cutoff));
+  const started=Date.now();let processed=0,removed=0,failed=0,retained=0;
+  for(const job of jobs){if(Date.now()-started>35000)break;processed++;try{
    if(!['chat-media','avatars','luo-stories','luo-vault'].includes(job.bucket_id))throw Error('Unsupported cleanup bucket');
    const path=encodeURIComponent(job.object_path);
    let referenced=false;
@@ -27,10 +28,10 @@ Deno.serve(async(req:Request)=>{
    if(job.bucket_id==='luo-vault')referenced=(await rows('chat_vault_files','select=id&object_path=eq.'+path+'&limit=1')).length>0;
    if(job.bucket_id==='avatars')referenced=(await rows('profiles','select=id&avatar_url=like.'+encodeURIComponent('%'+job.object_path)+'&limit=1')).length>0;
    if(referenced){await acknowledge(job.id);retained++;continue}
-   const r=await fetch(`${projectUrl}/storage/v1/object/${encodeURIComponent(job.bucket_id)}`,{method:'DELETE',headers,body:JSON.stringify({prefixes:[job.object_path]})});
+   const r=await deadlineFetch(`${projectUrl}/storage/v1/object/${encodeURIComponent(job.bucket_id)}`,{method:'DELETE',headers,body:JSON.stringify({prefixes:[job.object_path]})});
    if(!r.ok&&r.status!==404)throw Error('Storage removal failed with status '+r.status);
    await acknowledge(job.id);removed++;
-  }catch(e){failed++;await fetch(`${projectUrl}/rest/v1/storage_cleanup_queue?id=eq.${job.id}`,{method:'PATCH',headers,body:JSON.stringify({attempts:(job.attempts||0)+1,last_error:String(e).slice(0,300)})})}}
-  return reply(200,{processed:jobs.length,removed,retained,failed});
+  }catch(e){failed++;await deadlineFetch(`${projectUrl}/rest/v1/storage_cleanup_queue?id=eq.${job.id}`,{method:'PATCH',headers,body:JSON.stringify({attempts:(job.attempts||0)+1,last_error:'LUO_CLEANUP_ITEM_FAILED',queued_at:new Date(Date.now()+Math.min(3600000,30000*2**Math.min(job.attempts||0,7))).toISOString()})}).catch(()=>console.error('LUO_CLEANUP_RETRY_UPDATE_FAILED'))}}
+  return reply(200,{processed,removed,retained,failed});
  }catch{return reply(502,{error:'Cleanup worker unavailable'})}
 });

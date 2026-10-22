@@ -1,3 +1,4 @@
+import {timedFetch,readRequestJSON} from '../_shared/http.ts';
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.118.0';
 const headers={'Content-Type':'application/json','Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Allow-Methods':'POST,OPTIONS'};
 Deno.serve(async req=>{
@@ -6,9 +7,10 @@ Deno.serve(async req=>{
  try{
   const url=Deno.env.get('SUPABASE_URL')!,anon=Deno.env.get('SUPABASE_ANON_KEY')!,service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const token=(req.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
-  const client=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false}}),admin=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false}});
+  if(!token||token.length>8192||/\s/.test(token))return reply(401,{error:'Sign in required.'});
+  const client=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}}),admin=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}});
   const {data,error}=await client.auth.getUser(token);if(error||!data.user?.email)return reply(401,{error:'Sign in required.'});
-  const body=await req.json();if(body.confirmation!=='DELETE MY ACCOUNT'||typeof body.password!=='string')return reply(400,{error:'Password and explicit confirmation required.'});
+  const body=await readRequestJSON(req);if(body.confirmation!=='DELETE MY ACCOUNT'||typeof body.password!=='string'||body.password.length<8||body.password.length>128)return reply(400,{error:'Password and explicit confirmation required.'});
   const check=await client.auth.signInWithPassword({email:data.user.email,password:body.password});if(check.error||check.data.user?.id!==data.user.id)return reply(403,{error:'Password confirmation failed.'});
   // Reauthentication creates a temporary session; revoke it before proceeding.
   await client.auth.signOut({scope:'local'});

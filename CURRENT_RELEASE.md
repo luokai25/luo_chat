@@ -1,5 +1,7 @@
 # Current reliability and call-quality fixes
 
+The subsequent security/reliability review is in [HARDENING_REPORT.md](HARDENING_REPORT.md). Its database and worker changes supersede the frontend-only scope below.
+
 The current source includes signed-out route guards, scoped navigation bindings, mobile screen-switch stability, and removal of legacy app controls from the sign-in screen.
 
 Calls now request up to 1920 × 1080 at 30 fps when supported. Microphone capture requests echo cancellation, noise suppression and gain control. Sender configuration gives audio high priority and video an initial 4.5 Mbps ceiling; this is a ceiling, not a forced minimum. Browser congestion control remains active. Repeated loss, round-trip delay, limited bandwidth or CPU pressure lower video load; sustained recovery restores detail gradually. Camera switching reapplies the same capture and sender settings. Remote video fits the frame without cropping or magnification, and the video-call controls avoid costly backdrop blur. Signaling polls every 750 ms; this affects setup responsiveness, not the media transport latency.
