@@ -27,3 +27,4 @@ jobs:
       - run: npm run release:reproduce
       - run: npx playwright install --with-deps chromium
       - run: node tests/call-quality-browser.cjs
+      - run: node tests/browser-navigation-local.cjs
