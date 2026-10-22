@@ -11,7 +11,7 @@ export function createCallConfigHandler({clientFactory=createClient,env=process.
   try{
    const db=clientFactory(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:createRequestFetch({timeoutMs:8000})}});
    const {data,error}=await db.auth.getUser(bearer);
-   if(error){if(!error.status||error.status>=500)throw Error('Auth unavailable');return res.status(401).json({error:'Sign in first'});}
+   if(error){if(error.status===429){res.setHeader('Retry-After','60');return res.status(429).json({error:'Too many requests. Try again shortly'});}if(![400,401,403].includes(error.status))throw Error('Auth unavailable');return res.status(401).json({error:'Sign in first'});}
    if(!data?.user)return res.status(401).json({error:'Sign in first'});
    const iceServers=[{urls:'stun:stun.l.google.com:19302'}];
    const urls=env.LUO_TURN_URL,username=env.LUO_TURN_USER,credential=env.LUO_TURN_PASSWORD;

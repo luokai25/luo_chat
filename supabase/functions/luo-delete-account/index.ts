@@ -10,7 +10,7 @@ Deno.serve(async req=>{
   if(!token||token.length>8192||/\s/.test(token))return reply(401,{error:'Sign in required.'});
   const client=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}}),admin=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}});
   const {data,error}=await client.auth.getUser(token);if(error||!data.user?.email)return reply(401,{error:'Sign in required.'});
-  const body=await readRequestJSON(req);if(body.confirmation!=='DELETE MY ACCOUNT'||typeof body.password!=='string'||body.password.length<8||body.password.length>128)return reply(400,{error:'Password and explicit confirmation required.'});
+  let body;try{body=await readRequestJSON(req)}catch{return reply(400,{error:'Send a JSON object up to 16 KiB.'})}if(body.confirmation!=='DELETE MY ACCOUNT'||typeof body.password!=='string'||body.password.length<8||body.password.length>128)return reply(400,{error:'Password and explicit confirmation required.'});
   const check=await client.auth.signInWithPassword({email:data.user.email,password:body.password});if(check.error||check.data.user?.id!==data.user.id)return reply(403,{error:'Password confirmation failed.'});
   // Reauthentication creates a temporary session; revoke it before proceeding.
   await client.auth.signOut({scope:'local'});
