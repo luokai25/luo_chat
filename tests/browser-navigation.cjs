@@ -41,7 +41,7 @@ async function setup(signedIn,width=390){
  return {context,page,errors,requests};
 }
 async function run(){
- browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ browser=await chromium.launch({headless:true,channel:process.env.LUO_BROWSER_CHANNEL||undefined,args:['--no-sandbox']});
  for(const width of [390,1280]){const {context,page,errors}=await setup(false,width);
   await page.locator('#signin').waitFor({state:'visible'});assert.equal(await page.locator('#home').isVisible(),false);
   for(const sel of ['.workspace-nav','#desktopWelcome','#luoApprovedNav','.quick-compose'])assert.equal(await page.locator(sel).isVisible(),false,sel+' leaked onto auth');

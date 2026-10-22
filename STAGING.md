@@ -1,6 +1,6 @@
 # Staging and release checks
 
-The Vercel project provides protected preview deployments, and production builds run the complete automated release suite. GitHub Actions now defines an independent build/test, credential scan, production dependency audit, reproducibility check and synthetic two-peer browser call check. CI uses read-only repository permissions, pinned action commits, no deployment credentials, and no hosted production test accounts.
+The Vercel project provides protected preview deployments, and production builds run the complete automated release suite. GitHub Actions now defines an independent build/test, credential scan, production dependency audit, reproducibility check and synthetic two-peer browser call check. CI runs the browser fixtures in the runner-provided Chrome (local fixtures default to Playwright Chromium). CI uses read-only repository permissions, pinned action commits, no deployment credentials, and no hosted production test accounts.
 
 An isolated Supabase staging backend is NOT provisioned. A branch request on 2026-10-22 returned `PaymentRequiredException: Branching is supported only on the Pro plan or above`. No plan upgrade or additional project was purchased. A protected frontend preview still points at the current configured backend; it must not be treated as an isolated database.
 

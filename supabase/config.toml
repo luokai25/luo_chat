@@ -6,3 +6,7 @@ verify_jwt = true
 [functions.cleanup-chat-media]
 # Authenticated by a scoped server-generated token (or service-role token) inside the handler.
 verify_jwt = false
+
+[functions.luo-web-push]
+# Authenticated by the private worker bearer inside the handler; it is not a JWT.
+verify_jwt = false
