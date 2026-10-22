@@ -1,0 +1,26 @@
+{
+  "confirmation": {
+    "subject": "Confirm your Luo Chat email",
+    "file": "templates/confirmation.html"
+  },
+  "recovery": {
+    "subject": "Reset your Luo Chat password",
+    "file": "templates/recovery.html"
+  },
+  "email_change": {
+    "subject": "Confirm your Luo Chat email change",
+    "file": "templates/email_change.html"
+  },
+  "magic_link": {
+    "subject": "Your Luo Chat sign-in link",
+    "file": "templates/magic_link.html"
+  },
+  "invite": {
+    "subject": "Your Luo Chat invitation",
+    "file": "templates/invite.html"
+  },
+  "reauthentication": {
+    "subject": "Your Luo Chat verification code",
+    "file": "templates/reauthentication.html"
+  }
+}

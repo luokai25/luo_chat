@@ -1,0 +1,35 @@
+{
+  "provider": "Resend",
+  "status": "blocked_missing_verified_domain",
+  "supabase_project": "byjixqwpjvsgmqilmzbm",
+  "transport": "Supabase Auth custom SMTP",
+  "smtp": {
+    "host": "smtp.resend.com",
+    "port": 465,
+    "username": "resend",
+    "sender_name": "Luo Chat",
+    "sender_email": null,
+    "password_source": "Domain-restricted Resend sending API key stored in hosted Supabase SMTP settings"
+  },
+  "covered_flows": [
+    "signup confirmation",
+    "confirmation resend",
+    "password recovery",
+    "email change",
+    "magic link",
+    "invitation",
+    "reauthentication"
+  ],
+  "preserve": [
+    "email confirmations",
+    "secure email change",
+    "redirect allowlist",
+    "existing sessions",
+    "existing signup/reset/resend quotas"
+  ],
+  "do_not_enable": [
+    "public arbitrary-recipient send endpoint",
+    "click tracking on authentication links",
+    "real-user bulk tests"
+  ]
+}

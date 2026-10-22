@@ -22,18 +22,28 @@ Deno.serve(async req=>{
  if(limit.error)return reply(503,{error:'Rate limiting unavailable. Try again later.'});if(limit.data!==true)return new Response(JSON.stringify({error:'Too many requests. Try again later.'}),{status:429,headers:{...headers,'Retry-After':'3600'}});
  const requested=typeof body.redirect_to==='string'?body.redirect_to:'';let redirect='https://luo-chat-luokai25.vercel.app/';
  try{const parsed=new URL(requested);if(allowed(parsed.origin))redirect=parsed.origin+'/?auth='+(action==='reset'?'recovery':'confirmed')}catch{}
+ // Keep transport/SMTP failures distinct from account-specific validation.
+ // Recovery/resend responses for unknown accounts remain deliberately generic.
+ const sendEmail=async(operation:()=>Promise<any>)=>{try{return await operation()}catch{return {error:{status:503}}}};
+ const emailFailure=(error:any)=>{
+  if(!error)return null;
+  if(error.status===429||['over_email_send_rate_limit','over_request_rate_limit'].includes(error.code))return new Response(JSON.stringify({error:'Too many email requests. Try again shortly.'}),{status:429,headers:{...headers,'Retry-After':'60'}});
+  if(!Number.isFinite(error.status)||error.status===0||error.status>=500||error.code==='email_address_not_authorized')return reply(503,{error:'Email service unavailable. Try again later.'});
+  return null;
+ };
  if(action==='signup'){
   const username=String(body.username||'').trim().toLowerCase(),password=String(body.password||'');
   if(!/^[a-z0-9_]{3,24}$/.test(username)||password.length<8||password.length>128)return reply(400,{error:'Use a valid username and a password of 8–128 characters.'});
   const existing=await admin.from('profiles').select('id').eq('username',username).maybeSingle();if(existing.error)return reply(503,{error:'Profile lookup failed.'});if(existing.data)return reply(409,{error:'That username is already taken.'});
-  const {error}=await client.auth.signUp({email,password,options:{emailRedirectTo:redirect,data:{username,display_name:username}}});
+  const {error}=await sendEmail(()=>client.auth.signUp({email,password,options:{emailRedirectTo:redirect,data:{username,display_name:username}}}));
+  const failure=emailFailure(error);if(failure)return failure;
   if(error)return reply(400,{error:'Account creation could not finish. Check your details or try again later.'});
  }else if(action==='reset'){
-  const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:redirect});
-  if(error&&error.status&&error.status>=500)return reply(503,{error:'Email service unavailable. Try again later.'});
+  const {error}=await sendEmail(()=>client.auth.resetPasswordForEmail(email,{redirectTo:redirect}));
+  const failure=emailFailure(error);if(failure)return failure;
  }else{
-  const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:redirect}});
-  if(error&&error.status&&error.status>=500)return reply(503,{error:'Email service unavailable. Try again later.'});
+  const {error}=await sendEmail(()=>client.auth.resend({type:'signup',email,options:{emailRedirectTo:redirect}}));
+  const failure=emailFailure(error);if(failure)return failure;
  }
  return reply(200,{ok:true,message:'If eligible, check your email.'});
  }catch{return reply(400,{error:'Request could not be processed.'})}
