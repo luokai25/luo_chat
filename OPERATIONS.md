@@ -36,6 +36,10 @@ Use the relevant provider's supported containment tools. Key rotation, session r
 
 For Google's reported phishing warning, use owner Security Issues findings and the existing submitted review. Do not bypass browser warnings, submit duplicate reviews, or switch domains to present the incident as cleared. Only supported official host-specific clearance evidence can establish that status, and it still does not certify application security.
 
+## Connected monitoring
+
+See `INTEGRATIONS.md` for the Cloudflare five-minute availability monitor, bounded first-party PostHog diagnostic reports, Upstash ingestion quotas, Linear follow-up project and pending integrations. The public endpoint is `https://luo-chat-uptime.luo-chat-ops.workers.dev/status.json`. A stale monitor reports unknown; a clean public status does not prove that messages, media, email or background jobs are functioning. No paging recipient is configured.
+
 ## Monitoring limits
 
 A short recent Vercel runtime query returned no error/fatal entries; this static frontend's browser failures and Supabase behavior are not covered by that query. Browser rejection logging is deliberately generic in 14.1.4. A comprehensive remote error/alert system, retention policy, incident owner and cost thresholds still need configuration. Do not collect message bodies or credentials to make monitoring convenient.

@@ -1,0 +1,9 @@
+{
+  "name": "luo-chat-uptime",
+  "main": "uptime.js",
+  "compatibility_date": "2026-10-22",
+  "workers_dev": true,
+  "kv_namespaces": [{"binding": "STATUS", "id": "3351a6109eb24c95ac78a051f3c940f4"}],
+  "triggers": {"crons": ["*/5 * * * *"]},
+  "observability": {"enabled": true, "logs": {"enabled": true, "invocation_logs": false}}
+}

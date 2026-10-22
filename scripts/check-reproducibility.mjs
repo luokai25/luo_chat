@@ -9,7 +9,7 @@ async function hashes(folder){const result={};async function visit(path){for(con
 const run=(args,cwd)=>{const result=spawnSync(npm,args,{cwd,stdio:'inherit'});if(result.error)throw result.error;if(result.status!==0)throw Error('Clean build command failed: npm '+args.join(' '))};
 try{
  // Copy only reviewed build inputs. Never copy local credentials, modules or generated output.
- for(const path of ['package.json','package-lock.json','build.mjs','vercel.json','src','public','scripts','tests','api','supabase/functions'])await cp(join(root,path),join(fresh,path),{recursive:true});
+ for(const path of ['package.json','package-lock.json','build.mjs','vercel.json','src','public','scripts','tests','api','integrations','supabase/functions'])await cp(join(root,path),join(fresh,path),{recursive:true});
  run(['run','release:check'],root);
  const expected=await hashes(join(root,'dist'));
  run(['ci','--ignore-scripts','--no-audit','--no-fund'],fresh);
