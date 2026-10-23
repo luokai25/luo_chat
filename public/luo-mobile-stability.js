@@ -7,12 +7,50 @@ function startup(){
  // App boot starts with data-screen="auth" even while an existing Supabase token is restored.
  // Only a previously signed-in browser gets the neutral restoration surface.
  let awaiting=document.documentElement.classList.contains('luo-restoring-session');
- const showApp=()=>{if(awaiting){awaiting=false;document.documentElement.classList.remove('luo-restoring-session');}};
- function checkSession(){const screen=app.dataset.screen;if(screen==='home'||screen==='room'||screen==='recovery'){showApp()}}
- checkSession();const observer=new MutationObserver(checkSession);observer.observe(app,{attributes:true,attributeFilter:['data-screen']});
+ let slowRecovery=null;
+ const showApp=()=>{
+  if(!awaiting)return;
+  awaiting=false;
+  document.documentElement.classList.remove('luo-restoring-session');
+  slowRecovery?.remove();slowRecovery=null;
+ };
+ function checkSession(){
+  if(!awaiting)return;
+  const screen=app.dataset.screen;
+  // Auth startup owns this class. When it resolves an invalid or unavailable
+  // session, reveal the real sign-in UI immediately, not a stale splash.
+  if(screen==='home'||screen==='room'||screen==='recovery'||
+     !document.documentElement.classList.contains('luo-restoring-session'))showApp();
+ }
+ checkSession();
+ const observer=new MutationObserver(checkSession);
+ observer.observe(app,{attributes:true,attributeFilter:['data-screen']});
+ observer.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
  window.addEventListener('pageshow',checkSession);
- // Never strand an expired/offline browser behind a splash forever.
- if(awaiting)setTimeout(()=>{if(app.dataset.screen==='auth')showApp()},3500);
+ // A slow valid session must never flash the signed-out screen at 3.5 seconds.
+ // Provide an explicit escape hatch while auth is pending; never change
+ // credentials, log out, or silently display sign-in for a returning user.
+ if(awaiting)setTimeout(()=>{
+  if(!awaiting||app.dataset.screen!=='auth'||
+     !document.documentElement.classList.contains('luo-restoring-session'))return;
+  const panel=document.createElement('div');
+  panel.id='luoSessionSlowRecovery';
+  panel.setAttribute('role','status');
+  panel.setAttribute('aria-live','polite');
+  panel.style.cssText='position:fixed;z-index:9998;left:50%;bottom:max(30px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(88vw,350px);box-sizing:border-box;text-align:center;background:#18130f;color:#f4dfba;border:1px solid #8b6539;border-radius:18px;padding:16px;box-shadow:0 15px 40px #0009;font:14px system-ui,sans-serif';
+  const explanation=document.createElement('p');
+  explanation.textContent='Still restoring your Luo Chat session…';
+  explanation.style.cssText='margin:0 0 12px';
+  const button=document.createElement('button');
+  button.type='button';
+  button.textContent='Sign in instead';
+  button.setAttribute('aria-label','Stop waiting and open the Luo Chat sign-in screen');
+  button.style.cssText='background:#d6aa61;color:#17100a;padding:10px 20px;min-height:44px;border:0;border-radius:12px;font-weight:700;cursor:pointer';
+  button.addEventListener('click',showApp);
+  panel.append(explanation,button);
+  document.body.append(panel);
+  slowRecovery=panel;
+ },3500);
  // The native navigation, private group manager and all message actions remain authoritative.
  // Clear visual layers only when a native target page actually replaces the chat list.
  const home=$('home');if(home){const panes=['chats','new','group','saved','scheduled','profile'];function reconcile(){
