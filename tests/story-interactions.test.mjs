@@ -81,7 +81,7 @@ test('private quiz renders accessible golden choices and reveals answer only aft
   assert.equal(h.calls.filter(x=>x.name==='vote_chat_story_prompt').length,1);
   assert.equal(root.querySelectorAll('button.story-option:disabled').length,3);
   assert.equal(root.querySelector('[data-correct="true"]').textContent,'No');
-  assert.match(root.textContent,/1 total votes/);
+  assert.match(root.textContent,/1 vote · 100%/);assert.match(root.textContent,/Correct! Your answer was saved/);
  }finally{h.dom.window.close()}
 });
 test('stale responses cannot display private content after signout or account switch',async()=>{
