@@ -4,6 +4,10 @@ on:
     branches: [feature/social-android-test-20261023]
     paths:
       - 'android/app/**'
+      - 'src/luo-core-brain.js'
+      - 'src/luo-core-renderer.js'
+      - 'src/luo-core-overlay.js'
+      - 'tests/luo-core.test.mjs'
       - 'public/luo-session-boot.js'
       - 'public/luo-mobile-stability.js'
       - 'tests/android-session-restoration.test.mjs'
@@ -33,7 +37,7 @@ jobs:
         timeout-minutes: 7
         run: |
           npm run build
-          node --test tests/android-host.test.mjs tests/auth-fast-login.test.mjs tests/auth-capabilities.test.mjs tests/google-sign-in-disabled.test.mjs
+          node --test tests/android-host.test.mjs tests/luo-core.test.mjs tests/auth-fast-login.test.mjs tests/auth-capabilities.test.mjs tests/google-sign-in-disabled.test.mjs
       - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
         with:
           distribution: temurin
