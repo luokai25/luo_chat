@@ -125,3 +125,22 @@ test('Unlocked Time Capsule visibly unfolds its envelope before revealing letter
  assert.equal(modal.querySelectorAll('.luo-capsule-release-particle').length,0);
  h.window.close();
 });
+
+
+test('Rejected capsule attachments never create an orphan server-side draft',async()=>{
+ const friend='30000000-0000-4000-8000-000000000003';
+ const h=harness({'get_chat_connections':[{id:friend,username:'friend',display_name:'Friend'}],'feed':[]});
+ h.doc.querySelector('[data-tab="social"]').click();await h.flush();
+ [...h.doc.querySelectorAll('.luo-social-chip')].find(b=>b.textContent==='Time Capsules').click();await h.flush();
+ const form=h.doc.querySelector('#social form');assert.ok(form);
+ form.querySelector('select').value=friend;
+ form.querySelector('textarea').value='For your birthday';
+ const future=new Date(Date.now()+86400000),local=new Date(future.getTime()-future.getTimezoneOffset()*60000);
+ form.querySelector('input[type=datetime-local]').value=local.toISOString().slice(0,16);
+ Object.defineProperty(form.querySelector('input[type=file]'),'files',{value:[new h.window.File(['bad payload'],'danger.exe',{type:'application/octet-stream'})]});
+ form.dispatchEvent(new h.window.Event('submit',{bubbles:true,cancelable:true}));
+ await h.flush();
+ assert.equal(h.requests.filter(r=>r.action==='entry.create').length,0);
+ assert.match(h.doc.querySelector('.luo-social-status').textContent,/supported photos or audio/);
+ h.window.close();
+});
