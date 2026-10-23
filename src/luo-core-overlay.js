@@ -1,5 +1,6 @@
 import {createLuoCoreBrain,LUO_CORE_MOTIONS} from './luo-core-brain.js';
 import {createLuoCoreRenderer} from './luo-core-renderer.js';
+import {startInstalledLuoCoreOffline,saveLuoCoreOffline} from './luo-core-offline.js';
 
 // This resident cat observes layout coordinates and message additions ONLY.
 // It never examines message text, images, usernames or network traffic.
@@ -57,7 +58,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
   owner=id;brain=createLuoCoreBrain({random});menu.hidden=true;menuOpen=false;target=null;perchNode=null;hopTo=null;nextJump=0;
   enabled=id?pref(id):false;
   root.hidden=!id||!enabled;restore.hidden=!id||enabled;
-  if(id&&enabled){x=width()-170;y=height()-260;setStatus('');renderer.render(brain.snapshot(),0,reduced)}
+  if(id&&enabled){x=width()-170;y=height()-260;setStatus('');renderer.render(brain.snapshot(),0,reduced);startInstalledLuoCoreOffline(win)}
  }
  function showMenu(){
   if(!owner||!enabled)return;
@@ -75,6 +76,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
   ['Take a nap','nap','Sweet dreams...'],
   ['Jump to a message','jump','Coming over!'],
   ['Follow messages','follow','I will explore.'],
+  ['Save HD model offline','offline',''],
   ['Hide companion','hide','']
  ];
  for(const [label,command,response] of buttons){
@@ -84,6 +86,11 @@ export function installLuoCore({win,getUser,random=Math.random}){
    if(!owner)return;
    if(command==='hide'){
     enabled=false;store();root.hidden=true;restore.hidden=false;dismissMenu();return;
+   }
+   if(command==='offline'){
+    setStatus('Saving full 3D cat offline…');dismissMenu();
+    saveLuoCoreOffline(win,{force:true}).then(result=>setStatus(result.ready?'Full Luo Core model saved offline.':'Model not yet available. Check connection or storage.'));
+    return;
    }
    brain.command(command);setStatus(response);dismissMenu();
    if(command==='jump'||command==='follow')chooseAnchor(true);
