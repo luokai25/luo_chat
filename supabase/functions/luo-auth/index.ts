@@ -72,6 +72,25 @@ Deno.serve(async req=>{
   }
   const isUsername=/^[a-z0-9_]{3,24}$/.test(username);
   if(action==='signup_username'){
+   // Every new account requires a fresh, single-use Cloudflare challenge.
+   // Rate limits alone can be bypassed by forged IP headers or rotating networks.
+   // Never fall back to accepting signups if the siteverify secret is missing.
+   const challengeSecret=Deno.env.get('TURNSTILE_SECRET');
+   const challengeToken=typeof body.turnstile_token==='string'?body.turnstile_token:'';
+   if(!challengeSecret)return reply(503,{error:'Registration verification is not configured.'});
+   if(!origin||!allowed(origin)||!challengeToken||challengeToken.length>2048)
+     return reply(403,{error:'Complete the registration security check.'});
+   let verifiedChallenge:any;
+   try{
+    const verification=await timedFetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{
+     method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({secret:challengeSecret,response:challengeToken})
+    });
+    if(!verification.ok)return reply(503,{error:'Registration verification temporarily unavailable.'});
+    verifiedChallenge=await verification.json();
+   }catch{return reply(503,{error:'Registration verification temporarily unavailable.'})}
+   if(verifiedChallenge?.success!==true||verifiedChallenge?.action!=='luo_signup'||verifiedChallenge?.hostname!==new URL(origin).hostname)
+     return reply(403,{error:'Security check expired or failed. Please retry.'});
    if(!isUsername||username.startsWith('luo_')||['admin','administrator','moderator','support','security','root','system','official','staff','help','luochat','luo_chat'].includes(username))
      return reply(400,{error:'Choose another username (3–24 letters, numbers or underscores).'});
    if(password.length<12||password.length>128||password.toLowerCase().includes(username))
