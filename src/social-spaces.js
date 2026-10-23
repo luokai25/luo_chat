@@ -88,7 +88,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
    if(!data.content?.length)items.append(mk('p','muted','No visible social content matched.'));
    results.append(items)
   };
-  buttons.append(btn('Search social',search,'primary'),btn('Search my messages',async()=>{const q=term.value.trim();tab('chats');const toggle=$('globalSearchToggle');if(toggle)toggle.click();const field=$('globalSearchInput');if(field&&q){field.value=q;field.dispatchEvent(new win.Event('input',{bubbles:true}))}}));return
+  buttons.append(btn('Search social',search,'primary'),btn('Search my messages',async()=>{const q=term.value.trim();tab('chats');const toggle=$('globalSearchToggle');if(toggle)toggle.click();const field=$('globalSearchInput');if(field&&q){field.value=q;field.dispatchEvent(new win.Event('input',{bubbles:true}));$('globalSearchSubmit')?.click()}}));return
  }
  if(key==='memories'){releaseMemory=renderMemoryConstellations({win,db,note,getUser,getChats,output});return}
  if(key==='sessions'){await sessions.render(output);return}
