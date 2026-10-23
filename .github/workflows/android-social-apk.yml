@@ -9,6 +9,8 @@ on:
       - 'src/app.js'
       - 'src/experience.js'
       - 'src/auth-recovery.js'
+      - 'src/google-sign-in.js'
+      - 'tests/google-sign-in-disabled.test.mjs'
       - 'public/index.html'
       - 'public/luo-auth-premium.css'
       - 'tests/username-login-compat.test.mjs'
