@@ -134,9 +134,6 @@ begin
     or b.bot_user_id is null or b.paid_until is null or b.paid_until<=now()
     or not (p_action=any(b.scopes))
  then return false;end if;
- -- A bot identity may never be an ordinary human Auth account.
- if not exists(select 1 from auth.users u where u.id=b.bot_user_id
-   and u.raw_app_meta_data->>'luo_account_type'='bot') then return false;end if;
  if exists(select 1 from luo_bots.action_receipts
            where bot_id=p_bot_id and request_id=p_request_id)
  then return false;end if;
@@ -216,20 +213,18 @@ end;$$;
 revoke all on function public.pause_own_luo_bot(uuid) from public,anon;
 grant execute on function public.pause_own_luo_bot(uuid) to authenticated;
 
--- Plan duration is created and priced on the merchant backend, not by a bot
--- or checkout return URL. Only paid orders extend the subscription.
+-- Extra merchant order information is server-selected, never from a checkout
+-- redirect or a bot. Settlement requires signed provider callbacks.
 alter table luo_bots.orders
  add column if not exists period_days integer not null default 30
  check(period_days between 1 and 365);
 
--- Called ONLY by a trusted server after Paymob/Paddle signature verification.
--- The caller must pass the signed data fields, NOT browser-provided payment
--- status. Duplicate callbacks are ignored; wrong amount/order is rejected.
+-- Webhook adapter validates signature *before* calling this. This RPC checks
+-- a matching pending order and deduplicates signed transaction IDs.
 create or replace function public.settle_luo_bot_payment(
  p_provider text,p_event_id text,p_provider_order_id text,
  p_amount_minor bigint,p_currency text,p_outcome text
-) returns boolean
-language plpgsql security definer set search_path='' as $
+) returns boolean language plpgsql security definer set search_path='' as $$
 declare o luo_bots.orders%rowtype;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role'
@@ -238,11 +233,9 @@ begin
   or p_event_id is null or length(p_event_id) not between 8 and 128
   or p_provider_order_id is null or length(p_provider_order_id) not between 1 and 128
   or p_amount_minor is null or p_amount_minor<=0
-  or p_currency not in ('EGP','USD','EUR')
- then return false;end if;
+  or p_currency not in ('EGP','USD','EUR') then return false;end if;
  select * into o from luo_bots.orders
- where provider=p_provider and provider_order_id=p_provider_order_id
- for update;
+ where provider=p_provider and provider_order_id=p_provider_order_id for update;
  if not found or o.amount_minor<>p_amount_minor or o.currency<>p_currency
  then return false;end if;
  if exists(select 1 from luo_bots.payment_events
@@ -255,10 +248,8 @@ begin
   update luo_bots.orders set state='paid',settled_at=now() where id=o.id;
   update luo_bots.accounts set payment_status='active',
    paid_until=greatest(now(),coalesce(paid_until,now()))+
-     make_interval(days=>o.period_days),updated_at=now()
+    make_interval(days=>o.period_days),updated_at=now()
   where id=o.bot_id and payment_status not in ('refunded','disputed');
-  -- NOTE: suspended remains true and moderation remains pending until a
-  -- human review explicitly approves and unsuspends the bot.
  else
   update luo_bots.orders set state=p_outcome where id=o.id;
   update luo_bots.accounts set payment_status=p_outcome,
@@ -268,87 +259,28 @@ begin
  insert into luo_bots.audit(bot_id,action,result)
  values(o.bot_id,'payment_'||p_outcome,'verified_webhook');
  return true;
-end;$;
+end;$$;
 revoke all on function public.settle_luo_bot_payment(text,text,text,bigint,text,text)
  from public,anon,authenticated;
 grant execute on function public.settle_luo_bot_payment(text,text,text,bigint,text,text)
  to service_role;
 
--- Anonymous bot auth attempts are throttled independently of human accounts.
--- Hash username and IP server-side; do not store plaintext IPs or passwords.
+-- Rate limiting for failed bot authentication. Do not store raw IP/usernames.
 create table if not exists luo_bots.login_attempts(
- username_digest text not null check(username_digest ~ '^[a-f0-9]{64}
-do $$declare t regclass;begin
- for t in select c.oid::regclass
- from pg_class c join pg_namespace n on n.oid=c.relnamespace
- where n.nspname='luo_bots' and c.relkind in ('r','p')
- loop
-  execute format('alter table %s enable row level security',t);
-  execute format('revoke all on table %s from public,anon,authenticated',t);
-  execute format('grant all on table %s to service_role',t);
- end loop;
-end$$;
-grant usage,select on all sequences in schema luo_bots to service_role;
-revoke all on all sequences in schema luo_bots from public,anon,authenticated;
-commit;
-),
- ip_digest text not null check(ip_digest ~ '^[a-f0-9]{64}
-do $$declare t regclass;begin
- for t in select c.oid::regclass
- from pg_class c join pg_namespace n on n.oid=c.relnamespace
- where n.nspname='luo_bots' and c.relkind in ('r','p')
- loop
-  execute format('alter table %s enable row level security',t);
-  execute format('revoke all on table %s from public,anon,authenticated',t);
-  execute format('grant all on table %s to service_role',t);
- end loop;
-end$$;
-grant usage,select on all sequences in schema luo_bots to service_role;
-revoke all on all sequences in schema luo_bots from public,anon,authenticated;
-commit;
-),
+ username_digest text not null check(username_digest ~ '^[a-f0-9]{64}$'),
+ ip_digest text not null check(ip_digest ~ '^[a-f0-9]{64}$'),
  attempted_at timestamptz not null default now()
 );
 create index if not exists bot_login_by_name_idx on luo_bots.login_attempts(username_digest,attempted_at);
 create index if not exists bot_login_by_ip_idx on luo_bots.login_attempts(ip_digest,attempted_at);
-
 create or replace function public.consume_luo_bot_login_limit(
  p_username_digest text,p_ip_digest text
-) returns boolean language plpgsql security definer set search_path='' as $
+) returns boolean language plpgsql security definer set search_path='' as $$
 declare name_attempts integer;ip_attempts integer;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role'
-   or p_username_digest !~ '^[a-f0-9]{64}
-do $$declare t regclass;begin
- for t in select c.oid::regclass
- from pg_class c join pg_namespace n on n.oid=c.relnamespace
- where n.nspname='luo_bots' and c.relkind in ('r','p')
- loop
-  execute format('alter table %s enable row level security',t);
-  execute format('revoke all on table %s from public,anon,authenticated',t);
-  execute format('grant all on table %s to service_role',t);
- end loop;
-end$$;
-grant usage,select on all sequences in schema luo_bots to service_role;
-revoke all on all sequences in schema luo_bots from public,anon,authenticated;
-commit;
-
-   or p_ip_digest !~ '^[a-f0-9]{64}
-do $$declare t regclass;begin
- for t in select c.oid::regclass
- from pg_class c join pg_namespace n on n.oid=c.relnamespace
- where n.nspname='luo_bots' and c.relkind in ('r','p')
- loop
-  execute format('alter table %s enable row level security',t);
-  execute format('revoke all on table %s from public,anon,authenticated',t);
-  execute format('grant all on table %s to service_role',t);
- end loop;
-end$$;
-grant usage,select on all sequences in schema luo_bots to service_role;
-revoke all on all sequences in schema luo_bots from public,anon,authenticated;
-commit;
-
- then return false;end if;
+  or p_username_digest !~ '^[a-f0-9]{64}$'
+  or p_ip_digest !~ '^[a-f0-9]{64}$' then return false;end if;
  perform pg_advisory_xact_lock(hashtextextended('bot-login:'||p_username_digest,0));
  perform pg_advisory_xact_lock(hashtextextended('bot-ip:'||p_ip_digest,0));
  select count(*) into name_attempts from luo_bots.login_attempts
@@ -359,36 +291,21 @@ commit;
  insert into luo_bots.login_attempts(username_digest,ip_digest)
  values(p_username_digest,p_ip_digest);
  return true;
-end;$;
+end;$$;
 revoke all on function public.consume_luo_bot_login_limit(text,text) from public,anon,authenticated;
 grant execute on function public.consume_luo_bot_login_limit(text,text) to service_role;
 
--- Creates a disabled username reservation. No password is issued, and paying
--- later is NOT sufficient for activation without moderator approval.
+-- Owner-submitted applications are disabled until verified payment and review.
 create or replace function public.request_luo_bot_account(
  p_owner_id uuid,p_username text
-) returns uuid language plpgsql security definer set search_path='' as $
+) returns uuid language plpgsql security definer set search_path='' as $$
 declare count_all integer;count_pending integer;new_id uuid;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role'
-   or p_owner_id is null or p_username !~ '^bot_[a-z][a-z0-9_]{2,19}
-do $$declare t regclass;begin
- for t in select c.oid::regclass
- from pg_class c join pg_namespace n on n.oid=c.relnamespace
- where n.nspname='luo_bots' and c.relkind in ('r','p')
- loop
-  execute format('alter table %s enable row level security',t);
-  execute format('revoke all on table %s from public,anon,authenticated',t);
-  execute format('grant all on table %s to service_role',t);
- end loop;
-end$$;
-grant usage,select on all sequences in schema luo_bots to service_role;
-revoke all on all sequences in schema luo_bots from public,anon,authenticated;
-commit;
-
+  or p_owner_id is null or p_username !~ '^bot_[a-z][a-z0-9_]{2,19}$'
  then return null;end if;
- if not exists(select 1 from auth.users u
-  where u.id=p_owner_id and coalesce(u.raw_app_meta_data->>'luo_account_type','human')<>'bot')
+ if not exists(select 1 from auth.users u where u.id=p_owner_id
+  and coalesce(u.raw_app_meta_data->>'luo_account_type','human')<>'bot')
  then return null;end if;
  perform pg_advisory_xact_lock(hashtextextended('bot-owner:'||p_owner_id::text,0));
  select count(*) into count_all from luo_bots.accounts where owner_id=p_owner_id;
@@ -403,51 +320,40 @@ commit;
  insert into luo_bots.audit(bot_id,actor_id,action,result)
  values(new_id,p_owner_id,'application','pending_payment');
  return new_id;
-end;$;
+end;$$;
 revoke all on function public.request_luo_bot_account(uuid,text) from public,anon,authenticated;
 grant execute on function public.request_luo_bot_account(uuid,text) to service_role;
 
 create or replace function public.get_luo_bot_gateway_credential(p_username text)
 returns table(bot_id uuid,secret_digest text)
-language sql stable security definer set search_path='' as $
- select a.id,c.secret_digest
- from luo_bots.accounts a join luo_bots.credentials c on c.bot_id=a.id
- where a.username=p_username and c.revoked_at is null and a.payment_status='active'
-   and a.moderation_status='approved' and a.suspended=false
-   and a.bot_user_id is not null and a.paid_until>now()
-$;
+language sql stable security definer set search_path='' as $$
+ select a.id,c.secret_digest from luo_bots.accounts a
+ join luo_bots.credentials c on c.bot_id=a.id
+ where a.username=p_username and c.revoked_at is null
+  and a.payment_status='active' and a.moderation_status='approved'
+  and a.suspended=false and a.bot_user_id is not null and a.paid_until>now()
+  and exists(select 1 from auth.users u where u.id=a.bot_user_id
+   and u.raw_app_meta_data->>'luo_account_type'='bot')
+$$;
 revoke all on function public.get_luo_bot_gateway_credential(text) from public,anon,authenticated;
 grant execute on function public.get_luo_bot_gateway_credential(text) to service_role;
 
--- Owner credential activation requires BOTH verified payment and manual
--- moderator approval; defaults must not be bypassed by creating a new key.
+-- Owner key rotation requires server-enforced paid approval.
 create or replace function public.activate_luo_bot_credential(
  p_owner_id uuid,p_bot_id uuid,p_secret_digest text
-) returns boolean language plpgsql security definer set search_path='' as $
+) returns boolean language plpgsql security definer set search_path='' as $$
 declare n integer;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role'
   or p_owner_id is null or p_bot_id is null
-  or p_secret_digest !~ '^[a-f0-9]{64}
-do $$declare t regclass;begin
- for t in select c.oid::regclass
- from pg_class c join pg_namespace n on n.oid=c.relnamespace
- where n.nspname='luo_bots' and c.relkind in ('r','p')
- loop
-  execute format('alter table %s enable row level security',t);
-  execute format('revoke all on table %s from public,anon,authenticated',t);
-  execute format('grant all on table %s to service_role',t);
- end loop;
-end$$;
-grant usage,select on all sequences in schema luo_bots to service_role;
-revoke all on all sequences in schema luo_bots from public,anon,authenticated;
-commit;
- then return false;end if;
+  or p_secret_digest !~ '^[a-f0-9]{64}$' then return false;end if;
  update luo_bots.accounts a set suspended=false,updated_at=now()
  where a.id=p_bot_id and a.owner_id=p_owner_id
   and a.payment_status='active' and a.moderation_status='approved'
   and a.paid_until>now() and a.bot_user_id is not null
-  and cardinality(a.scopes)>0;
+  and cardinality(a.scopes)>0
+  and exists(select 1 from auth.users u where u.id=a.bot_user_id
+   and u.raw_app_meta_data->>'luo_account_type'='bot');
  get diagnostics n=row_count;
  if n<>1 then return false;end if;
  insert into luo_bots.credentials(bot_id,secret_digest,issued_at,revoked_at,rotated_at)
@@ -457,7 +363,7 @@ commit;
  insert into luo_bots.audit(bot_id,actor_id,action,result)
  values(p_bot_id,p_owner_id,'credentials_rotated','active');
  return true;
-end;$;
+end;$$;
 revoke all on function public.activate_luo_bot_credential(uuid,uuid,text) from public,anon,authenticated;
 grant execute on function public.activate_luo_bot_credential(uuid,uuid,text) to service_role;
 
