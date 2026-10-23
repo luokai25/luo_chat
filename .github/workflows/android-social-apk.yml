@@ -12,6 +12,9 @@ on:
       - 'tests/android-host.test.mjs'
       - 'src/experience.js'
       - 'src/auth-recovery.js'
+      - 'src/auth-capabilities.js'
+      - 'tests/auth-capabilities.test.mjs'
+      - 'supabase/functions/luo-auth-compat/index.ts'
       - 'src/google-sign-in.js'
       - 'tests/google-sign-in-disabled.test.mjs'
       - 'public/index.html'
@@ -51,7 +54,7 @@ jobs:
       - name: Verify web release and security
         run: |
           node scripts/check-secrets.mjs
-          node --test tests/android-host.test.mjs
+          node --test tests/android-host.test.mjs tests/auth-capabilities.test.mjs
           npm run release:check
           npm run audit:production
       - name: Verify Story RPC schema is part of release sources
