@@ -53,3 +53,18 @@ jobs:
               ;;
           esac
           rm -f /tmp/luo-auth-probe.json
+          STATUS=$(curl -sS --max-time 18 -o /tmp/luo-capabilities.json -w '%{http_code}' \
+            -X POST "$ENDPOINT" \
+            -H 'Origin: https://luo-chat-luokai25.vercel.app' \
+            -H 'Content-Type: application/json' \
+            --data '{"action":"capabilities"}') || { echo "Capability endpoint network failure"; exit 1; }
+          test "$STATUS" = "200" || { echo "Capability endpoint returned $STATUS"; exit 1; }
+          node -e '
+            const fs=require("fs");
+            const d=JSON.parse(fs.readFileSync("/tmp/luo-capabilities.json","utf8"));
+            if(d.ok!==true||d.username_signin!==true)throw Error("Existing account login wrongly disabled");
+            if(d.username_signup!==false||d.username_recovery!==false)
+              throw Error("Server advertised undeployed registration/recovery");
+            console.log("PASS: deployed auth v5 honestly reports signup and recovery unavailable.");
+          '
+          rm -f /tmp/luo-capabilities.json
