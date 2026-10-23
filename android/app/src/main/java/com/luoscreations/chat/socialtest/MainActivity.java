@@ -11,6 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Button;
+import android.view.Gravity;
 import android.webkit.WebView;
 import android.net.Uri;
 import android.os.Build;
@@ -24,6 +28,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
+import android.webkit.RenderProcessGoneDetail;
 import android.widget.Toast;
 
 import androidx.webkit.ServiceWorkerClientCompat;
@@ -133,6 +138,14 @@ public final class MainActivity extends Activity {
                         Toast.makeText(MainActivity.this, "No application can open this link.", Toast.LENGTH_SHORT).show();
                     }
                 }
+                return true;
+            }
+            @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                // A crashed Android System WebView must not terminate Luo Chat's
+                // entire Activity. No passwords, tokens or page contents are logged.
+                if (web == view) web = null;
+                view.destroy();
+                renderSafeRecoveryScreen();
                 return true;
             }
             @Override public void onPageFinished(WebView view, String url) {
@@ -305,6 +318,38 @@ public final class MainActivity extends Activity {
             pendingFiles = null;
             callback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
         }
+    }
+
+    private void renderSafeRecoveryScreen() {
+        if (root == null) {
+            root = new FrameLayout(this);
+            setContentView(root);
+        }
+        root.removeAllViews();
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setGravity(Gravity.CENTER);
+        layout.setPadding(28, 28, 28, 28);
+        layout.setBackgroundColor(Color.rgb(10, 9, 12));
+        TextView title = new TextView(this);
+        title.setText("Luo Chat needs to reopen");
+        title.setTextColor(Color.rgb(244, 211, 155));
+        title.setTextSize(22);
+        title.setGravity(Gravity.CENTER);
+        TextView explanation = new TextView(this);
+        explanation.setText("Android stopped the chat display. Your messages are stored on the server. Reopen Luo Chat to restore the app.");
+        explanation.setTextColor(Color.rgb(213, 202, 184));
+        explanation.setTextSize(15);
+        explanation.setGravity(Gravity.CENTER);
+        explanation.setPadding(0, 20, 0, 26);
+        Button retry = new Button(this);
+        retry.setAllCaps(false);
+        retry.setText("Reopen Luo Chat");
+        retry.setOnClickListener(v -> recreate());
+        layout.addView(title);
+        layout.addView(explanation);
+        layout.addView(retry);
+        root.addView(layout, new FrameLayout.LayoutParams(-1, -1));
     }
 
     private void showMessage(String text) {
