@@ -23,23 +23,72 @@ import {installMedia,mediaLinkLifetime} from './media.js';
 import {installSettings} from './settings.js';
 import {installExperience} from './experience.js';
 import {installEnhancements} from './enhancements.js';
+import {describeAuthError,isTransientAuthError,createAuthRestoreControl} from './auth-recovery.js';
 import {SUPABASE_URL,SUPABASE_KEY} from './config.js';
 
 import{createClient}from '@supabase/supabase-js';const db=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true},global:{fetch:createRequestFetch()}});const $=id=>document.getElementById(id);let user=null,profile=null,current=null,channel=null,inboxChannel=null,chats=[],unread={},busy=false,booting=false,historyOldest=null,historyHasMore=false,historyLoading=false;let suite=null;let social=null;let chatNotes=null;const chatAtmosphere=installChatAtmosphere({win:window,getUser:()=>user,getRoom:()=>current?.id});
 const voiceReplies=installQuickVoiceReplies({win:window,getUser:()=>user,getRoom:()=>current?.id,note,onSend:({file,messageId,messageBody,roomId,ownerId})=>{if(!user||user.id!==ownerId||current?.id!==roomId)throw Error('This conversation is no longer open.');if(busy||selectedFile||replyTarget||$('body').value.trim())throw Error('Finish your current draft or attachment before sending a voice reaction.');selectedFile=file;replyTarget={id:messageId,body:messageBody||'Message'};showFile();showReply();const form=$('sendform');if(form.requestSubmit)form.requestSubmit();else form.dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));note('Sending your private two-second voice reply…');return true}});let accountGeneration=0,bootRequest=0,inboxRequest=0,roomRequest=0,lookupRequest=0;const isAccount=(id,generation)=>!!id&&user?.id===id&&generation===accountGeneration;const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const initials=s=>(s||'L').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'L';const time=s=>{const d=new Date(s),now=new Date();if(Number.isNaN(d.valueOf()))return '';return d.toLocaleDateString()===now.toLocaleDateString()?d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString([],{month:'short',day:'numeric',...(d.getFullYear()!==now.getFullYear()?{year:'numeric'}:{})})};const opid=()=>crypto.randomUUID?.()||'op-'+Date.now()+'-'+Math.random().toString(36).slice(2);let noticeTimer;function note(s){clearTimeout(noticeTimer);$('notice').textContent=s;$('notice').setAttribute('role','status');$('notice').setAttribute('aria-live','polite');$('notice').classList.remove('hidden');const dialog=document.activeElement?.closest('dialog[open]')||[...document.querySelectorAll('dialog[open]')].at(-1);if(dialog){$('notice').classList.add('hidden');let feedback=dialog.querySelector('.dialog-feedback');if(!feedback){feedback=document.createElement('p');feedback.className='dialog-feedback';feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');feedback.setAttribute('aria-atomic','true');const heading=dialog.querySelector('.dialog-heading');if(heading)heading.after(feedback);else dialog.prepend(feedback);dialog.addEventListener('close',()=>feedback.remove(),{once:true})}feedback.textContent=s;feedback.scrollIntoView?.({block:'nearest',behavior:'instant'})}noticeTimer=setTimeout(()=>$('notice').classList.add('hidden'),4000)}function screen(id){if((id==='home'||id==='room')&&(!user?.id||profile?.id!==user.id))id='auth';document.documentElement.classList.remove('luo-restoring-session');document.querySelector('.app').dataset.screen=id;document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}function tab(id){if(!user?.id||profile?.id!==user.id){screen(recovering?'recovery':'auth');return}document.querySelector('.app').dataset.tab=id;screen(id==='chats'&&current?'room':'home');document.querySelectorAll('.workspace-nav .tab[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===id));document.querySelectorAll('.sub').forEach(x=>x.classList.add('hidden'));$(id).classList.remove('hidden');if(id!=='saved')enhancements.onTab(id);experience.onTab(id);settingsUi.onTab(id);workspace?.onTab(id);connections.onTab(id);social?.onTab(id);chatNotes?.onTab(id);if(id!=='chats')voiceReplies.onRoom()}
+const authRestore=createAuthRestoreControl({doc:document,onRetry:async()=>{try{const restored=await db.auth.getSession();if(restored.error)throw restored.error;const session=restored.data?.session;if(session?.user){await boot(session.user);return}screen('auth');$('authmsg').textContent='No active session found. Sign in with your Luo Chat username and password.';authRestore.hide()}catch(e){screen('auth');authRestore.show(describeAuthError(e,'restore'))}}});
 function clearAuthPasswords(){for(const id of ['password','signupConfirm','newPassword','confirmPassword'])$(id).value='';$('password').type='password';$('showPassword').textContent='Show';$('showPassword').setAttribute('aria-label','Show password');$('showPassword').setAttribute('aria-pressed','false')}
-async function auth(kind){const generation=accountGeneration;const email=$('email').value.trim(),password=$('password').value,username=$('username').value.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<8||password.length>128)return $('authmsg').textContent='Enter a valid email and a password of 8–128 characters.';if(kind==='signup'&&!/^[a-z0-9_]{3,24}$/.test(username))return $('authmsg').textContent='Username: 3–24 letters, numbers, or underscores.';if(kind==='signup'&&password!==$('signupConfirm').value)return $('authmsg').textContent='Passwords do not match.';busy=true;$('signin').disabled=$('signup').disabled=true;try{if(kind==='signup'){await authAction('signup',{email,password,username,display_name:username});if(generation!==accountGeneration)return;clearAuthPasswords();$('authmsg').textContent='If eligible, your account has been created. Check your email for confirmation, then sign in.';return}const r=await db.auth.signInWithPassword({email,password});if(generation!==accountGeneration)return;if(r.error)throw r.error;clearAuthPasswords();await boot(r.data.user)}catch(e){$('authmsg').textContent=e.message||'Authentication failed.'}finally{busy=false;$('signin').disabled=$('signup').disabled=false}}$('signin').onclick=()=>auth('signin');$('signup').onclick=()=>auth('signup');
+async function auth(kind){
+ if(busy)return;
+ authRestore.hide();$('authmsg').textContent='';
+ const generation=accountGeneration;
+ const username=$('email').value.trim().replace(/^@/,'').toLowerCase();
+ const password=$('password').value;
+ if(!/^[a-z0-9_]{3,24}$/.test(username))return $('authmsg').textContent='Enter your Luo Chat username (3–24 letters, numbers or underscores).';
+ if(password.length<(kind==='signup'?12:8)||password.length>128)return $('authmsg').textContent=kind==='signup'?'Choose a password of 12–128 characters.':'Enter your Luo Chat password.';
+ if(kind==='signup'&&password!==$('signupConfirm').value)return $('authmsg').textContent='Passwords do not match.';
+ busy=true;$('signin').disabled=$('signup').disabled=true;
+ try{
+  const result=await authAction(kind==='signup'?'signup_username':'signin_username',{username,password});
+  if(generation!==accountGeneration)return;
+  let sessionUser=null;
+  if(result.access_token&&result.refresh_token){
+   const established=await db.auth.setSession({access_token:result.access_token,refresh_token:result.refresh_token});
+   if(generation!==accountGeneration)return;
+   if(established.error)throw established.error;
+   sessionUser=established.data?.user||established.data?.session?.user;
+  }
+  clearAuthPasswords();
+  if(sessionUser)await boot(sessionUser);
+  else $('authmsg').textContent='Account created. Save the recovery codes, then sign in when the service becomes available.';
+  if(Array.isArray(result.recovery_codes)&&result.recovery_codes.length===10)showLuoRecoveryCodes(result.recovery_codes);
+  else if(kind==='signup')$('authmsg').textContent='Account created, but recovery codes were not received. Contact support before signing out.';
+ }catch(e){
+  if(generation===accountGeneration)$('authmsg').textContent=describeAuthError(e,'signin');
+ }finally{
+  if(generation===accountGeneration){busy=false;$('signin').disabled=$('signup').disabled=false}
+ }
+}
+$('signin').onclick=()=>auth('signin');$('signup').onclick=()=>auth('signup');
 async function boot(u){
- if(booting)return;const request=++bootRequest,generation=accountGeneration,active=()=>request===bootRequest&&generation===accountGeneration;booting=true;
+ // A newly confirmed SIGNED_IN or manual retry supersedes any hung session restore.
+ // Older async work checks bootRequest before it can change account state.
+ const request=++bootRequest,generation=accountGeneration,active=()=>request===bootRequest&&generation===accountGeneration;booting=true;
  try{
   const au=u||(await db.auth.getUser()).data.user;if(!active())return;if(!au){screen('auth');return}
-  if(navigator.onLine===false){let saved;try{saved=JSON.parse(readLocal('luo-chat-offline-index-'+au.id)||'null')}catch{}if(saved?.profile?.id===au.id&&Array.isArray(saved.chats)){user=au;profile=saved.profile;chats=saved.chats;unread={};fillProfile();screen('home');render();$('state').textContent='OFFLINE';$('subtitle').textContent='Offline · messages will queue';$('myemail').textContent=au.email||'';workspace.offlineReady();workspace.queueChanged();privacyLock.accountReady();interactions.accountReady();return}}
+  if(navigator.onLine===false){let saved;try{saved=JSON.parse(readLocal('luo-chat-offline-index-'+au.id)||'null')}catch{}if(saved?.profile?.id===au.id&&Array.isArray(saved.chats)){user=au;profile=saved.profile;chats=saved.chats;unread={};fillProfile();screen('home');render();$('state').textContent='OFFLINE';$('subtitle').textContent='Offline · messages will queue';$('myemail').textContent='@'+profile.username;workspace.offlineReady();workspace.queueChanged();privacyLock.accountReady();interactions.accountReady();return}}
+  // A Supabase-authenticated session must open the app immediately.
+  // Profile and chats may still be temporarily unavailable during an outage.
+  // All server mutations remain protected by the user's real Supabase JWT/RLS.
+  if(user?.id!==au.id||profile?.id!==au.id){
+   user=au;
+   const storedName=String(au.user_metadata?.username||'').toLowerCase();
+   const placeholder=/^[a-z0-9_]{3,24}$/.test(storedName)?storedName:'member';
+   profile={id:au.id,username:placeholder,display_name:placeholder,bio:'',avatar_url:null};
+   chats=[];unread={};current=null;
+   $('chatlist').replaceChildren();$('messages').replaceChildren();
+   fillProfile();$('myemail').textContent='@'+profile.username;
+  }
+  screen('home');$('state').textContent='SYNCING';
+  $('subtitle').textContent='Signed in · synchronizing your conversations';
   let r;for(let i=0;i<3;i++){r=await db.from('profiles').select('id,username,display_name,bio,avatar_url,profile_frame').eq('id',au.id).maybeSingle();if(!active())return;if(r.data||r.error)break;await new Promise(ok=>setTimeout(ok,250*(i+1)));if(!active())return}
-  if(r.error)throw r.error;if(!r.data){$('authmsg').textContent='Profile is still being prepared. Sign in again shortly.';return}
-  user=au;profile=r.data;googleSignIn.sessionReady();fillProfile();syncNotificationSettings();$('myemail').textContent=user.email||'';$('subtitle').textContent='Signed in as @'+profile.username;$('state').textContent='ONLINE';screen('home');
-  for(const load of [loadChats,startInboxRealtime,()=>enhancements.accountReady(),()=>settingsUi.accountReady(),()=>experience.accountReady(),()=>workspace.accountReady(),()=>suite?.accountReady()]){await load();if(!active()||user?.id!==au.id)return}
+  if(r?.error||!r?.data){$('state').textContent='SYNC PAUSED';$('subtitle').textContent='Signed in · profile sync temporarily unavailable';note('Signed in successfully. Your profile or chats will appear when Supabase reconnects.');return}
+  user=au;profile=r.data;authRestore.hide();googleSignIn.sessionReady();fillProfile();syncNotificationSettings();$('myemail').textContent='@'+profile.username;$('subtitle').textContent='Signed in as @'+profile.username;$('state').textContent='ONLINE';screen('home');
+  for(const load of [loadChats,startInboxRealtime,()=>enhancements.accountReady(),()=>settingsUi.accountReady(),()=>experience.accountReady(),()=>workspace.accountReady(),()=>suite?.accountReady()]){try{await load()}catch(e){if(active()&&user?.id===au.id)note('Some chat features could not load. Luo Chat will retry when the connection returns.');break}if(!active()||user?.id!==au.id)return}
   privacyLock.accountReady();interactions.accountReady();
- }catch(e){if(active()){$('authmsg').textContent=e.message||'Could not load account.';screen('auth')}}finally{if(request===bootRequest)booting=false}
+ }catch(e){if(active()){if(user?.id&&profile?.id===user.id){screen('home');note('Some features are temporarily unavailable. Your session remains active.')}else{screen('auth');authRestore.show(isTransientAuthError(e)?describeAuthError(e,'restore'):'Your account is authenticated, but its profile could not be loaded. Retry restoration.')}}}finally{if(request===bootRequest)booting=false}
 }
 function fillProfile(){$('myname').textContent=profile.display_name||profile.username;$('edituser').value=profile.username||'';$('editname').value=profile.display_name||'';$('bio').value=profile.bio||''}
 function loadChats(){return inboxRefresh()}
@@ -91,7 +140,74 @@ $('logout').onclick=async()=>{const generation=accountGeneration;await suite?.be
 let recovering=false,recoveryUserId=null;
 let replyTarget=null,selectedFile=null,pendingSend=null;
 async function authAction(action,values){const {data,error}=await db.functions.invoke('luo-auth',{body:{action,...values,redirect_to:location.origin+'/?auth='+ (action==='reset'?'recovery':'confirmed')}});if(error){let detail;try{detail=await error.context?.json()}catch{}throw Error(detail?.message||detail?.error||error.message)}if(data?.error)throw Error(data.message||data.error);return data}
-$('forgot').onclick=async()=>{const email=$('email').value.trim();if(!email)return $('authmsg').textContent='Enter your email above, then choose Forgot password.';$('forgot').disabled=true;try{await authAction('reset',{email});$('authmsg').textContent='If your account exists, a recovery link has been sent. Check your email.'}catch(e){$('authmsg').textContent=e.message}finally{$('forgot').disabled=false}};
+function showLuoRecoveryCodes(codes){
+ const dialog=$('luoRecoveryCodesDialog');
+ $('luoRecoveryCodesText').value=codes.map((code,i)=>String(i+1).padStart(2,'0')+'. '+code).join('\n');
+ $('luoRecoveryCodesStatus').textContent='Save your ten recovery codes in a safe place. They cannot be emailed to you.';
+ if(!dialog.open)dialog.showModal();
+}
+$('copyLuoRecoveryCodes').onclick=async()=>{
+ try{await navigator.clipboard.writeText($('luoRecoveryCodesText').value);$('luoRecoveryCodesStatus').textContent='Recovery codes copied. Store them somewhere secure.'}
+ catch{$('luoRecoveryCodesStatus').textContent='Copy unavailable; select and save the codes manually.'}
+};
+$('confirmLuoRecoverySaved').onclick=()=>{$('luoRecoveryCodesDialog').close()};
+$('luoRecoveryCodesDialog').addEventListener('close',()=>{$('luoRecoveryCodesText').value='';$('luoRecoveryCodesStatus').textContent=''});
+$('forgot').onclick=()=>{
+ const dialog=$('luoForgotDialog');
+ $('luoForgotForm').reset();
+ $('luoForgotUsername').value=$('email').value.trim().replace(/^@/,'').toLowerCase();
+ $('luoForgotStatus').textContent='';
+ dialog.showModal();
+};
+$('cancelLuoForgot').onclick=()=>{$('luoForgotDialog').close()};
+$('luoForgotForm').onsubmit=async event=>{
+ event.preventDefault();
+ const username=$('luoForgotUsername').value.trim().replace(/^@/,'').toLowerCase(),code=$('luoForgotCode').value.trim(),newPassword=$('luoForgotPassword').value;
+ const status=$('luoForgotStatus');status.textContent='';
+ $('submitLuoForgot').disabled=true;
+ try{
+  const data=await authAction('recover_username',{username,recovery_code:code,new_password:newPassword});
+  $('luoForgotForm').reset();$('luoForgotDialog').close();
+  $('email').value=username;
+  $('authmsg').textContent='Password changed. Sign in with your username and new password.';
+  if(Array.isArray(data.recovery_codes))showLuoRecoveryCodes(data.recovery_codes);
+ }catch(e){status.textContent=describeAuthError(e,'signin')}
+ finally{$('submitLuoForgot').disabled=false}
+};
+$('manageLuoRecovery').onclick=()=>{if(!user)return;$('luoEnrollRecoveryForm').reset();$('luoEnrollRecoveryStatus').textContent='';$('luoEnrollRecoveryDialog').showModal()};
+$('cancelLuoEnrollRecovery').onclick=()=>{$('luoEnrollRecoveryDialog').close()};
+$('luoEnrollRecoveryForm').onsubmit=async e=>{
+ e.preventDefault();if(!user)return;
+ const actor=user.id,pass=$('luoEnrollRecoveryPassword').value;
+ $('submitLuoEnrollRecovery').disabled=true;
+ try{
+  const data=await authAction('enroll_recovery',{password:pass});
+  if(actor!==user?.id)return;
+  $('luoEnrollRecoveryForm').reset();$('luoEnrollRecoveryDialog').close();
+  if(Array.isArray(data.recovery_codes))showLuoRecoveryCodes(data.recovery_codes);
+ }catch(err){if(actor===user?.id)$('luoEnrollRecoveryStatus').textContent=describeAuthError(err,'signin')}
+ finally{$('submitLuoEnrollRecovery').disabled=false}
+};
+$('forgetLuoEmail').onclick=()=>{
+ if(!user)return;
+ $('luoForgetEmailForm').reset();$('luoForgetEmailStatus').textContent='';
+ $('luoForgetEmailDialog').showModal();
+};
+$('cancelLuoForgetEmail').onclick=()=>$('luoForgetEmailDialog').close();
+$('luoForgetEmailForm').onsubmit=async event=>{
+ event.preventDefault();
+ if(!user)return;
+ const actor=user.id,password=$('luoForgetEmailPassword').value,code=$('luoForgetEmailCode').value;
+ const status=$('luoForgetEmailStatus');
+ $('submitLuoForgetEmail').disabled=true;
+ try{
+  const result=await authAction('forget_legacy_email',{password,recovery_code:code});
+  if(actor!==user?.id)return;
+  $('luoForgetEmailForm').reset();$('luoForgetEmailDialog').close();
+  note(result.message||'Your old email is no longer attached. Sign in using your username.');
+ }catch(e){if(actor===user?.id)status.textContent=describeAuthError(e,'signin')}
+ finally{$('submitLuoForgetEmail').disabled=false}
+};
 $('resend').onclick=async()=>{const email=$('email').value.trim();if(!email)return $('authmsg').textContent='Enter your email above first.';$('resend').disabled=true;try{await authAction('resend',{email});$('authmsg').textContent='If eligible, a confirmation email has been sent.'}catch(e){$('authmsg').textContent=e.message}finally{$('resend').disabled=false}};
 $('recoveryForm').onsubmit=async e=>{e.preventDefault();if(!recovering||!recoveryUserId){clearAuthPasswords();return $('recoverymsg').textContent='Open a valid recovery link or use Password in your account settings.'}const owner=recoveryUserId,password=$('newPassword').value;if(password!==$('confirmPassword').value)return $('recoverymsg').textContent='Passwords do not match.';if(password.length<8||password.length>128)return $('recoverymsg').textContent='Use 8–128 characters.';$('updatePassword').disabled=true;try{const verified=await db.auth.getUser();if(verified.error||verified.data?.user?.id!==owner||!recovering||recoveryUserId!==owner)throw Error('This password-change session is no longer available.');const {error}=await db.auth.updateUser({password});if(error)throw error;recovering=false;recoveryUserId=null;clearAuthPasswords();note('Password updated.');await boot()}catch(e){$('recoverymsg').textContent=e.message}finally{$('updatePassword').disabled=false}};
 $('cancelRecovery').onclick=()=>{recovering=false;recoveryUserId=null;clearAuthPasswords();$('recoverymsg').textContent='';if(user)screen('home');else screen('auth')};
@@ -180,8 +296,8 @@ const connections=installConnections({win:window,db,$,getUser:()=>user,getCurren
 suite=installSuite({win:window,db,$,deviceCache,openCachedFile:item=>mediaUi.open(item),getUser:()=>user,getCurrent:()=>current,getChats:()=>chats,getUnread:()=>unread,chatName:name,note,outbox,isLocked:()=>privacyLock.isLocked(),openRoom,renderInbox:render,setText:text=>{$('body').value=text;$('body').dispatchEvent(new Event('input'))},reloadRoom:async id=>{if(current?.id===id){await loadMessages();await loadChats()}},focusMessage:async target=>{const actor=user?.id,generation=accountGeneration;let roomId=target.conversation_id;if(!roomId){const lookup=await db.from('chat_messages').select('id,conversation_id').eq('id',target.id).maybeSingle();if(!isAccount(actor,generation))return;if(lookup.error)throw lookup.error;if(!lookup.data)return note('Original message is no longer available.');roomId=lookup.data.conversation_id}if(current?.id!==roomId)await openRoom(roomId);if(isAccount(actor,generation)&&current?.id===roomId)await focusGlobalSearchMessage({id:target.id,conversation_id:roomId})}});
 social=installSocialSpaces({win:window,db,$,note,getUser:()=>user,getChats:()=>chats,tab,openPerson:id=>connections.open(id)});
 chatNotes=installChatNotesRibbon({win:window,db,getUser:()=>user,openNotes:()=>social?.openSection('notes')});
-function resetAccount(){social?.signedOut();chatNotes?.signedOut();chatAtmosphere.signedOut();voiceReplies.signedOut();deviceCache.signedOut(user?.id);clearTimeout(noticeTimer);$('notice').classList.add('hidden');lookupRequest++;$('lookup').disabled=false;$('lookupResult').replaceChildren();$('saveContact').classList.add('hidden');deviceNotifications.signedOut(user?.id);googleSignIn.reset();accountGeneration++;bootRequest++;inboxRequest++;roomRequest++;booting=false;historyLoading=false;reconciling=false;busy=false;for(const c of [channel,inboxChannel])if(c)db.removeChannel(c).catch(()=>{});channel=inboxChannel=null;recovering=false;recoveryUserId=null;clearAuthPasswords();user=profile=current=null;selectedFile=replyTarget=pendingSend=null;$('body').disabled=false;$('attach').disabled=false;$('cancelFile').disabled=false;$('sendform').querySelector('.send').disabled=false;$('body').value='';showFile();showReply();chats=[];unread={};enhancements.signedOut();experience.signedOut();settingsUi.signedOut();workspace.signedOut();mediaUi.signedOut();stories.signedOut();fileEditor.signedOut();deviceAccess.signedOut();suite?.signedOut();videoEditor.signedOut();privacyLock.signedOut();interactions.signedOut();connections.signedOut();document.querySelector('.app').dataset.tab='chats';screen('auth');$('chatlist').replaceChildren();$('messages').replaceChildren();;for(const id of ['globalSearchResults','lookupResult','groupMembersList','myemail','myname','roomtitle','roomsub','profilemsg','authmsg'])$(id).replaceChildren();for(const id of ['globalSearchInput','roomSearchInput','search','target','email','edituser','editname','bio'])$(id).value='';$('globalSearchPanel').classList.add('hidden');$('globalSearchToggle').setAttribute('aria-expanded','false');$('inboxUnread').textContent='';$('inboxUnread').classList.add('hidden');for(const id of ['myAvatar','avatarFull'])$(id).removeAttribute('src');$('myAvatar').classList.add('hidden');$('settingsAvatar').replaceChildren();$('subtitle').textContent='Private conversations, your way';$('state').textContent='READY';$('signin').disabled=$('signup').disabled=false;syncNotificationSettings();}
-db.auth.onAuthStateChange((ev,s)=>{if(ev==='PASSWORD_RECOVERY'&&s?.user){clearAuthPasswords();$('recoverymsg').textContent='';recovering=true;recoveryUserId=s.user.id;screen('recovery');history.replaceState(null,'',location.pathname)}else if(ev==='SIGNED_OUT'){resetAccount()}else if(ev==='SIGNED_IN'&&s?.user&&!recovering){if(user&&user.id!==s.user.id)resetAccount();if(!user){const generation=accountGeneration;setTimeout(()=>{if(generation===accountGeneration&&!recovering)boot(s.user)},0)}}});const authError=new URLSearchParams(location.hash.slice(1)).get('error_description');if(authError){$('authmsg').textContent=authError;recovering=false;history.replaceState(null,'',location.pathname)}const {data:{session}}=await db.auth.getSession();if(session&&!recovering)await boot(session.user);else if(recovering&&session)screen('recovery');else screen('auth');
+function resetAccount(){for(const dialogId of ['luoRecoveryCodesDialog','luoForgotDialog','luoEnrollRecoveryDialog','luoForgetEmailDialog']){const d=$(dialogId);if(d?.open)d.close()}$('luoRecoveryCodesText').value='';authRestore.hide();social?.signedOut();chatNotes?.signedOut();chatAtmosphere.signedOut();voiceReplies.signedOut();deviceCache.signedOut(user?.id);clearTimeout(noticeTimer);$('notice').classList.add('hidden');lookupRequest++;$('lookup').disabled=false;$('lookupResult').replaceChildren();$('saveContact').classList.add('hidden');deviceNotifications.signedOut(user?.id);googleSignIn.reset();accountGeneration++;bootRequest++;inboxRequest++;roomRequest++;booting=false;historyLoading=false;reconciling=false;busy=false;for(const c of [channel,inboxChannel])if(c)db.removeChannel(c).catch(()=>{});channel=inboxChannel=null;recovering=false;recoveryUserId=null;clearAuthPasswords();user=profile=current=null;selectedFile=replyTarget=pendingSend=null;$('body').disabled=false;$('attach').disabled=false;$('cancelFile').disabled=false;$('sendform').querySelector('.send').disabled=false;$('body').value='';showFile();showReply();chats=[];unread={};enhancements.signedOut();experience.signedOut();settingsUi.signedOut();workspace.signedOut();mediaUi.signedOut();stories.signedOut();fileEditor.signedOut();deviceAccess.signedOut();suite?.signedOut();videoEditor.signedOut();privacyLock.signedOut();interactions.signedOut();connections.signedOut();document.querySelector('.app').dataset.tab='chats';screen('auth');$('chatlist').replaceChildren();$('messages').replaceChildren();;for(const id of ['globalSearchResults','lookupResult','groupMembersList','myemail','myname','roomtitle','roomsub','profilemsg','authmsg'])$(id).replaceChildren();for(const id of ['globalSearchInput','roomSearchInput','search','target','email','edituser','editname','bio'])$(id).value='';$('globalSearchPanel').classList.add('hidden');$('globalSearchToggle').setAttribute('aria-expanded','false');$('inboxUnread').textContent='';$('inboxUnread').classList.add('hidden');for(const id of ['myAvatar','avatarFull'])$(id).removeAttribute('src');$('myAvatar').classList.add('hidden');$('settingsAvatar').replaceChildren();$('subtitle').textContent='Private conversations, your way';$('state').textContent='READY';$('signin').disabled=$('signup').disabled=false;syncNotificationSettings();}
+db.auth.onAuthStateChange((ev,s)=>{if(ev==='PASSWORD_RECOVERY'&&s?.user){clearAuthPasswords();$('recoverymsg').textContent='';recovering=true;recoveryUserId=s.user.id;screen('recovery');history.replaceState(null,'',location.pathname)}else if(ev==='SIGNED_OUT'){resetAccount()}else if(ev==='SIGNED_IN'&&s?.user&&!recovering){if(user&&user.id!==s.user.id)resetAccount();if(!user){const generation=accountGeneration;setTimeout(()=>{if(generation===accountGeneration&&!recovering)boot(s.user)},0)}}});const authError=new URLSearchParams(location.hash.slice(1)).get('error_description');if(authError){$('authmsg').textContent=authError;recovering=false;history.replaceState(null,'',location.pathname)}try{const restored=await db.auth.getSession();if(restored.error)throw restored.error;const session=restored.data?.session;if(session&&!recovering)await boot(session.user);else if(recovering&&session)screen('recovery');else {screen('auth');authRestore.hide()}}catch(e){screen('auth');authRestore.show(describeAuthError(e,'restore'))}
 experience.watchUpdates();
 
 window.addEventListener('online',async()=>{if(!user)return;await Promise.allSettled([enhancements.accountReady(),settingsUi.accountReady(),workspace.accountReady(),startInboxRealtime()]);});
