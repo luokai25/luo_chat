@@ -271,6 +271,193 @@ revoke all on function public.settle_luo_bot_payment(text,text,text,bigint,text,
 grant execute on function public.settle_luo_bot_payment(text,text,text,bigint,text,text)
  to service_role;
 
+-- Anonymous bot auth attempts are throttled independently of human accounts.
+-- Hash username and IP server-side; do not store plaintext IPs or passwords.
+create table if not exists luo_bots.login_attempts(
+ username_digest text not null check(username_digest ~ '^[a-f0-9]{64}
+do $$declare t regclass;begin
+ for t in select c.oid::regclass
+ from pg_class c join pg_namespace n on n.oid=c.relnamespace
+ where n.nspname='luo_bots' and c.relkind in ('r','p')
+ loop
+  execute format('alter table %s enable row level security',t);
+  execute format('revoke all on table %s from public,anon,authenticated',t);
+  execute format('grant all on table %s to service_role',t);
+ end loop;
+end$$;
+grant usage,select on all sequences in schema luo_bots to service_role;
+revoke all on all sequences in schema luo_bots from public,anon,authenticated;
+commit;
+),
+ ip_digest text not null check(ip_digest ~ '^[a-f0-9]{64}
+do $$declare t regclass;begin
+ for t in select c.oid::regclass
+ from pg_class c join pg_namespace n on n.oid=c.relnamespace
+ where n.nspname='luo_bots' and c.relkind in ('r','p')
+ loop
+  execute format('alter table %s enable row level security',t);
+  execute format('revoke all on table %s from public,anon,authenticated',t);
+  execute format('grant all on table %s to service_role',t);
+ end loop;
+end$$;
+grant usage,select on all sequences in schema luo_bots to service_role;
+revoke all on all sequences in schema luo_bots from public,anon,authenticated;
+commit;
+),
+ attempted_at timestamptz not null default now()
+);
+create index if not exists bot_login_by_name_idx on luo_bots.login_attempts(username_digest,attempted_at);
+create index if not exists bot_login_by_ip_idx on luo_bots.login_attempts(ip_digest,attempted_at);
+
+create or replace function public.consume_luo_bot_login_limit(
+ p_username_digest text,p_ip_digest text
+) returns boolean language plpgsql security definer set search_path='' as $
+declare name_attempts integer;ip_attempts integer;
+begin
+ if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role'
+   or p_username_digest !~ '^[a-f0-9]{64}
+do $$declare t regclass;begin
+ for t in select c.oid::regclass
+ from pg_class c join pg_namespace n on n.oid=c.relnamespace
+ where n.nspname='luo_bots' and c.relkind in ('r','p')
+ loop
+  execute format('alter table %s enable row level security',t);
+  execute format('revoke all on table %s from public,anon,authenticated',t);
+  execute format('grant all on table %s to service_role',t);
+ end loop;
+end$$;
+grant usage,select on all sequences in schema luo_bots to service_role;
+revoke all on all sequences in schema luo_bots from public,anon,authenticated;
+commit;
+
+   or p_ip_digest !~ '^[a-f0-9]{64}
+do $$declare t regclass;begin
+ for t in select c.oid::regclass
+ from pg_class c join pg_namespace n on n.oid=c.relnamespace
+ where n.nspname='luo_bots' and c.relkind in ('r','p')
+ loop
+  execute format('alter table %s enable row level security',t);
+  execute format('revoke all on table %s from public,anon,authenticated',t);
+  execute format('grant all on table %s to service_role',t);
+ end loop;
+end$$;
+grant usage,select on all sequences in schema luo_bots to service_role;
+revoke all on all sequences in schema luo_bots from public,anon,authenticated;
+commit;
+
+ then return false;end if;
+ perform pg_advisory_xact_lock(hashtextextended('bot-login:'||p_username_digest,0));
+ perform pg_advisory_xact_lock(hashtextextended('bot-ip:'||p_ip_digest,0));
+ select count(*) into name_attempts from luo_bots.login_attempts
+ where username_digest=p_username_digest and attempted_at>now()-interval '15 minutes';
+ select count(*) into ip_attempts from luo_bots.login_attempts
+ where ip_digest=p_ip_digest and attempted_at>now()-interval '15 minutes';
+ if name_attempts>=8 or ip_attempts>=120 then return false;end if;
+ insert into luo_bots.login_attempts(username_digest,ip_digest)
+ values(p_username_digest,p_ip_digest);
+ return true;
+end;$;
+revoke all on function public.consume_luo_bot_login_limit(text,text) from public,anon,authenticated;
+grant execute on function public.consume_luo_bot_login_limit(text,text) to service_role;
+
+-- Creates a disabled username reservation. No password is issued, and paying
+-- later is NOT sufficient for activation without moderator approval.
+create or replace function public.request_luo_bot_account(
+ p_owner_id uuid,p_username text
+) returns uuid language plpgsql security definer set search_path='' as $
+declare count_all integer;count_pending integer;new_id uuid;
+begin
+ if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role'
+   or p_owner_id is null or p_username !~ '^bot_[a-z][a-z0-9_]{2,19}
+do $$declare t regclass;begin
+ for t in select c.oid::regclass
+ from pg_class c join pg_namespace n on n.oid=c.relnamespace
+ where n.nspname='luo_bots' and c.relkind in ('r','p')
+ loop
+  execute format('alter table %s enable row level security',t);
+  execute format('revoke all on table %s from public,anon,authenticated',t);
+  execute format('grant all on table %s to service_role',t);
+ end loop;
+end$$;
+grant usage,select on all sequences in schema luo_bots to service_role;
+revoke all on all sequences in schema luo_bots from public,anon,authenticated;
+commit;
+
+ then return null;end if;
+ if not exists(select 1 from auth.users u
+  where u.id=p_owner_id and coalesce(u.raw_app_meta_data->>'luo_account_type','human')<>'bot')
+ then return null;end if;
+ perform pg_advisory_xact_lock(hashtextextended('bot-owner:'||p_owner_id::text,0));
+ select count(*) into count_all from luo_bots.accounts where owner_id=p_owner_id;
+ select count(*) into count_pending from luo_bots.accounts
+ where owner_id=p_owner_id and payment_status='unpaid';
+ if count_all>=5 or count_pending>=2 then return null;end if;
+ if exists(select 1 from public.profiles where lower(username)=p_username)
+  or exists(select 1 from luo_bots.accounts where username=p_username)
+ then return null;end if;
+ insert into luo_bots.accounts(owner_id,username) values(p_owner_id,p_username)
+ returning id into new_id;
+ insert into luo_bots.audit(bot_id,actor_id,action,result)
+ values(new_id,p_owner_id,'application','pending_payment');
+ return new_id;
+end;$;
+revoke all on function public.request_luo_bot_account(uuid,text) from public,anon,authenticated;
+grant execute on function public.request_luo_bot_account(uuid,text) to service_role;
+
+create or replace function public.get_luo_bot_gateway_credential(p_username text)
+returns table(bot_id uuid,secret_digest text)
+language sql stable security definer set search_path='' as $
+ select a.id,c.secret_digest
+ from luo_bots.accounts a join luo_bots.credentials c on c.bot_id=a.id
+ where a.username=p_username and c.revoked_at is null and a.payment_status='active'
+   and a.moderation_status='approved' and a.suspended=false
+   and a.bot_user_id is not null and a.paid_until>now()
+$;
+revoke all on function public.get_luo_bot_gateway_credential(text) from public,anon,authenticated;
+grant execute on function public.get_luo_bot_gateway_credential(text) to service_role;
+
+-- Owner credential activation requires BOTH verified payment and manual
+-- moderator approval; defaults must not be bypassed by creating a new key.
+create or replace function public.activate_luo_bot_credential(
+ p_owner_id uuid,p_bot_id uuid,p_secret_digest text
+) returns boolean language plpgsql security definer set search_path='' as $
+declare n integer;
+begin
+ if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role'
+  or p_owner_id is null or p_bot_id is null
+  or p_secret_digest !~ '^[a-f0-9]{64}
+do $$declare t regclass;begin
+ for t in select c.oid::regclass
+ from pg_class c join pg_namespace n on n.oid=c.relnamespace
+ where n.nspname='luo_bots' and c.relkind in ('r','p')
+ loop
+  execute format('alter table %s enable row level security',t);
+  execute format('revoke all on table %s from public,anon,authenticated',t);
+  execute format('grant all on table %s to service_role',t);
+ end loop;
+end$$;
+grant usage,select on all sequences in schema luo_bots to service_role;
+revoke all on all sequences in schema luo_bots from public,anon,authenticated;
+commit;
+ then return false;end if;
+ update luo_bots.accounts a set suspended=false,updated_at=now()
+ where a.id=p_bot_id and a.owner_id=p_owner_id
+  and a.payment_status='active' and a.moderation_status='approved'
+  and a.paid_until>now() and a.bot_user_id is not null
+  and cardinality(a.scopes)>0;
+ get diagnostics n=row_count;
+ if n<>1 then return false;end if;
+ insert into luo_bots.credentials(bot_id,secret_digest,issued_at,revoked_at,rotated_at)
+ values(p_bot_id,p_secret_digest,now(),null,now())
+ on conflict(bot_id) do update set
+ secret_digest=excluded.secret_digest,issued_at=now(),revoked_at=null,rotated_at=now();
+ insert into luo_bots.audit(bot_id,actor_id,action,result)
+ values(p_bot_id,p_owner_id,'credentials_rotated','active');
+ return true;
+end;$;
+revoke all on function public.activate_luo_bot_credential(uuid,uuid,text) from public,anon,authenticated;
+grant execute on function public.activate_luo_bot_credential(uuid,uuid,text) to service_role;
+
 -- Private schema objects NEVER become Data API human client tables.
 do $$declare t regclass;begin
  for t in select c.oid::regclass
