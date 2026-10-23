@@ -19,7 +19,7 @@ function harness({quota=true,exists=false,storeFails=false,validPassword=true,co
    if(name==='consume_luo_recovery_code')return{data:consume,error:null};
    return{data:null,error:{message:'Unknown RPC'}};
   },
-  from:table=>({select(){return this},eq(){return this},maybeSingle:async()=>({data:exists?{id}:null,error:null})}),
+  from:table=>({select(){return this},update(values){this.values=values;return this},eq(key,value){this.match={key,value};return this},single:async function(){calls.push({name:'profileUpdated',username:this.values?.username});return {data:{id,username:this.values?.username},error:null}},maybeSingle:async()=>({data:exists?{id}:null,error:null})}),
   auth:{
    admin:{
     createUser:async args=>{created=args;calls.push({name:'createUser'});return providerError?{data:null,error:providerError}:{data:{user:{id,email:args.email}},error:null}},
@@ -54,6 +54,7 @@ test('brand new username signup creates a confirmed internal Auth user without G
  assert.equal(h.calls[0].name,'consume_signup_rate_limit');
  assert.match(h.calls[0].args.ip_digest,/^[a-f0-9]{64}$/);
  assert.equal(h.stored.length,10);
+ assert.equal(h.calls.some(x=>x.name==='profileUpdated'&&x.username==='new_account'),true);
  assert.equal(response.headers.get('Cache-Control'),'no-store');
 });
 test('registration blocks reserved names, short passwords and repeated username before creating Auth user',async()=>{
