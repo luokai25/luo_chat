@@ -13,7 +13,7 @@ The application integration is built. The live Supabase public settings endpoint
 
 ## Runtime behavior
 
-- The button stays disabled until the public provider settings confirm Google is enabled. Retry can recheck availability without exposing provider configuration to visitors.
+- **Production status (October 23, 2026): Google sign-in has been removed from the login page** because `external.google = false`, no OAuth credentials/consent return were verified, and an unresolved browser security warning remains. The disabled Google integration is retained in source for future testing but performs no `/auth/v1/settings` polling or OAuth request while the button is absent. Restoring the button requires verified Supabase provider setup and a tested real login.
 - The app starts `signInWithOAuth` with minimal identity scopes and an account chooser, validates the returned Supabase authorization destination, then performs a full-page redirect. Google passwords are entered only on Google's page.
 - Supabase's existing browser session/callback handling completes sign-in. Existing verified-email identity linking is handled by Supabase, never by client-side email matching.
 - Existing database triggers create a valid generated Luo Chat username and default settings for a new Google account. Change the username/display name in Settings. A rolled-back Google-metadata trigger test passed; no test account was retained.
