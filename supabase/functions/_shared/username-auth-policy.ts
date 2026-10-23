@@ -7,9 +7,10 @@ const RESERVED=new Set(['admin','administrator','support','moderator','official'
 export function canonicalUsername(input){
  if(typeof input!=='string')return null;
  const text=input.trim().toLowerCase();
- if(!USERNAME_RE.test(text)||RESERVED.has(text)||text.startsWith('luo_'))return null;
+ if(!USERNAME_RE.test(text))return null;
  return text;
 }
+export function isAvailableForRegistration(username){return canonicalUsername(username)!==null&&!RESERVED.has(canonicalUsername(username))&&!canonicalUsername(username).startsWith('luo_')}
 export function validatePassword(password,username){
  if(typeof password!=='string')return {ok:false,reason:'Use a password of at least 12 characters.'};
  if(password.length<12||password.length>128||password.length!==[...password].length)return {ok:false,reason:'Use a password of 12–128 characters.'};
