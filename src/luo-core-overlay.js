@@ -40,7 +40,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
  doc.head.append(style);
  const renderer=createLuoCoreRenderer(canvas);
  let owner=null,enabled=true,manualUntil=0,disposed=false,frame=0,previous=0;
- let x=0,y=0,target=null,nextJump=0,hopStart=0,hopFrom=null,hopTo=null,scrollDirty=true;
+ let x=0,y=0,target=null,perchNode=null,nextJump=0,hopStart=0,hopFrom=null,hopTo=null,scrollDirty=true;
  let holdTimer=0,down=null,dragged=false,menuOpen=false,lastFrame=0,lastSignal=0;
  const reduced=!!win.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  const connectionSave=!!win.navigator?.connection?.saveData;
@@ -53,7 +53,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
  function changeOwner(){
   const id=active()?getUser().id:null;
   if(owner===id)return;
-  owner=id;menu.hidden=true;menuOpen=false;target=null;nextJump=0;
+  owner=id;menu.hidden=true;menuOpen=false;target=null;perchNode=null;hopTo=null;nextJump=0;
   enabled=id?pref(id):false;
   root.hidden=!id||!enabled;restore.hidden=!id||enabled;
   if(id&&enabled){x=width()-170;y=height()-260;setStatus('');renderer.render(brain.snapshot(),0,reduced)}
@@ -65,7 +65,9 @@ export function installLuoCore({win,getUser,random=Math.random}){
   menu.style.setProperty('--luo-core-menu-y',Math.round(Math.max(8,Math.min(height()-255,y-30)))+'px');
   menu.querySelector('button')?.focus();
  }
- function dismissMenu(){menuOpen=false;menu.hidden=true}
+ function dismissMenu(){menuOpen=false;menu.hidden=true;}
+ function typing(){return !!doc.activeElement?.matches?.('input,textarea,[contenteditable="true"]')}
+ function roomVisible(){return !!doc.getElementById('room')?.classList.contains('active')}
  const buttons=[
   ['Pet Luo Core','pet','Purr...'],
   ['Play together','play','Time to play!'],
@@ -94,14 +96,14 @@ export function installLuoCore({win,getUser,random=Math.random}){
  });
  function candidates(){
   // Inspect only geometry of already-rendered message bubbles.
-  const container=doc.getElementById('messages');if(!container)return [];
+  const container=doc.getElementById('messages');if(!container||!roomVisible())return [];
   const els=container.querySelectorAll('.bubble,.message-bubble,.msg,[data-message-id],.message');
   const results=[];
   for(const node of Array.from(els).slice(-65)){
    const r=node.getBoundingClientRect?.();
    if(!r||r.width<24||r.height<10||r.top<136||r.top>height()-145||r.bottom<0)continue;
    if(results.some(a=>Math.abs(a.left-r.left)<4&&Math.abs(a.top-r.top)<4))continue;
-   results.push({left:r.left,top:r.top,width:r.width,height:r.height});
+   results.push({node,left:r.left,top:r.top,width:r.width,height:r.height});
   }
   return results;
  }
@@ -111,19 +113,27 @@ export function installLuoCore({win,getUser,random=Math.random}){
           y:Math.round(Math.max(0,Math.min(height()-165,rect.top-130)))};
  }
  function chooseAnchor(force=false){
-  if(!owner||!enabled||doc.visibilityState==='hidden'||menuOpen)return;
+  if(!owner||!enabled||doc.visibilityState==='hidden'||menuOpen||typing())return;
   if(!force&&Date.now()<nextJump)return;
   const pool=candidates();
   const selection=pool.length?pool[Math.floor(random()*pool.length)%pool.length]:null;
   const dest=anchorPosition(selection);
+  perchNode=selection?.node||null;
   nextJump=Date.now()+6500+Math.floor(random()*8000);
   if(Math.abs(dest.x-x)<10&&Math.abs(dest.y-y)<10){target=dest;return}
+  if(!animate){x=dest.x;y=dest.y;target=dest;hopTo=null;brain.choose('sit');return}
   hopFrom={x,y};hopTo=dest;hopStart=Date.now();target=dest;
   brain.command('jump');
  }
  function measure(){
   if(!owner||!enabled||Date.now()<manualUntil)return;
-  if(scrollDirty&&target&&!hopTo){const nearby=candidates();if(!nearby.length)target=anchorPosition(null)}
+  if(scrollDirty&&!hopTo&&perchNode){
+   const bounds=perchNode.isConnected?perchNode.getBoundingClientRect?.():null;
+   if(bounds&&roomVisible()&&bounds.top>=136&&bounds.top<=height()-145){
+    const updated=anchorPosition(bounds);x=updated.x;y=updated.y;target=updated;
+   }else{perchNode=null;nextJump=0}
+  }
+  if(!roomVisible()&&perchNode){perchNode=null;nextJump=0}
   scrollDirty=false;
   chooseAnchor();
  }
@@ -144,6 +154,8 @@ export function installLuoCore({win,getUser,random=Math.random}){
     if(!animate||now-lastFrame>=33){
      measure();settle(now);const state=brain.tick(elapsed,{visible:true,motion:animate});
      canvas.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0)';
+     status.style.setProperty('--luo-core-status-x',Math.round(x+71)+'px');
+     status.style.setProperty('--luo-core-status-y',Math.round(Math.max(20,y-2))+'px');
      if(animate||!lastFrame)renderer.render(state,now,!animate);
      lastFrame=now;
     }
