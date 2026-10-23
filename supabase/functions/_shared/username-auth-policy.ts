@@ -45,7 +45,7 @@ export async function digestRecoveryCode({code,userId,secret,cryptoImpl=crypto})
  if(!validateRecoveryCodeInput(code))throw Error('Invalid recovery-code format');
  if(typeof secret!=='string'||secret.length<32)throw Error('Server recovery secret missing');
  if(!/^[0-9a-f-]{36}$/i.test(userId||''))throw Error('Invalid user identifier');
- const key=await cryptoImpl.subtle.importKey('raw',new TextEncoder().encode(secret),'HMAC',false,['sign']);
+ const key=await cryptoImpl.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
  const signature=await cryptoImpl.subtle.sign('HMAC',key,new TextEncoder().encode('luo-recovery-v1:'+userId+':'+code.toUpperCase()));
  return Array.from(new Uint8Array(signature)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
