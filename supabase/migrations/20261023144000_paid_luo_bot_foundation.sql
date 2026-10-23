@@ -213,6 +213,64 @@ end;$$;
 revoke all on function public.pause_own_luo_bot(uuid) from public,anon;
 grant execute on function public.pause_own_luo_bot(uuid) to authenticated;
 
+-- Plan duration is created and priced on the merchant backend, not by a bot
+-- or checkout return URL. Only paid orders extend the subscription.
+alter table luo_bots.orders
+ add column if not exists period_days integer not null default 30
+ check(period_days between 1 and 365);
+
+-- Called ONLY by a trusted server after Paymob/Paddle signature verification.
+-- The caller must pass the signed data fields, NOT browser-provided payment
+-- status. Duplicate callbacks are ignored; wrong amount/order is rejected.
+create or replace function public.settle_luo_bot_payment(
+ p_provider text,p_event_id text,p_provider_order_id text,
+ p_amount_minor bigint,p_currency text,p_outcome text
+) returns boolean
+language plpgsql security definer set search_path='' as $
+declare o luo_bots.orders%rowtype;
+begin
+ if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role'
+  or p_provider not in ('paymob','paddle')
+  or p_outcome not in ('paid','refunded','disputed')
+  or p_event_id is null or length(p_event_id) not between 8 and 128
+  or p_provider_order_id is null or length(p_provider_order_id) not between 1 and 128
+  or p_amount_minor is null or p_amount_minor<=0
+  or p_currency not in ('EGP','USD','EUR')
+ then return false;end if;
+ select * into o from luo_bots.orders
+ where provider=p_provider and provider_order_id=p_provider_order_id
+ for update;
+ if not found or o.amount_minor<>p_amount_minor or o.currency<>p_currency
+ then return false;end if;
+ if exists(select 1 from luo_bots.payment_events
+  where provider=p_provider and event_id=p_event_id) then return false;end if;
+ if p_outcome='paid' and o.state<>'pending' then return false;end if;
+ if p_outcome in ('refunded','disputed') and o.state<>'paid' then return false;end if;
+ insert into luo_bots.payment_events(provider,event_id,order_id,outcome,amount_minor,currency)
+ values(p_provider,p_event_id,o.id,p_outcome,p_amount_minor,p_currency);
+ if p_outcome='paid' then
+  update luo_bots.orders set state='paid',settled_at=now() where id=o.id;
+  update luo_bots.accounts set payment_status='active',
+   paid_until=greatest(now(),coalesce(paid_until,now()))+
+     make_interval(days=>o.period_days),updated_at=now()
+  where id=o.bot_id and payment_status not in ('refunded','disputed');
+  -- NOTE: suspended remains true and moderation remains pending until a
+  -- human review explicitly approves and unsuspends the bot.
+ else
+  update luo_bots.orders set state=p_outcome where id=o.id;
+  update luo_bots.accounts set payment_status=p_outcome,
+   suspended=true,updated_at=now() where id=o.bot_id;
+  update luo_bots.credentials set revoked_at=now() where bot_id=o.bot_id;
+ end if;
+ insert into luo_bots.audit(bot_id,action,result)
+ values(o.bot_id,'payment_'||p_outcome,'verified_webhook');
+ return true;
+end;$;
+revoke all on function public.settle_luo_bot_payment(text,text,text,bigint,text,text)
+ from public,anon,authenticated;
+grant execute on function public.settle_luo_bot_payment(text,text,text,bigint,text,text)
+ to service_role;
+
 -- Private schema objects NEVER become Data API human client tables.
 do $$declare t regclass;begin
  for t in select c.oid::regclass
