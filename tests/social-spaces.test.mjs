@@ -158,6 +158,7 @@ test('Interactive question reveals a decorated safe answer only after server con
  assert.match(reveal.textContent,/golden surprise/);
  assert.equal(reveal.querySelector('img'),null);
  assert.equal(reveal.getAttribute('role'),'status');
+ assert.equal(pick.disabled,true,'answered question cannot be activated again');
  pick.click();await h.flush();
  assert.equal(h.requests.filter(r=>r.action==='response').length,1);
  h.window.close();
