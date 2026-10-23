@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {isInstalledLuoChat,saveLuoCoreOffline,luoCoreOfflineStatus} from '../src/luo-core-offline.js';
+import {isInstalledLuoChat,saveLuoCoreOffline,luoCoreOfflineStatus,luoCoreModelCacheName} from '../src/luo-core-offline.js';
+import {parseLuoCoreGlb} from '../src/luo-core-master-preview.js';
 
 test('installed Luo Chat identifies standalone browser mode and iOS homescreen',()=>{
  assert.equal(isInstalledLuoChat({matchMedia:()=>({matches:true}),navigator:{}}),true);
@@ -59,4 +60,22 @@ test('compiled installable web bundle contains the full 3D cat and does not gate
  assert.equal(shell.includes('/luo-core-master.glb'),false);
  assert.match(sw,/CORE_CACHE/);
  assert.match(sw,/LUO_CORE_SAVE_OFFLINE/);
+});
+
+test('full Luo Core GLB opens in the offline viewer with named eye, paw, tail and motion tracks',async()=>{
+ const blob=await readFile('dist/luo-core-master.glb');
+ const buffer=blob.buffer.slice(blob.byteOffset,blob.byteOffset+blob.byteLength);
+ const {gltf,binary}=parseLuoCoreGlb(buffer);
+ assert.ok(binary.byteLength>1_000_000);
+ for(const part of ['Body','Head','FrontPawL','FrontPawR','EarOuterL','Tail03','PupilR'])
+  assert.ok(gltf.nodes.some(x=>x.name===part),'Missing detailed 3D part '+part);
+ assert.equal(gltf.animations.length,28);
+ assert.ok(gltf.materials.some(m=>m.name==='iris'));
+ assert.ok(gltf.extras.luoCore.triangularFaces>=100000);
+});
+test('model revisions create separate cache identities to prevent stale offline cat meshes',()=>{
+ const make=hash=>({document:{querySelector:()=>({content:hash})}});
+ assert.equal(luoCoreModelCacheName(make('abcdef012345')),'luo-core-master-abcdef012345');
+ assert.equal(luoCoreModelCacheName(make('123456abcdef')),'luo-core-master-123456abcdef');
+ assert.notEqual(luoCoreModelCacheName(make('abcdef012345')),luoCoreModelCacheName(make('123456abcdef')));
 });
