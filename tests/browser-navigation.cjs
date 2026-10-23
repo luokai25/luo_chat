@@ -49,8 +49,8 @@ async function run(){
  for(const width of [390,1280]){const {context,page,errors}=await setup(false,width);
   await page.locator('#signin').waitFor({state:'visible'});assert.equal(await page.locator('#home').isVisible(),false);
   for(const sel of ['.workspace-nav','#desktopWelcome','#luoApprovedNav','.quick-compose'])assert.equal(await page.locator(sel).isVisible(),false,sel+' leaked onto auth');
-  await page.locator('#authModeSignup').click();await page.locator('#username').waitFor({state:'visible'});await page.locator('#authModeSignin').click();await page.locator('#signin').click();
-  assert.match(await page.locator('#authmsg').textContent(),/valid email/);
+  await page.locator('#authModeSignup').click();await page.locator('#signupConfirm').waitFor({state:'visible'});await page.locator('#authModeSignin').click();await page.locator('#signin').click();
+  assert.match(await page.locator('#authmsg').textContent(),/Luo Chat username/);
   assert.equal(await page.locator('.app').getAttribute('data-screen'),'auth');assert.equal(await page.locator('.app').evaluate(e=>e.onclick===null),true);
   assert.deepEqual(errors,[]);checks.push('signed-out controls and validation '+width+'px');await context.close();
  }
