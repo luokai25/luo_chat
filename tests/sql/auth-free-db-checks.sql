@@ -38,7 +38,7 @@ begin
  for idx in 1..6 loop
   if not public.consume_signup_rate_limit(
    encode(sha256(convert_to('household-'||idx,'UTF8')),'hex'),b)
-  then raise exception 'Family member %% blocked before 6 users',idx;end if;
+  then raise exception 'Family member % blocked before 6 users',idx;end if;
  end loop;
  if public.consume_signup_rate_limit(a,b) then
   raise exception 'IP hourly anti-abuse limit not enforced';end if;
