@@ -254,7 +254,7 @@ test('auth surface tells users their actual login method and has safe, labelled 
 test('legacy account can sign in using username without revealing internal email in a browser request',async()=>{
  const {w,dom,calls}=await setup(false);
  const d=w.document;
- d.getElementById('email').value='UiTest';
+ d.getElementById('email').value='@UiTest';
  d.getElementById('password').value='example-password';
  d.getElementById('signin').click();
  for(let i=0;i<4;i++)await tick();
