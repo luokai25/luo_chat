@@ -1,3 +1,4 @@
+import {synthesizeLuoCorePose} from './luo-core-motion.js';
 // Lightweight articulated 3D WebGL cat for the message overlay. The 565k-face
 // Blender-importable master is deliberately NOT rendered continuously on phones.
 const VERTEX=`
@@ -85,18 +86,16 @@ export function createLuoCoreRenderer(canvas){
  let disposed=false,frames=0;
  function paint(pose={},time=0,reduced=false){
   if(disposed)return;
-  const mode=pose.state||'idle',t=reduced?0:time*.001;
-  const sleeping=['sleep','curl_up','lie_down','dream'].includes(mode);
-  const playing=['play_yarn','bat','paw_tap','pounce','chase'].includes(mode);
-  const grooming=['groom','wash_paw','scratch'].includes(mode);
-  const airborne=['leap','hop','pounce','land'].includes(mode);
-  const blink=sleeping||mode==='blink'||(!reduced&&Math.sin(t*.74)>.995);
-  const bob=reduced?0:Math.sin(t*2.4)*.013;
-  const swish=reduced?0:Math.sin(t*3.1)*.13;
-  const hop=airborne&&!reduced?Math.abs(Math.sin(t*5))*.25:0;
-  const breathe=1+(reduced?0:Math.sin(t*1.8)*.018);
-  const squash=sleeping?.32:1;
-  const headRoll=mode==='curious'?.11:mode==='look'?Math.sin(t*.9)*.09:0;
+  const p=synthesizeLuoCorePose(pose,time,reduced);
+  const mode=p.family,t=reduced?0:time*.001;
+  const sleeping=p.resting,playing=p.playful,grooming=p.care;
+  const blink=p.eyeClose>=.65||(!reduced&&Math.sin(t*.74)>.995);
+  const bob=p.bounce;
+  const swish=p.tail;
+  const hop=p.hop;
+  const breathe=p.breathScale;
+  const squash=p.bodySquash;
+  const headRoll=p.headRoll;
   if(gl){
    if(!program||!attributes)return;
    gl.viewport(0,0,canvas.width,canvas.height);
@@ -115,34 +114,36 @@ export function createLuoCoreRenderer(canvas){
     gl.drawElements(gl.TRIANGLES,attributes.count,gl.UNSIGNED_SHORT,0);
    };
    // Every segment is independently positioned, permitting rich poses.
-   const floor=hop;
-   part([0,.68+floor,-.12],[.44,.50*squash*breathe,.40],'body');
-   part([0,.65+floor,.235],[.29,.39*squash,.15],'cream');
+   const floor=hop+p.bodyY;
+   part([0,.68+floor,-.12],[.44,.50*squash*breathe,.40],'body',p.bodyRoll);
+   part([0,.65+floor,.235],[.29,.39*squash,.15],'cream',p.bodyRoll);
    part([-.33,.39+floor,-.26],[.21,.28*squash,.23],'light');
    part([ .33,.39+floor,-.26],[.21,.28*squash,.23],'light');
    for(const side of [-1,1]){
-    part([side*.32,.25+floor,.20],[.13,.27*squash,.145],'body');
-    const pawX=side*.32+(playing?side*.09:0);
-    const pawY=.103+floor+(playing?.22:0)+(grooming&&side<0?.36:0);
-    part([pawX,pawY,.35],[.185,.095,.225],'cream');
-    part([side*.39,.105+floor,-.35],[.19,.10,.22],'light');
+    const legLift=side<0?p.frontL:p.frontR;
+    part([side*.32,.25+floor+legLift*.09,.20],[.13,.27*squash,.145],'body',legLift*.28+p.walk*side*.19);
+    const pawX=side*.32+(playing?side*.09:0)+p.walk*side*.09;
+    const pawY=.103+floor+legLift*.31;
+    part([pawX,pawY,.35+legLift*.09],[.185,.095,.225],'cream');
+    part([side*.39,.105+floor+p.rear*.12,-.35],[.19,.10,.22],'light');
    }
    // Tail moves in arcs independently of breathing/ears.
    for(let i=0;i<6;i++){
-    const a=i*.46+swish*(i+1);
-    part([.45+Math.sin(a)*.32+i*.035,.74+floor+i*.16,-.44-i*.035],
+    const a=i*.46+swish*(i+1)+p.tailCurl*i*.12;
+    part([.45+Math.sin(a)*.32+i*.035,.74+floor+i*.16-p.tailCurl*i*.045,-.44-i*.035],
      [.135-i*.007,.17-i*.007,.15-i*.006],i===5?'light':'body');
    }
-   const hY=1.42+floor+(sleeping?-.36:0)+bob;
-   part([0,hY,.23],[.405,.35,.365],'light',headRoll);
+   const hY=1.42+floor+(sleeping?-.13:0)+bob;
+   part([p.headYaw*.06,hY,.23],[.405,.35,.365],'light',headRoll+p.headNod*.18,p.headYaw);
    part([-.12,hY-.16,.52],[.15,.13,.15],'cream');
    part([ .12,hY-.16,.52],[.15,.13,.15],'cream');
    part([0,hY-.11,.669],[.065,.041,.045],'nose');
    for(const side of [-1,1]){
     const ex=side*.30;
-    part([ex,hY+.33,.17],[.125,.205,.095],'body',side*.24+(mode==='ear_twitch'?swish:0));
-    part([ex,hY+.33,.244],[.071,.145,.033],'pink',side*.24);
-    part([side*.177,hY+.035,.544],[.125,blink?.013:.131,.043],'dark');
+    const ear=side<0?p.earL:p.earR;
+    part([ex,hY+.33,.17],[.125,.205,.095],'body',side*.24+ear*.16);
+    part([ex,hY+.33,.244],[.071,.145,.033],'pink',side*.24+ear*.10);
+    part([side*.177,hY+.035,.544],[.125,blink?.013:.131*(1+p.eyeWide*.2),.043],'dark');
     if(!blink){
      part([side*.177,hY+.029,.585],[.082,.11,.024],'iris');
      part([side*.177,hY+.029,.604],[.028,.091,.015],'eye');
@@ -151,35 +152,39 @@ export function createLuoCoreRenderer(canvas){
    }
    part([0,1.12+floor,.43],[.26,.055,.11],'dark');
    part([0,1.065+floor,.54],[.09,.11,.035],'gold');
-   if(playing){part([.54,.19+floor,.47],[.12,.12,.12],'gold');}
+   if(p.toy>.05){part([.54,.19+floor,.47],[.12+p.toy*.03,.12+p.toy*.03,.12+p.toy*.03],'gold');}
+   if(p.mouth>.05){part([0,hY-.21,.64],[.068,.038+p.mouth*.057,.025],'pink');}
    frames++;
    return;
   }
   // GPU-disabled fallback still renders an accessible, shaded companion.
   if(!ctx)return;
   const w=canvas.width,h=canvas.height;
-  ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(w/2,h*.88-hop*h*.3);
+  ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(w/2,h*.88-(hop+p.bodyY)*h*.3);
   const scale=w/160;ctx.scale(scale,scale);
   const ell=(x,y,rx,ry,color)=>{
    ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();
   };
   ell(0,0,43,7,'#0003');
   ctx.strokeStyle='#a67d44';ctx.lineCap='round';ctx.lineWidth=15;
-  ctx.beginPath();ctx.moveTo(32,-31);ctx.bezierCurveTo(57,-70,63+swish*100,-97,43+swish*100,-102);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(32,-31);ctx.bezierCurveTo(57,-70,63+swish*100-p.tailCurl*20,-97,43+swish*100-p.tailCurl*10,-102);ctx.stroke();
   const fur=ctx.createLinearGradient(-40,-110,45,5);
   fur.addColorStop(0,'#fff0c7');fur.addColorStop(.52,'#d7aa65');fur.addColorStop(1,'#81522b');
-  ell(0,sleeping?-26:-43,40,sleeping?23:37,fur);
+  ell(0,sleeping?-30:-43,40,Math.max(16,37*squash),fur);
   ell(-29,-8,15,10,'#f3d8a8');ell(29,-8,15,10,'#f3d8a8');
   ctx.fillStyle='#c19454';
   for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*23,-100);ctx.lineTo(side*43,-135);ctx.lineTo(side*50,-92);ctx.closePath();ctx.fill()}
-  ell(0,-97+(sleeping?17:0),43,35,fur);
+  ell(p.headYaw*10,-97+(sleeping?15:0),43,35,fur);
   ell(-15,-78,18,12,'#fff0ca');ell(15,-78,18,12,'#fff0ca');
   for(const side of [-1,1]){
    ell(side*18,-101+(sleeping?17:0),10,blink?1.6:13,'#322820');
    if(!blink){ell(side*18,-101,7,10,'#74c69a');ell(side*18,-101,3,9,'#13261e');ell(side*16,-105,2,2,'#fff')}
   }
   ell(0,-81+(sleeping?17:0),5,3,'#b16c74');
-  if(playing)ell(49,-6,12,12,'#e9bc5d');
+  if(p.toy>.05)ell(49,-6,12+p.toy*2,12+p.toy*2,'#e9bc5d');
+  if(p.mouth>.05)ell(0,-69+(sleeping?15:0),5,3+p.mouth*5,'#8a5260');
+  if(p.frontL>.15)ell(-29,-24-p.frontL*26,13,9,'#f3d8a8');
+  if(p.frontR>.15)ell(29,-24-p.frontR*26,13,9,'#f3d8a8');
   ctx.restore();frames++;
  }
  return {render:paint,get mode(){return gl?'webgl':ctx?'canvas2d':'unavailable'},get frames(){return frames},
