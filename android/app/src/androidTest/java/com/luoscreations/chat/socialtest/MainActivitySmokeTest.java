@@ -44,29 +44,31 @@ public final class MainActivitySmokeTest {
             assertNotNull("Android activity must contain the actual Luo Chat WebView",ref.get());
             WebView web=ref.get();
             String script="(function(){"
-                    +"const f=document.getElementById('email');"
+                    +"var f=document.getElementById('email');"
                     +"return JSON.stringify({ready:!!document.getElementById('signin'),"
-                    +"username:f?.type==='text',"
+                    +"username:!!f&&f.type==='text',"
                     +"google:!!document.getElementById('googleSignIn'),"
                     +"auth:!!document.getElementById('auth'),"
                     +"packaged:!!document.querySelector('.app')})"
                     +"})()";
             JSONObject state=null;
-            for(int attempt=0;attempt<25;attempt++){
+            String lastResponse="(not evaluated)";
+            for(int attempt=0;attempt<35;attempt++){
                 CountDownLatch completed=new CountDownLatch(1);
                 AtomicReference<String> value=new AtomicReference<>("");
                 scenario.onActivity(activity -> web.evaluateJavascript(script,answer -> {
                     value.set(answer);completed.countDown();
                 }));
                 assertTrue("WebView JavaScript never replied",completed.await(5,TimeUnit.SECONDS));
+                lastResponse=String.valueOf(value.get());
                 try {
-                    String rendered=new JSONArray("["+value.get()+"]").getString(0);
+                    String rendered=new JSONArray("["+lastResponse+"]").getString(0);
                     state=new JSONObject(rendered);
                     if(state.optBoolean("ready"))break;
                 }catch(Exception ignored){}
                 Thread.sleep(400);
             }
-            assertNotNull("No Luo Chat document",state);
+            assertNotNull("No Luo Chat document. WebView URL="+web.getUrl()+", response="+lastResponse,state);
             assertTrue("Real login controls never loaded in the packaged app",state.optBoolean("ready"));
             assertTrue("Username input was replaced with old email form",state.optBoolean("username"));
             assertTrue("The signup/login screen is missing",state.optBoolean("auth"));
