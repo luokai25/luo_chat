@@ -39,3 +39,10 @@ Features not yet fully delivered include service-licensed Spotify/YouTube shared
 - Interactive questions show a safe, animated golden answer card after a confirmed server response, rather than only a transient toast.
 
 These refinements use existing database permissions and do not claim third-party licensed streaming, end-to-end encryption or physical-device notification delivery.
+
+## Follow-up: Story Studio, Chats Notes, and voice replies
+- **Story Studio:** private mobile-first 9:16 designer for JPG, PNG and WebP photos with up to four-photo layouts, background themes, photo filters, captions, stickers, drawing, undo and local PNG export. It integrates into the existing 24-hour Story composer, which still controls the explicit audience and publish action. The design is not uploaded when merely editing.
+- **Chats Notes ribbon:** the authenticated `luo_space` Notes feed appears above conversations, filters expired Notes, deduplicates users and opens Social Notes. Only server-authorized feed results appear, and asynchronous requests cannot repopulate content after sign-out.
+- **Two-second voice reactions:** tap Voice 2s on a text or media message, explicitly grant microphone permission, record a short clip, preview, and send. This uses the *existing secure audio-attachment reply RPC* and links the result to the original message. It is an audio reply rather than a new `space_voice_reactions` record. No new database migration is required.
+- Audio and image capture are local until the user explicitly sends; canceled or sign-out interrupted recordings release microphone tracks. Real Android/iOS permission and media compatibility still need acceptance testing.
+- The existing limits remain: social media is **not end-to-end encrypted**; interactive Story polls/quizzes and Snapchat-grade AR are not yet delivered; Spotify URLs do not permit in-app licensed music playback.
