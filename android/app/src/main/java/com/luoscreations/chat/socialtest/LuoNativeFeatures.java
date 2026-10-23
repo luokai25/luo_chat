@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.webkit.WebView;
 import android.webkit.URLUtil;
 import android.widget.Toast;
@@ -36,7 +37,13 @@ final class LuoNativeFeatures {
     private static final String CHANNEL_ID = "luo_chat_activity_generic_v1";
     private final Activity activity;
     private final WebView view;
+    private static final long MIN_NOTIFICATION_INTERVAL_MS = 8000L;
+    private static final long DOWNLOAD_WINDOW_MS = 300000L;
+    private static final int MAX_DOWNLOADS_PER_WINDOW = 6;
     private int notificationId = 1000;
+    private long previousNotificationAt = 0;
+    private long downloadWindowStart = 0;
+    private int downloadsInWindow = 0;
     private boolean foreground = true;
 
     LuoNativeFeatures(Activity activity, WebView view) {
@@ -128,6 +135,9 @@ final class LuoNativeFeatures {
     }
 
     private void showGenericNotification() {
+        long now=SystemClock.elapsedRealtime();
+        if(previousNotificationAt!=0 && now-previousNotificationAt<MIN_NOTIFICATION_INTERVAL_MS)return;
+        previousNotificationAt=now;
         NotificationManager manager =
             (NotificationManager) activity.getSystemService(Activity.NOTIFICATION_SERVICE);
         if (manager == null) return;
@@ -159,6 +169,15 @@ final class LuoNativeFeatures {
     }
 
     void enqueueDownload(String url, String requestedName) {
+        long now=SystemClock.elapsedRealtime();
+        if(downloadWindowStart==0 || now-downloadWindowStart>DOWNLOAD_WINDOW_MS){
+            downloadWindowStart=now;
+            downloadsInWindow=0;
+        }
+        if(downloadsInWindow>=MAX_DOWNLOADS_PER_WINDOW){
+            Toast.makeText(activity, "Too many downloads. Try again in a few minutes.", Toast.LENGTH_LONG).show();
+            return;
+        }
         Uri uri;
         try { uri = Uri.parse(url); }
         catch (Exception e) { return; }
@@ -180,6 +199,7 @@ final class LuoNativeFeatures {
             DownloadManager manager = (DownloadManager) activity.getSystemService(Activity.DOWNLOAD_SERVICE);
             if (manager == null) throw new IllegalStateException("Download service unavailable");
             manager.enqueue(request);
+            downloadsInWindow++;
             Toast.makeText(activity, "Download started", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(activity, "Could not download this file. Try Share or Open.", Toast.LENGTH_LONG).show();
