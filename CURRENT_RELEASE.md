@@ -1,5 +1,7 @@
 # Current reliability and call-quality fixes
 
+Latest social update: clickable profile cards/photos, incoming and outgoing friend requests, approvals and removal, and blocking wired to the backend. See [SOCIAL_FEATURES.md](SOCIAL_FEATURES.md) for behavior, migrations and test evidence.
+
 The subsequent security/reliability review is in [HARDENING_REPORT.md](HARDENING_REPORT.md). Its database and worker changes supersede the frontend-only scope below.
 
 The current source includes signed-out route guards, scoped navigation bindings, mobile screen-switch stability, and removal of legacy app controls from the sign-in screen.

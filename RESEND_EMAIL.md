@@ -2,6 +2,8 @@
 
 Status on 2026-10-23: **prepared, not activated**. The connected Resend account has no sending domains. Cloudflare has no DNS zones and Vercel has no registered custom domains available to verify. A sender domain controlled by the owner is required before production delivery can move to Resend. The existing provider is unchanged.
 
+The Vercel hostname remains valid for the website and authentication redirects. It cannot serve as the Resend sender: Vercel owns `vercel.app`, so the project cannot publish the required sender-verification DNS records beneath its free hostname. Resend requires a domain the sender owns: https://resend.com/docs/dashboard/domains/introduction.
+
 ## Integration
 
 Use Supabase Auth's supported custom SMTP configuration. The current `luo-auth` Edge Function continues to call native signup, recovery and confirmation resend APIs. Supabase creates and validates the authentication links; Resend transports the messages. No new browser-facing email sender, recipient selector or custom token-generation path is needed. SMTP also covers other native Auth email flows when those flows are enabled.

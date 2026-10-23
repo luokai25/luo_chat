@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "checks": [
+    "signed-out controls and validation 390px",
+    "signed-out controls and validation 1280px",
+    "contact lookup and save",
+    "profile view, full photo, friend request, sent list and cancellation",
+    "incoming approval, block and unblock",
+    "start direct chat",
+    "room profile entry point",
+    "send RPC and render chat message",
+    "stories navigation and composer",
+    "group member picker and creation",
+    "all six native tabs",
+    "no browser exceptions",
+    "desktop profile layout, keyboard access and reduced motion"
+  ],
+  "scope": "Synthetic browser backend; hosted SQL authorization verified separately",
+  "unit_tests": 323,
+  "reproducible_files": 98,
+  "database_tests": [
+    "connections-access.sql",
+    "v12-social-access.sql"
+  ],
+  "migrations": [
+    "20261023001926_profile_connections",
+    "20261023002025_block_direct_chat_creation"
+  ]
+}

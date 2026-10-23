@@ -2,6 +2,8 @@
 
 Black-and-gold chat PWA using Supabase and Vercel.
 
+See [SOCIAL_FEATURES.md](SOCIAL_FEATURES.md) for clickable profiles, profile photos, approved friendships, request management, blocking and verification.
+
 Live app: https://luo-chat-luokai25.vercel.app/
 
 See [HARDENING_REPORT.md](HARDENING_REPORT.md), [STAGING.md](STAGING.md), [BACKUP_RESTORE.md](BACKUP_RESTORE.md), [INTEGRATIONS.md](INTEGRATIONS.md) and [RESEND_EMAIL.md](RESEND_EMAIL.md) for checked controls, connected services and open operational gates.
