@@ -134,6 +134,9 @@ begin
     or b.bot_user_id is null or b.paid_until is null or b.paid_until<=now()
     or not (p_action=any(b.scopes))
  then return false;end if;
+ -- A bot identity may never be an ordinary human Auth account.
+ if not exists(select 1 from auth.users u where u.id=b.bot_user_id
+   and u.raw_app_meta_data->>'luo_account_type'='bot') then return false;end if;
  if exists(select 1 from luo_bots.action_receipts
            where bot_id=p_bot_id and request_id=p_request_id)
  then return false;end if;
