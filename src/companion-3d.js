@@ -47,11 +47,12 @@ export function mountCompanion3D(host,{species='cat',name='Companion',home='obsi
   triangle([.07,1,-.61],[.3,1.15,-.59],[.29,.87,-.59],'#d66e89')
  }
  const hex=(color,factor)=>{const n=parseInt(color.slice(1),16);return '#'+[n>>16,(n>>8)&255,n&255].map(c=>Math.min(255,Math.max(0,Math.round(c*factor))).toString(16).padStart(2,'0')).join('')};
- let yaw=.4,pitch=.12,dragging=false,lastX=0,lastY=0,frame=0,prev=0,disposed=false;
+ let yaw=.4,pitch=.12,dragging=false,lastX=0,lastY=0,frame=0,prev=0,disposed=false,visible=true;
  const motion=win.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
  function project(p){const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const x=p[0]*cy+p[2]*sy,z=-p[0]*sy+p[2]*cy,y=p[1]-.91;const Y=y*cp-z*sp,Z=y*sp+z*cp,scale=530*1.6/(Z+4.4);return {x:260+x*scale,y:262-Y*scale,z:Z}}
  function draw(now=0){
-  if(disposed||!host.isConnected)return;
+  frame=0;if(disposed||!host.isConnected||!visible)return;
+  if(now&&prev&&now-prev<32){frame=win.requestAnimationFrame(draw);return}
   const sky=ctx.createLinearGradient(0,0,520,520);
   for(const [offset,color] of(home==='garden'?[[0,'#0a251c'],[1,'#243c29']]:home==='stars'?[[0,'#090d29'],[1,'#2b2242']]:[[0,'#111012'],[1,'#32271c']]))sky.addColorStop(offset,color);
   ctx.fillStyle=sky;ctx.fillRect(0,0,520,520);
@@ -61,12 +62,13 @@ export function mountCompanion3D(host,{species='cat',name='Companion',home='obsi
   const sorted=faces.map(f=>{const projected=f.points.map(project);return {projected,depth:projected.reduce((t,p)=>t+p.z,0)/projected.length,color:f.color,shade:f.shade}}).sort((a,b)=>b.depth-a.depth);
   for(const {projected,color,shade} of sorted){ctx.fillStyle=hex(color,shade);ctx.strokeStyle='#07060845';ctx.lineWidth=1;ctx.beginPath();projected.forEach((v,i)=>i?ctx.lineTo(v.x,v.y):ctx.moveTo(v.x,v.y));ctx.closePath();ctx.fill();ctx.stroke()}
   if(!motion&&!dragging)yaw+=.0025*Math.min(2,Math.max(1,(now-prev)/16));prev=now;
-  if(!motion){frame=win.requestAnimationFrame(t=>{if(t-prev>=25)draw(t);else if(!disposed)frame=win.requestAnimationFrame(draw)})}
+  if(!motion)frame=win.requestAnimationFrame(draw)
  }
  const down=e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;canvas.style.cursor='grabbing';try{canvas.setPointerCapture(e.pointerId)}catch{}};
  const move=e=>{if(!dragging)return;yaw+=(e.clientX-lastX)*.012;pitch=Math.max(-.28,Math.min(.38,pitch+(e.clientY-lastY)*.004));lastX=e.clientX;lastY=e.clientY;if(motion)draw()};
  const up=()=>{dragging=false;canvas.style.cursor='grab'};
+ const observer=typeof win.IntersectionObserver==='function'?new win.IntersectionObserver(entries=>{visible=!!entries[0]?.isIntersecting;if(visible&&!frame&&!motion&&!disposed)draw()}):null;observer?.observe(canvas);
  canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
  draw();
- return ()=>{disposed=true;if(frame)win.cancelAnimationFrame(frame);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up)}
+ return ()=>{disposed=true;observer?.disconnect();if(frame)win.cancelAnimationFrame(frame);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up)}
 }
