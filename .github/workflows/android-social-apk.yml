@@ -6,6 +6,13 @@ on:
       - 'android/**'
       - '.github/workflows/android-social-apk.yml'
       - 'src/stories.js'
+      - 'src/app.js'
+      - 'src/experience.js'
+      - 'src/auth-recovery.js'
+      - 'public/index.html'
+      - 'tests/ui.test.mjs'
+      - 'tests/android-username-auth.test.mjs'
+      - 'supabase/functions/luo-auth/index.ts'
       - 'src/story-interactions.js'
       - 'supabase/migrations/20261023180000_story_interactive_stickers.sql'
   workflow_dispatch:
