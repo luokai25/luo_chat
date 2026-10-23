@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {LUO_CORE_FAMILIES,LUO_CORE_MOTIONS,createLuoCoreBrain} from '../src/luo-core-brain.js';
 import {installLuoCore} from '../src/luo-core-overlay.js';
+import {LUO_CORE_POSE_FAMILIES,synthesizeLuoCorePose} from '../src/luo-core-motion.js';
 
 test('Luo Core defines 336 unique parametric motion variations across 42 families',()=>{
  assert.equal(LUO_CORE_FAMILIES.length,42);
@@ -86,5 +87,43 @@ test('Luo Core is account-scoped: hiding for one user never hides for another',(
   a.signIn('b');a.tick(64);
   assert.equal(a.core.visible,true);
   assert.equal(a.w.localStorage.getItem('luo-core-enabled:b'),null);
+ }finally{a.core.dispose();a.dom.window.close()}
+});
+
+test('all 42 motion families produce real distinct animated poses and variant amplitudes',()=>{
+ assert.equal(LUO_CORE_POSE_FAMILIES.length,42);
+ const samples=LUO_CORE_POSE_FAMILIES.map(name=>synthesizeLuoCorePose({state:name,variant:3,elapsed:500},4200,false));
+ const signatures=new Set(samples.map(({family,moving,playful,resting,care,alert,...p})=>JSON.stringify(p)));
+ assert.equal(signatures.size,42,'each movement family has its own visible pose');
+ const a=synthesizeLuoCorePose({state:'play_yarn',variant:0,elapsed:500},4200,false);
+ const b=synthesizeLuoCorePose({state:'play_yarn',variant:7,elapsed:500},4200,false);
+ assert.notEqual(a.frontL,b.frontL,'variant intensity changes animated limbs');
+ assert.ok(a.toy>0&&b.toy>0);
+ const sleeping=synthesizeLuoCorePose({state:'sleep',variant:4,elapsed:450},4200,false);
+ assert.equal(sleeping.eyeClose,1);
+ assert.ok(sleeping.bodySquash<.7);
+ const reduced=synthesizeLuoCorePose({state:'leap',variant:4,elapsed:500},4200,true);
+ assert.equal(reduced.hop,0,'reduced motion removes bouncing while preserving a pose');
+});
+
+test('cat anchors to real visible bubbles and follows bubble scrolling without reading text',()=>{
+ const a=host();
+ try{
+  a.signIn('scroll-user');a.doc.getElementById('room').classList.add('active');
+  const bubble=a.doc.querySelector('.bubble');
+  let top=270;
+  bubble.getBoundingClientRect=()=>({left:25,top,width:280,height:48,right:305,bottom:top+48});
+  a.tick(16);
+  a.core.refresh();
+  const canvas=a.doc.querySelector('.luo-core-character');
+  // The first perch may use a hop; reduced-motion state snaps to the target.
+  a.tick(50);
+  assert.match(canvas.style.transform,/translate3d\\(/);
+  const first=canvas.style.transform;
+  top=360;
+  a.w.dispatchEvent(new a.w.Event('scroll'));
+  a.tick(90);
+  assert.notEqual(canvas.style.transform,first,'perch follows message position');
+  assert.ok(!a.core.brain.snapshot().eventCount,'scroll is not a message-read event');
  }finally{a.core.dispose();a.dom.window.close()}
 });
