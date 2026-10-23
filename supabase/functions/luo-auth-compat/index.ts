@@ -10,6 +10,7 @@ Deno.serve(async req=>{
  if(origin&&!allowed(origin))return reply(403,{error:'Origin not allowed.'});
  try{
  const body=await readRequestJSON(req),email=String(body.email||'').trim().toLowerCase(),action=String(body.action||'');
+ if(action==='capabilities')return reply(200,{ok:true,username_signin:true,username_signup:false,username_recovery:false,feature_flags:{google_oauth:false,story_interactive:false},reason:'Username-only registration and recovery require the pending protected Supabase database migration.'});
  if(action==='signin_username'){
   const username=String(body.username||'').trim().toLowerCase(),password=String(body.password||'');
   if(!/^[a-z0-9_]{3,24}$/.test(username)||password.length<8||password.length>128)return reply(400,{error:'Enter a valid username and password.'});
