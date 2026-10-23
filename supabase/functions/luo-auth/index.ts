@@ -95,7 +95,17 @@ Deno.serve(async req=>{
     const status=Number(created.error?.status||0);
     return reply(status>=500||status===0?503:409,{error:status>=500||status===0?'Account service temporarily unavailable.':'Could not create that username.'});
    }
-   const newId=created.data.user.id,codes=makeCodes();
+   const newId=created.data.user.id;
+   // GoTrue may set user_metadata after the auth.users INSERT. Its trigger
+   // can therefore install a fallback username. Correct the canonical profile
+   // on the trusted server, or delete this newly created account on failure.
+   let profileSaved;
+   try{profileSaved=await admin.from('profiles').update({username,display_name:username}).eq('id',newId).select('id,username').single()}catch(e){profileSaved={error:e}}
+   if(profileSaved.error||profileSaved.data?.id!==newId||profileSaved.data?.username!==username){
+    try{await admin.auth.admin.deleteUser(newId)}catch{}
+    return reply(503,{error:'Profile setup unavailable. No account was activated; retry later.'});
+   }
+   const codes=makeCodes();
    const hashes=await codeHashes(newId,codes);
    let stored;
    try{stored=await admin.rpc('replace_luo_recovery_codes',{target_user_id:newId,code_hashes:hashes})}catch(e){stored={data:false,error:e}}
