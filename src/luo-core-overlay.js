@@ -57,12 +57,12 @@ export function installLuoCore({win,getUser,random=Math.random}){
   if(owner===id)return;
   owner=id;brain=createLuoCoreBrain({random});menu.hidden=true;menuOpen=false;target=null;perchNode=null;hopTo=null;nextJump=0;
   enabled=id?pref(id):false;
-  root.hidden=!id||!enabled;restore.hidden=!id||enabled;
+  root.hidden=!id||!enabled||!roomVisible();restore.hidden=!id||enabled||!roomVisible();
   if(id)startInstalledLuoCoreOffline(win);
   if(id&&enabled){x=width()-170;y=height()-260;setStatus('');renderer.render(brain.snapshot(),0,reduced)}
  }
  function showMenu(){
-  if(!owner||!enabled)return;
+  if(!owner||!enabled||!roomVisible())return;
   menu.hidden=false;menuOpen=true;
   menu.style.setProperty('--luo-core-menu-x',Math.round(Math.max(8,Math.min(width()-204,x+90)))+'px');
   menu.style.setProperty('--luo-core-menu-y',Math.round(Math.max(8,Math.min(height()-255,y-30)))+'px');
@@ -70,7 +70,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
  }
  function dismissMenu(){menuOpen=false;menu.hidden=true;}
  function typing(){return !!doc.activeElement?.matches?.('input,textarea,[contenteditable="true"]')}
- function roomVisible(){return !!doc.getElementById('room')?.classList.contains('active')}
+ function roomVisible(){return doc.querySelector('.app')?.dataset.screen==='room'&&!!doc.getElementById('room')?.classList.contains('active')}
  const buttons=[
   ['Pet Luo Core','pet','Purr...'],
   ['Play together','play','Time to play!'],
@@ -163,7 +163,11 @@ export function installLuoCore({win,getUser,random=Math.random}){
  function frameLoop(now){
   frame=0;if(disposed)return;
   changeOwner();
-  if(owner&&enabled){
+  const inRoom=roomVisible();
+  root.hidden=!owner||!enabled||!inRoom;
+  restore.hidden=!owner||enabled||!inRoom;
+  if(!inRoom&&menuOpen)dismissMenu();
+  if(owner&&enabled&&inRoom){
    if(doc.visibilityState!=='hidden'){
     const elapsed=previous?Math.min(150,now-previous):16;
     if(!animate||now-lastFrame>=33){
@@ -237,7 +241,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
   get mode(){return renderer.mode},
   get motionCount(){return LUO_CORE_MOTIONS.length},
   get visible(){return !root.hidden},
-  refresh(){changeOwner();if(owner&&enabled)chooseAnchor(true)},
+  refresh(){changeOwner();if(owner&&enabled&&roomVisible())chooseAnchor(true)},
   signedOut(){owner=null;enabled=false;root.hidden=true;restore.hidden=true;dismissMenu();setStatus('')},
   dispose(){
    disposed=true;if(frame)win.cancelAnimationFrame?.(frame);

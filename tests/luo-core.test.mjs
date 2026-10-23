@@ -48,7 +48,7 @@ function host(){
  });
  const core=installLuoCore({win:w,getUser:()=>actor,random:()=>.2});
  const tick=(ms=16)=>{const next=pending;assert.ok(next);pending=null;next(ms)};
- return {dom,w,doc,core,tick,get drawCount(){return count},signIn:(id)=>{actor={id};doc.querySelector('.app').dataset.screen='home'},signOut:()=>{actor=null;doc.querySelector('.app').dataset.screen='auth'}};
+ return {dom,w,doc,core,tick,get drawCount(){return count},signIn:(id)=>{actor={id};doc.querySelector('.app').dataset.screen='room';doc.getElementById('room').classList.add('active')},signOut:()=>{actor=null;doc.querySelector('.app').dataset.screen='auth';doc.getElementById('room').classList.remove('active')}};
 }
 test('Luo Core is private to an authenticated user, sits above texts, and is dismissible',()=>{
  const a=host();
@@ -154,5 +154,20 @@ test('switching accounts resets the companion mind without leaking the previous 
   a.signOut();a.core.signedOut();a.tick(32);
   a.signIn('account-two');a.tick(70);
   assert.equal(a.core.brain.snapshot().affection,.53);
+ }finally{a.core.dispose();a.dom.window.close()}
+});
+
+test('Luo Core never covers home navigation and only appears inside conversations',()=>{
+ const a=host();
+ try{
+  a.signIn('web-user');a.tick(16);
+  assert.equal(a.core.visible,true);
+  a.doc.querySelector('.app').dataset.screen='home';
+  a.doc.getElementById('room').classList.remove('active');a.tick(46);
+  assert.equal(a.core.visible,false,'cat must not intercept New chat or primary navigation');
+  assert.equal(a.doc.querySelector('.luo-core-restore').hidden,true);
+  a.doc.querySelector('.app').dataset.screen='room';
+  a.doc.getElementById('room').classList.add('active');a.tick(86);
+  assert.equal(a.core.visible,true,'companion returns when a chat opens');
  }finally{a.core.dispose();a.dom.window.close()}
 });
