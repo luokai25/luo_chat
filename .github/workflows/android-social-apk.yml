@@ -1,0 +1,107 @@
+name: Luo Chat Android Social Test APK
+on:
+  push:
+    branches: [feature/social-android-test-20261023]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-social-apk.yml'
+      - 'src/stories.js'
+      - 'src/story-interactions.js'
+      - 'supabase/migrations/20261023180000_story_interactive_stickers.sql'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: luo-social-android-release
+  cancel-in-progress: true
+jobs:
+  build-and-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout approved GitHub source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install Node 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install tested web dependencies
+        run: npm ci --ignore-scripts
+      - name: Verify web release and security
+        run: |
+          node scripts/check-secrets.mjs
+          npm run release:check
+          npm run audit:production
+      - name: Verify Story RPC schema is part of release sources
+        run: |
+          test -s supabase/migrations/20261023180000_story_interactive_stickers.sql
+          node --test tests/story-interactions.test.mjs
+      - name: Set up Java 17
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Put verified web assets inside the test APK
+        run: |
+          set -euo pipefail
+          mkdir -p android/app/src/main/assets android/app/src/main/res/drawable-nodpi
+          cp -a dist/. android/app/src/main/assets/
+          icon="$(find dist -maxdepth 1 -type f -name 'icon-192-*.png' | head -n 1)"
+          test -n "$icon"
+          cp "$icon" android/app/src/main/res/drawable-nodpi/luo_icon.png
+          test -s android/app/src/main/assets/index.html
+          test -s android/app/src/main/assets/sw.js
+          echo "Packaged $(find android/app/src/main/assets -type f | wc -l) assets"
+      - name: Compile and test debug-signed Android APK
+        run: gradle --no-daemon -p android :app:assembleDebug
+      - name: Verify APK signature, permissions and included app bundle
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -n "$SDK_ROOT"
+          APKSIGNER="$(find "$SDK_ROOT/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose "$APK"
+          unzip -l "$APK" | grep -q "assets/index.html"
+          unzip -l "$APK" | grep -q "assets/sw.js"
+          cp "$APK" luo-chat-social-test.apk
+          sha256sum luo-chat-social-test.apk | tee luo-chat-social-test.apk.sha256
+      - name: Upload APK to GitHub Actions as a free test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: luo-chat-social-test-apk
+          path: |
+            luo-chat-social-test.apk
+            luo-chat-social-test.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish Android test prerelease to GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_NO: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          TAG="luo-social-test-$RUN_NO"
+          gh release create "$TAG" \
+            "luo-chat-social-test.apk" \
+            "luo-chat-social-test.apk.sha256" \
+            --target "$COMMIT_SHA" \
+            --title "Luo Chat Social Android Test #$RUN_NO" \
+            --notes "Preview-only, debug-signed Android APK built from tested GitHub branch commit $COMMIT_SHA. Not a Play Store release. Uses original Supabase backend; some social interactions remain disabled until matching private database migrations are approved/deployed. Camera and microphone permission requires explicit Android consent. To install subsequent builds you may need to uninstall older debug-signed versions because GitHub runners create different debug keys." \
+            --prerelease \
+            --latest=false
