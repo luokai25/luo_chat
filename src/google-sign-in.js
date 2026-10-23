@@ -1,6 +1,16 @@
 // Google credentials stay on Google's page. This app only starts Supabase's OAuth flow.
 export function installGoogleSignIn({win,db,$,projectUrl,publicKey,onStart=()=>{},setBusy=()=>{},navigate=url=>win.location.assign(url)}){
  const button=$('googleSignIn'),status=$('googleAuthStatus'),retry=$('retryGoogleAuth');
+ // Google OAuth has not been enabled or verified in the production Supabase project.
+ // When these controls are intentionally absent, do not probe Auth settings during an outage.
+ // Keep a safe lifecycle interface for callers until a tested Google integration is activated.
+ if(!button||!status||!retry){
+  return {
+   reset(){},
+   sessionReady(){const url=new URL(win.location.href);if(url.searchParams.get('auth')==='google'){url.searchParams.delete('auth');for(const param of ['error','error_code','error_description'])url.searchParams.delete(param);win.history.replaceState(null,'',url.pathname+url.search+url.hash)}},
+   dispose(){}
+  };
+ }
  const backend=new URL(projectUrl),callback=win.location.origin+'/?auth=google';
  let available=false,running=false,disposed=false,checkId=0,attempt=0,controller=null;
  function render(){button.disabled=!available||running;button.textContent=running?'Opening Google…':'Continue with Google'}

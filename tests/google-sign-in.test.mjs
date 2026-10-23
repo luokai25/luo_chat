@@ -14,3 +14,16 @@ test('unexpected OAuth destinations and redirect targets never navigate',async()
 test('Google cancellation is readable and callback error details are removed from the URL',async()=>{for(const suffix of ['?auth=google&error=access_denied&error_description=private_detail','?auth=google#error=access_denied&error_description=private_detail']){const t=await setup({url:'https://chat.example/'+suffix});try{assert.match(t.$('googleAuthStatus').textContent,/cancelled/);assert.equal(t.$('googleAuthStatus').textContent.includes('private_detail'),false);assert.equal(t.w.location.href,'https://chat.example/')}finally{t.end()}}});
 test('an OAuth response arriving after reset cannot navigate the user away',async()=>{let release;const pending=new Promise(resolve=>release=resolve);const t=await setup({oauth:()=>pending});try{t.$('googleSignIn').click();t.api.reset();release({data:{url:'https://backend.example/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fchat.example%2F%3Fauth%3Dgoogle'}});await tick();assert.equal(t.navigations.length,0);assert.equal(t.$('googleSignIn').disabled,false);assert.equal(t.busy.at(-1),false)}finally{t.end()}});
 test('returning from the provider restores the sign-in controls',async()=>{const t=await setup();try{t.$('googleSignIn').click();await tick();assert.equal(t.$('googleSignIn').disabled,true);t.w.dispatchEvent(new t.w.PageTransitionEvent('pageshow',{persisted:true}));assert.equal(t.$('googleSignIn').disabled,false);assert.equal(t.busy.at(-1),false)}finally{t.end()}});
+
+test('an intentionally hidden Google provider performs no health-check request or OAuth attempt',async()=>{
+ const dom=new JSDOM('<p id="authmsg" role="status"></p>',{url:'https://chat.example/',runScripts:'outside-only'});
+ const w=dom.window,requests=[];
+ w.fetch=async()=>{requests.push('settings');throw Error('Unexpected Google probe')};
+ const db={auth:{signInWithOAuth:async()=>{requests.push('oauth');throw Error('Unexpected Google login')}}};
+ const api=installGoogleSignIn({win:w,db,$:id=>w.document.getElementById(id),projectUrl:'https://backend.example',publicKey:'sb_publishable_test'});
+ assert.deepEqual(requests,[]);
+ assert.equal(w.document.querySelector('#googleSignIn'),null);
+ api.reset();api.sessionReady();api.dispose();
+ assert.deepEqual(requests,[]);
+ dom.window.close();
+});

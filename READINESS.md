@@ -41,7 +41,7 @@ See `FEATURES.md` for exact scopes. End-to-end encryption, biometrics, individua
 
 ## Google sign-in activation blocker
 
-Live provider settings report Google disabled. The application integration is built; Google Cloud OAuth client registration, Supabase provider secrets/redirect configuration and actual consent/return flows are not verified. See `GOOGLE_SIGN_IN.md`. No Google passwords belong in Luo Chat fields.
+Live provider settings report Google disabled. As of October 23, 2026 the nonfunctional Google sign-in button has been removed from the public login page and its availability probing is stopped. OAuth remains deliberately inactive until Google client registration, Supabase provider secrets/redirect configuration, security-warning resolution, and real consent/return tests are verified. See `GOOGLE_SIGN_IN.md`. No Google passwords belong in Luo Chat fields.
 
 ## 14.1.1 security follow-up
 
