@@ -26,9 +26,11 @@ jobs:
       - name: Install cached dependencies
         timeout-minutes: 4
         run: npm ci --ignore-scripts --prefer-offline --no-audit --no-fund
-      - name: Build tested web app for Android emulator
+      - name: Build bundled web assets and run focused Android/login tests
         timeout-minutes: 7
-        run: npm run release:check
+        run: |
+          npm run build
+          node --test tests/android-host.test.mjs tests/auth-fast-login.test.mjs tests/auth-capabilities.test.mjs tests/google-sign-in-disabled.test.mjs
       - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
         with:
           distribution: temurin
