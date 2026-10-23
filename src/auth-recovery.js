@@ -13,8 +13,8 @@ export function describeAuthError(error,phase='signin'){
   'Luo Chat cannot reach the sign-in service right now. Your saved session may still be valid. Retry restoration when the connection recovers.':
   'Luo Chat sign-in is temporarily unavailable. Your account and chats have not been deleted. Please retry shortly.';
  const code=String(error?.code||'').toLowerCase();
- if(code==='invalid_credentials')return 'Email or password was not accepted. Check both and try again.';
- if(code==='email_not_confirmed')return 'Please confirm your email before signing in.';
+ if(code==='invalid_credentials')return 'Username or password was not accepted. Check both and try again.';
+ if(code==='email_not_confirmed')return 'This account needs migration support before username sign-in. Contact Luo Chat support.';
  if(code==='over_email_send_rate_limit')return 'Email requests are temporarily limited. Please try again later.';
  if(phase==='restore')return 'Your session could not be restored. You can retry or sign in again.';
  return String(error?.message||'Authentication could not finish. Please retry.').slice(0,260);
