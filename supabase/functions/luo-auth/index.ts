@@ -142,6 +142,9 @@ Deno.serve(async req=>{
    const verified=await client.auth.getUser(jwt);
    if(verified.error||!verified.data?.user?.id)return reply(401,{error:'Sign in again to enable recovery.'});
    const userId=verified.data.user.id;
+   if(!verified.data.user.email||password.length<8)return reply(401,{error:'Re-enter your current Luo Chat password.'});
+   const proof=await client.auth.signInWithPassword({email:verified.data.user.email,password});
+   if(proof.error||proof.data?.user?.id!==userId)return reply(401,{error:'Current password was not accepted.'});
    const quota=await admin.rpc('consume_auth_action_limit',{action_name:'password_reset',email_digest:await digest('recovery:'+userId),ip_digest:ipHash,max_email:3,max_ip:100,window_minutes:60});
    if(quota.error||quota.data!==true)return reply(429,{error:'Recovery enrollment is temporarily limited.'});
    const codes=makeCodes(),hashes=await codeHashes(userId,codes);
