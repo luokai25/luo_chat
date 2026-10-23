@@ -7,6 +7,7 @@ on:
       - 'scripts/luo-core-model.mjs'
       - 'src/luo-core-offline.js'
       - 'src/luo-core-overlay.js'
+      - 'src/luo-core-master-preview.js'
       - 'src/luo-core-renderer.js'
       - 'src/luo-core-motion.js'
       - 'src/app.js'
