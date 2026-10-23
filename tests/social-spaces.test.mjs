@@ -103,3 +103,25 @@ test('Interest recommendations require explicit public tag visibility as well as
  assert.equal(saved.input.sections.tags,'public');
  h.window.close();
 });
+
+
+test('Unlocked Time Capsule visibly unfolds its envelope before revealing letter and handles closing',async()=>{
+ const h=harness({'get_chat_connections':[],'feed':[{kind:'capsule',id:'capsule-one',locked:false,title:'A golden surprise',body:'Just for you',unlock_at:new Date(Date.now()-60000).toISOString(),author:{username:'friend'}}]});
+ h.window.matchMedia=()=>({matches:false});
+ const proto=h.window.HTMLDialogElement.prototype;
+ proto.showModal=function(){this.setAttribute('open','');};
+ proto.close=function(){this.removeAttribute('open');};
+ h.doc.querySelector('[data-tab="social"]').click();await h.flush();
+ [...h.doc.querySelectorAll('.luo-social-chip')].find(b=>b.textContent==='Time Capsules').click();await h.flush();
+ const open=[...h.doc.querySelectorAll('.luo-social-capsule button')].find(b=>b.textContent==='Open letter');assert.ok(open);
+ open.click();await h.flush();
+ const modal=h.doc.querySelector('.luo-capsule-dialog');assert.ok(modal.open);
+ const unfold=[...modal.querySelectorAll('button')].find(b=>b.textContent==='Unfold letter');assert.ok(unfold);
+ unfold.click();
+ assert.ok(modal.querySelector('.luo-capsule-envelope.luo-capsule-unsealing'));
+ assert.equal(modal.querySelector('.luo-capsule-letter'),null);
+ await new Promise(resolve=>setTimeout(resolve,730));
+ assert.equal(modal.querySelector('.luo-capsule-letter p').textContent,'Just for you');
+ assert.equal(modal.querySelectorAll('.luo-capsule-release-particle').length,0);
+ h.window.close();
+});
