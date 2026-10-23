@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {installConnections} from '../src/connections.js';
-function setup(){
+function setup(social=null){
  const dom=new JSDOM('<div class="app"><div id="new"></div><div id="settings-profile"></div><strong id="roomtitle"></strong><div id="roomavatar"></div><button id="manageGroup"></button></div>',{url:'https://app.example'}),w=dom.window,doc=w.document;
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'))};w.confirm=()=>true;
  let actor={id:'me'},relation='none',blocked=false,hold=null,error=null;const calls=[],notices=[];
  const person={id:'peer',username:'friend',display_name:'<img onerror=evil()>',bio:'<script>private()</script>',avatar_url:'https://byjixqwpjvsgmqilmzbm.supabase.co/storage/v1/object/public/avatars/peer/photo.png'};
- const db={rpc:async(name,args)=>{calls.push({name,args});if(hold){const wait=hold;hold=null;await wait}if(error)throw Error(error);if(name==='get_chat_person')return {data:[{...person,relationship:relation,is_blocked:blocked}]};if(name==='change_chat_connection'){relation=({request:'outgoing',accept:'friends',decline:'none',cancel:'none',remove:'none'})[args.connection_action];return {data:null}}if(name==='set_chat_user_block'){blocked=args.should_block;relation='none';return {data:null}}return {data:[]}}};
+ const db={rpc:async(name,args)=>{calls.push({name,args});if(hold){const wait=hold;hold=null;await wait}if(error)throw Error(error);if(name==='luo_space')return {data:args.action==='pair.get'?{approved:!!social,data:{theme:'moonlit'}}:(social||{})};if(name==='get_chat_person')return {data:[{...person,relationship:relation,is_blocked:blocked}]};if(name==='change_chat_connection'){relation=({request:'outgoing',accept:'friends',decline:'none',cancel:'none',remove:'none'})[args.connection_action];return {data:null}}if(name==='set_chat_user_block'){blocked=args.should_block;relation='none';return {data:null}}return {data:[]}}};
  const api=installConnections({win:w,db,$:id=>doc.getElementById(id),getUser:()=>actor,getCurrent:()=>({kind:'direct',person}),note:s=>notices.push(s),startChat:async username=>calls.push({name:'start',username}),refreshBlocks:async()=>{},projectUrl:'https://byjixqwpjvsgmqilmzbm.supabase.co'});
  return {dom,w,doc,api,calls,notices,setRelation:v=>relation=v,setActor:v=>actor=v,setError:v=>error=v,holdNext(){let release;hold=new Promise(r=>release=r);return release}};
 }
@@ -19,3 +19,15 @@ test('incoming request approval, removal, blocking and unblocking use authentica
 test('stale profile and list responses cannot restore data after signout and same-account return',async()=>{const {dom,doc,api,holdNext}=setup();const release=holdNext(),pending=api.open('peer');api.signedOut();release();await pending;assert.equal(doc.querySelector('#personBody').textContent,'');assert.equal(doc.getElementById('personDialog').open,false);dom.window.close()});
 test('failed requests keep controls usable and show feedback without changing the relationship',async()=>{const {dom,doc,api,setError}=setup();await api.open('peer');setError('Network unavailable');click(doc,'Add friend');await tick();assert.match(doc.getElementById('personStatus').textContent,/Network unavailable/);assert.equal([...doc.querySelectorAll('#personActions button')].find(b=>b.textContent==='Add friend').disabled,false);dom.window.close()});
 test('room avatar keyboard activation opens profile and message action dismisses all overlays',async()=>{const {dom,doc,w,api,calls}=setup();doc.getElementById('roomavatar').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter'}));await tick();assert.ok(doc.getElementById('personDialog').open);const stories=doc.createElement('dialog');doc.body.append(stories);stories.showModal();click(doc,'Message');await tick();assert.ok(calls.some(c=>c.name==='start'&&c.username==='friend'));assert.equal(doc.querySelectorAll('dialog[open]').length,0);dom.window.close()});
+
+
+test('Privacy-filtered profile extras and mutually approved themes enrich existing profile without changing chat actions',async()=>{
+ const {dom,doc,api,setRelation}=setup({interests:['anime','poetry'],music:'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',presence:'busy',mutual:[{username:'sharedfriend'}]});
+ setRelation('friends');await api.open('peer');
+ assert.equal(doc.getElementById('personDialog').dataset.sharedTheme,'moonlit');
+ assert.match(doc.getElementById('personBody').textContent,/anime/);
+ assert.match(doc.getElementById('personBody').textContent,/sharedfriend/);
+ assert.equal(doc.querySelector('.luo-profile-extra a')?.getAttribute('rel'),'noopener noreferrer');
+ assert.ok([...doc.querySelectorAll('#personActions button')].some(x=>x.textContent==='Message'));
+ api.signedOut();dom.window.close();
+});

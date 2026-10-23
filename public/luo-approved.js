@@ -5,6 +5,7 @@ const svg={
 camera:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7l2-3h4l2 3"/><circle cx="12" cy="14" r="3"/>',
 more:'<circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/>',
 chat:'<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.95L3 21l1.9-5.5A8.5 8.5 0 1 1 21 11.5Z"/>',
+social:'<path d="M12 3l2.9 6.1L22 10l-5.2 4.9L18 22l-6-3.3L6 22l1.2-7.1L2 10l7.1-.9Z"/>',
 updates:'<circle cx="12" cy="12" r="8" stroke-dasharray="2 4"/><circle cx="12" cy="12" r="3"/>',
 users:'<circle cx="9" cy="8" r="3"/><path d="M2 21v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M16 15a5 5 0 0 1 6 5"/>',
 phone:'<path d="M4 4l5 1 2 5-3 2c2 4 4 6 8 8l2-3 5 2-1 5C11 27-2 14 4 4Z"/>',
@@ -47,11 +48,11 @@ function create(){
  for(const [btn,kind] of [[voice,'audio'],[video,'video']])btn.addEventListener('click',()=>{source.click();let n=0;const handle=()=>{if(app.dataset.screen==='room'){obs.disconnect();makeCall(kind)}else if(++n>25)obs.disconnect()};const obs=new MutationObserver(handle);obs.observe(app,{attributes:true,attributeFilter:['data-screen']});setTimeout(()=>{obs.disconnect();if(app.dataset.screen==='room')makeCall(kind)},450)});
  row.append(label,voice,video);callList.append(row)}if(!list.length){const empty=document.createElement('p');empty.className='empty';empty.textContent='Start a conversation to call someone.';callList.append(empty)}}
  const nav=document.createElement('nav');nav.id='luoApprovedNav';nav.setAttribute('aria-label','Main mobile navigation');
- const entries=[['Chats','chat','chats'],['Updates','updates','updates'],['Communities','users','group'],['Calls','phone','calls']];
+ const entries=[['Chats','chat','chats'],['Updates','updates','updates'],['Groups','users','group'],['Social','social','social'],['Calls','phone','calls']];
  let active='chats';let callsOpen=false;
  function refresh(){for(const b of nav.querySelectorAll('button'))b.setAttribute('aria-current',b.dataset.target===active?'page':'false')}
  function closeCalls(){callsOpen=false;app.classList.remove('luo-calls-open')}
- function navTo(key){if(key!=='calls')closeCalls();if(key==='chats'){clickTab('chats');active='chats'}else if(key==='updates'){const btn=$('luoModernUpdates');if(btn)btn.click();else{clickTab('new');$('openStories')?.click()}active='updates'}else if(key==='group'){clickTab('group');active='group'}else if(key==='calls'){clickTab('chats');populateCalls();callsOpen=true;app.classList.add('luo-calls-open');active='calls'}refresh()}
+ function navTo(key){if(key!=='calls')closeCalls();if(key==='chats'){clickTab('chats');active='chats'}else if(key==='updates'){const btn=$('luoModernUpdates');if(btn)btn.click();else{clickTab('new');$('openStories')?.click()}active='updates'}else if(key==='group'){clickTab('group');active='group'}else if(key==='social'){clickTab('social');active='social'}else if(key==='calls'){clickTab('chats');populateCalls();callsOpen=true;app.classList.add('luo-calls-open');active='calls'}refresh()}
  for(const [label,picto,key] of entries){const b=document.createElement('button');b.type='button';b.dataset.target=key;b.setAttribute('aria-label',label);b.innerHTML='<span class="luo-nav-icon">'+icon(picto)+'</span><span>'+label+'</span>';b.addEventListener('click',()=>navTo(key));nav.append(b)}app.append(nav);refresh();
  const tools=room.querySelector('.roomtools');
  for(const [label,kind] of [['Voice call','audio'],['Video call','video']]){const b=document.createElement('button');b.type='button';b.className='luo-approved-icon';b.id=kind==='audio'?'luoApprovedVoiceCall':'luoApprovedVideoCall';b.setAttribute('aria-label',label);b.innerHTML=icon(kind==='audio'?'phone':'video');b.addEventListener('click',()=>makeCall(kind));tools?.prepend(b)}
@@ -59,7 +60,7 @@ function create(){
  if(form&&body){const mic=document.createElement('button');mic.type='button';mic.id='luoApprovedMic';mic.setAttribute('aria-label','Record voice message');mic.title='Record voice message';mic.innerHTML=icon('mic');mic.addEventListener('click',()=>{if(!$('recordChatVoice'))return;$('recordChatVoice').click()});form.append(mic);
  const sync=()=>{const hasText=!!body.value.trim();const hasFile=file&&!file.classList.contains('hidden');form.classList.toggle('luo-can-record',!hasText&&!hasFile)};
  body.addEventListener('input',sync);new MutationObserver(sync).observe(file||form,{attributes:true,attributeFilter:['class']});sync()}
- const appObs=new MutationObserver(()=>{if(app.dataset.screen==='home'&&!callsOpen){const tab=app.dataset.tab;if(tab==='chats')active='chats';else if(tab==='group')active='group';else if(tab==='new')active='updates';refresh()}if(app.dataset.screen!=='home'){closeCalls();if(active==='calls')active='chats';refresh()}});
+ const appObs=new MutationObserver(()=>{if(app.dataset.screen==='home'&&!callsOpen){const tab=app.dataset.tab;if(tab==='chats')active='chats';else if(tab==='group')active='group';else if(tab==='new')active='updates';else if(tab==='social')active='social';refresh()}if(app.dataset.screen!=='home'){closeCalls();if(active==='calls')active='chats';refresh()}});
  appObs.observe(app,{attributes:true,attributeFilter:['data-screen','data-tab']});
  const chatsObs=new MutationObserver(()=>{if(filter==='favorites')applyFavorites()});
  if($('chatlist'))chatsObs.observe($('chatlist'),{childList:true});
