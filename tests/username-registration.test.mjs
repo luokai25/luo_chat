@@ -34,7 +34,7 @@ function harness({quota=true,exists=false,storeFails=false,validPassword=true,co
  const Deno={env:{get:x=>x==='SUPABASE_URL'?'https://example.supabase.co':x==='SUPABASE_ANON_KEY'?'anon-fixture':'service-secret-fixture'},serve:f=>handler=f};
  vm.runInNewContext(shared+'\n'+script,{createClient:()=>admin,Deno,Response,Request,URL,TextEncoder,TextDecoder,Uint8Array,AbortSignal,crypto:webcrypto,setTimeout,clearTimeout,fetch,Date});
  const post=(action,values={},headers={})=>new Request('https://edge.test',{method:'POST',headers:{'content-type':'application/json',origin:'https://luo-chat-luokai25.vercel.app','x-real-ip':'203.0.113.1',...headers},body:JSON.stringify({action,...values})});
- return {get handler(){return handler},post,get created(){return created},deleted,stored,passwordChanges,calls,id};
+ return {get handler(){return handler},post,get created(){return created},deleted,get stored(){return stored},passwordChanges,calls,id};
 }
 test('brand new username signup creates a confirmed internal Auth user without Gmail, then issues ten recovery codes',async()=>{
  const h=harness(),response=await h.handler(h.post('signup_username',{username:'New_Account',password:'strong-chosen-password'})),body=await response.json();
