@@ -18,3 +18,13 @@ Approved visual: the white kitten from the October 23 conversation, not the prev
 - Current Blender scene: revision **2**, rigged blockout with named body, head, legs, tail, ears, materials, collar, keyframe sequence.
 - Status **NOT READY** for production: requires fur/groom realism, ear and muzzle refinement, collision/grounding, animation auditing, visual review, GPU tests.
 - Existing production 3D cat is not the approved model. Its old shape must not be presented as complete.
+
+## Detailed Blender rig development (revision 6)
+
+- Blender source project: https://higgsfield.ai/3d-jutsu/277af779-b874-4dc9-a783-d420083ff214
+- 64 named bones covering cervical/thoracic/lumbar spine, pelvis, scapulae, fore/hind limbs, individual toes, ear cartilage, eye orbits, jaw, tongue, and nine caudal/tail vertebrae; bones have authored joint poses at 15 animation checkpoints.
+- Separate visible controls: ears (2), eye gaze (2), elbow/wrist (2), hind knees (2), independently flexed front/hind toes (12), six linked tail section controllers, blinking eyelids, moving lower jaw and tongue, whiskers.
+- Weighted skin deformation across BODY and BIB with four maximum spine influences per vertex, properly armature-parented for GLB export.
+- Procedural white/pearl/silver coat: 8,000 body hairs, 9,300 head hairs, 1,900 cheek hairs, and 6,180 six-joint tail hairs. Facial and body hairs have morph-based tip motion; tail coats move with articulated joints. Total **25,380 authored strand units**, realized as strips/geometry, not true physics-simulated follicles.
+- Hidden internal driver proxies: lungs, diaphragm and heart with animated breathing/pulse. **NOT** a realistic organ simulator; it does not purport to replicate veterinary anatomy or physiology.
+- Generated still audit at rest and aerial apex in progress. Live website is not changed. Mesh still requires visual inspection and further corrective sculpting, testing and app integration before release.
