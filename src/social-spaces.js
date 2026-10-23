@@ -3,7 +3,7 @@ import {mountCompanion3D} from './companion-3d.js';
 import {renderMemoryConstellations} from './memory-constellations.js';
 // Luo social hub: this is an interface over the already deployed, access-controlled luo_space RPC.
 // Do not persist another copy of private social content in localStorage.
-export function installSocialSpaces({win,db,$,note,getUser,getChats,tab}) {
+export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPerson}) {
  const doc=win.document;
  const mk=(tag,cls,text)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n};
  const btn=(label,fn,cls='ghost')=>{const n=mk('button',cls,label);n.type='button';n.addEventListener('click',async()=>{if(n.disabled)return;n.disabled=true;try{await fn()}catch(err){if(getUser())note(err.message||'This action could not finish.')}finally{n.disabled=false}});return n};
@@ -20,7 +20,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab}) {
  const page=mk('section','sub hidden luo-social-page');page.id='social';
  page.setAttribute('aria-label','Luo social spaces');
  const hero=mk('div','luo-social-hero');hero.append(mk('p','luo-social-eyebrow','LUO SOCIAL'),mk('h2','','Together feels closer'),mk('p','muted','Friends, memories, stories and special moments in one place.'));
- const options=[['feed','Friends feed'],['clips','Clips'],['sessions','Together'],['memories','Memories'],['capsule','Time Capsules'],['notes','Notes'],['pair','Shared bonds'],['questions','Questions'],['events','Events'],['communities','Communities'],['profile','My interests'],['alerts','Alerts'],['activity','Activity']];
+ const options=[['feed','Friends feed'],['search','Search'],['clips','Clips'],['sessions','Together'],['memories','Memories'],['capsule','Time Capsules'],['notes','Notes'],['pair','Shared bonds'],['questions','Questions'],['events','Events'],['communities','Communities'],['profile','My interests'],['alerts','Alerts'],['activity','Activity']];
  const tabs=mk('div','luo-social-tabs');tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Social features');
  let section='feed',epoch=0,request=0,releaseMemory=()=>{};
  const output=mk('div','luo-social-content');output.setAttribute('aria-live','polite');
@@ -74,6 +74,22 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab}) {
  if(key==='questions'){const rooms=(getChats()||[]).filter(c=>c.id);const room=select([['','Choose a conversation'],...rooms.map(c=>[c.id,c.title||c.name||c.person?.display_name||c.id.slice(0,8)])]);const q=input('textarea','Ask something fun or thoughtful',12000),a=input('text','First choice',80),b=input('text','Second choice',80),x=input('text','What appears after choosing the first answer?',500),y=input('text','What appears after choosing the second answer?',500);output.append(form('Interactive questions','Ask inside a conversation and reveal a custom follow-up for each answer.',[['room','Conversation',room],['question','Your question',q],['first','Option A',a],['followupA','Reveal for A',x],['second','Option B',b],['followupB','Reveal for B',y]],async(f,actor)=>{if(!f.room.value||!f.question.value.trim()||!f.first.value.trim()||!f.second.value.trim())throw Error('Choose a conversation and add your question with two choices.');const id=win.crypto.randomUUID();await call('entry.create',{id,kind:'question',room_id:f.room.value,audience:'room',body:f.question.value.trim(),data:{choices:[{label:f.first.value.trim(),followup:f.followupA.value},{label:f.second.value.trim(),followup:f.followupB.value}]}});if(actual(actor))await call('entry.publish',{id,media:[]})},'Send question'));const list=mk('section','luo-social-card');list.append(header('Your questions','Questions respect conversation membership.'));const actor=getUser()?.id,ticket=++request;try{const items=await call('feed',{kind:'question'});if(!alive(actor,ticket))return;for(const item of items||[]){const article=mk('article');article.append(mk('h4','',item.body));for(const [i,c] of (item.data?.choices||[]).entries())article.append(btn(c.label,async()=>{const result=await call('response',{id:item.id,kind:'answer',choice:i,operation:win.crypto.randomUUID()});note(result?.followup||'Response saved.')}));list.append(article,mk('div','luo-social-divider'))}if(!items?.length)list.append(mk('p','muted','No interactive questions yet.'));output.append(list)}catch(err){if(alive(actor,ticket))output.append(mk('p','muted',err.message))}return}
 
 
+
+ if(key==='search'){
+  const searchForm=mk('section','luo-social-card'),term=input('search','Search usernames, posts, clips, communities and events',100),results=mk('div');searchForm.append(header('Search Luo','Search only the public or shared content you are allowed to see.'),label('Search',term));const buttons=mk('div','luo-social-actions');searchForm.append(buttons,results);output.append(searchForm);
+  const search=async()=>{const q=term.value.trim(),actor=getUser()?.id,ticket=++request;if(q.length<2||q.length>100)throw Error('Use between 2 and 100 characters.');results.replaceChildren(mk('p','muted','Searching…'));
+   const data=await call('search',{query:q});if(!alive(actor,ticket)||section!=='search')return;results.replaceChildren();
+   const people=mk('section');people.append(mk('h4','','People'));
+   for(const p of data.people||[]){const row=mk('div','luo-social-actions');row.append(mk('p','',p.display_name||'@'+p.username));if(openPerson)row.append(btn('View @'+p.username,()=>openPerson(p.id)));people.append(row)}
+   if(!data.people?.length)people.append(mk('p','muted','No matching usernames.'));
+   results.append(people,mk('div','luo-social-divider'));
+   const items=mk('section');items.append(mk('h4','','Posts, Clips & Communities'));
+   for(const item of data.content||[]){const row=mk('article','luo-social-card');row.append(mk('p','luo-social-meta',(item.kind||'Post')+' · @'+(item.author?.username||'')));row.append(mk('strong','',item.title||''),mk('p','',item.body?.slice(0,300)||''));row.append(btn('Browse '+item.kind,()=>show(({post:'feed',clip:'clips',event:'events',community:'communities'})[item.kind]||'feed')));items.append(row)}
+   if(!data.content?.length)items.append(mk('p','muted','No visible social content matched.'));
+   results.append(items)
+  };
+  buttons.append(btn('Search social',search,'primary'),btn('Search my messages',async()=>{const q=term.value.trim();tab('chats');const toggle=$('globalSearchToggle');if(toggle)toggle.click();const field=$('globalSearchInput');if(field&&q){field.value=q;field.dispatchEvent(new win.Event('input',{bubbles:true}))}}));return
+ }
  if(key==='memories'){releaseMemory=renderMemoryConstellations({win,db,note,getUser,getChats,output});return}
  if(key==='sessions'){await sessions.render(output);return}
  if(key==='clips'){
