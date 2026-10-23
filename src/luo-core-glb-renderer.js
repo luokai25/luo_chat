@@ -18,7 +18,7 @@ export function luoCoreAnimationTime(state={},reduced=false){
 }
 export function prepareLuoCoreScene(gltf){
  const remove=[];
- gltf.scene.traverse(o=>{if(o.isLight||o.isCamera)remove.push(o)});
+ gltf.scene.traverse(o=>{if(o.isLight||o.isCamera||o.name.startsWith('STUDIO_'))remove.push(o)});
  for(const obj of remove)obj.parent?.remove(obj);
  const bounds=new THREE.Box3().setFromObject(gltf.scene);
  if(bounds.isEmpty())throw Error('Luo Core model is missing visible geometry.');
