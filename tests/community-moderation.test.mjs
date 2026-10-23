@@ -23,9 +23,9 @@ test('only accepted slow-mode settings and posting restrictions are submitted th
  const h=setup();assert.ok(h.wrapper);
  const sel=h.output.querySelector('.luo-community-mod-setting select'),check=h.output.querySelector('input[type=checkbox]');
  assert.equal(sel.value,'30');sel.value='300';check.checked=true;
- h.button('Save posting controls').click();await h.flush();
+ h.button('Save draft posting preferences').click();await h.flush();
  assert.deepEqual(h.requests,[{action:'community.moderate',input:{id:'comm-1',slow_seconds:300,restricted:true}}]);
- assert.match(h.output.querySelector('[role=status]').textContent,/saved/);
+ assert.match(h.output.querySelector('[role=status]').textContent,/not active yet/);
  h.dom.window.close();
 });
 test('membership actions show pending approved and rejected members and route moderator decisions to server',async()=>{
