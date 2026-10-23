@@ -12,8 +12,8 @@ test('Supabase 500/504 and transport deadlines are outages rather than invalid p
 });
 test('invalid password, email confirmation and ordinary user errors keep accurate explanations',()=>{
  assert.equal(isTransientAuthError({status:400,code:'invalid_credentials',message:'Invalid login credentials'}),false);
- assert.match(describeAuthError({status:400,code:'invalid_credentials'}),/Email or password/);
- assert.match(describeAuthError({status:400,code:'email_not_confirmed'}),/confirm your email/);
+ assert.match(describeAuthError({status:400,code:'invalid_credentials'}),/Username or password/);
+ assert.match(describeAuthError({status:400,code:'email_not_confirmed'}),/migration support/);
  assert.match(describeAuthError({message:'Permission denied'}),/Permission denied/);
 });
 test('restoration error is explicit and never claims a session or user has been deleted',()=>{
