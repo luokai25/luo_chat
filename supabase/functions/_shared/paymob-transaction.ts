@@ -54,7 +54,9 @@ export function parsePaidPaymobTransaction(payload){
  const amount=Number(obj.amount_cents),currency=String(obj.currency||'');
  if(!/^[0-9]+$/.test(id)||!/^[0-9]+$/.test(orderId)||!Number.isSafeInteger(amount)||amount<=0)return null;
  if(!['EGP','USD','EUR'].includes(currency))return null;
- if(obj.success!==true||obj.pending!==false||obj.is_refunded===true||obj.is_voided===true)return null;
+ if(obj.is_refunded===true)return {provider:'paymob',event_id:id+':refunded',provider_order_id:orderId,amount_minor:amount,currency,status:'refunded'};
+ if(obj.is_voided===true)return {provider:'paymob',event_id:id+':voided',provider_order_id:orderId,amount_minor:amount,currency,status:'disputed'};
+ if(obj.success!==true||obj.pending!==false)return null;
  if(obj.error_occured===true||obj.is_auth===true||obj.is_capture===true)return null;
  return {provider:'paymob',event_id:id,provider_order_id:orderId,amount_minor:amount,currency,status:'paid'};
 }
