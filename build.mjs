@@ -17,7 +17,7 @@ const manifest=JSON.parse(await readFile('dist/manifest.json','utf8'));for(const
 let html=await readFile('dist/index.html','utf8');html=html.replace('<span id="appVersion">development</span>','<span id="appVersion">'+release+'</span>').replace('</head>','<meta name="luo-version" content="'+release+'"></head>');for(const [old,fresh] of Object.entries(iconMap))html=html.replaceAll(old,fresh);html=html.replace('src="/app.js"','src="/'+js+'"').replace('href="/style.css"','href="/'+css+'"');await writeFile('dist/index.html',html);
 const shell=['/index.html','/'+js,'/'+css,...Object.values(iconMap),'/'+manifestName];
 const version=createHash('sha256').update(html).digest('hex').slice(0,12);
-await writeFile('dist/sw.js',`const CACHE='luo-chat-${version}',SHELL=${JSON.stringify(shell)},PUSH_ICON=${JSON.stringify(iconMap['/icon-192.png'])};
+await writeFile('dist/sw.js',`const CACHE='luo-chat-${version}',SHELL=${JSON.stringify(shell)};const PUSH_ICON=${JSON.stringify(iconMap['/icon-192.png'])};
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE_UPDATE')event.waitUntil(self.skipWaiting());});
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));});
 self.addEventListener('push',event=>{let payload;try{payload=event.data.json()}catch{payload={}}const owner=typeof payload?.data?.owner==='string'&&/^[a-f0-9-]{36}$/.test(payload.data.owner)?payload.data.owner:null;event.waitUntil(self.registration.showNotification('Luo Chat',{body:payload?.kind==='call'?'Incoming Luo Chat call':'You have a new message',icon:PUSH_ICON,badge:PUSH_ICON,tag:owner?'luo-push-'+owner:'luo-push',data:{luo:true,owner}}));});
