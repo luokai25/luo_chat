@@ -8,7 +8,7 @@ function harness(user=null,profile=null,recovering=false){
  const panes=Object.fromEntries(['auth','recovery','home','room'].map(id=>[id,{classList:{add(){},remove(){}}}]));
  const ctx={user,profile,recovering,document:{documentElement:{classList:{remove(){}}},querySelector:()=>app,querySelectorAll:()=>[]},$:id=>panes[id]};
  vm.createContext(ctx);
- vm.runInContext(source.slice(source.indexOf('function screen(id)'),source.indexOf('function clearAuthPasswords')),ctx);
+ vm.runInContext(source.slice(source.indexOf('function screen(id)'),source.indexOf('const authRestore=')),ctx);
  return {ctx,app};
 }
 test('new users cannot navigate into the app before authentication',()=>{
