@@ -37,10 +37,10 @@ export function installChatNotesRibbon({win,db,getUser,openNotes}) {
   rail.append(card);
  }
  async function refresh(force=false) {
-  const actor=current(),ticket=++seq;if(!actor){rail.replaceChildren();strip.hidden=true;return}
+  const actor=current();if(!actor){seq++;rail.replaceChildren();strip.hidden=true;return}
   strip.hidden=false;
   if(!force&&actor===lastOwner&&Date.now()-last<30000)return;
-  lastOwner=actor;last=Date.now();
+  const ticket=++seq;lastOwner=actor;last=Date.now();
   notice.textContent='Checking your friends’ latest Notes…';
   try {
    const r=await db.rpc('luo_space',{action:'feed',input:{kind:'note'}});
@@ -56,7 +56,7 @@ export function installChatNotesRibbon({win,db,getUser,openNotes}) {
   }catch(e){if(seq!==ticket||actor!==current())return;rail.replaceChildren();last=0;notice.textContent='Notes are temporarily unavailable. Your chats are unaffected.'}
  }
  add.onclick=()=>{if(current())openNotes()};
- function onTab(name){tab=name;if(name==='chats'){if(current())refresh().catch(()=>{});else signedOut()}else{seq++}}
+ function onTab(name){tab=name;if(name==='chats'){if(current())refresh().catch(()=>{});else signedOut()}else{seq++;last=0}}
  function signedOut(){seq++;last=0;lastOwner=null;rail.replaceChildren();strip.hidden=true;notice.textContent=''}
  strip.hidden=true;
  return {onTab,refresh,signedOut};
