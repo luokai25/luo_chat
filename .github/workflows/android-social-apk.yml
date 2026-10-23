@@ -9,6 +9,7 @@ on:
       - 'src/app.js'
       - 'src/luo-core-brain.js'
       - 'src/luo-core-renderer.js'
+      - 'src/luo-core-motion.js'
       - 'src/luo-core-overlay.js'
       - 'tests/luo-core.test.mjs'
       - 'src/android-native.js'
