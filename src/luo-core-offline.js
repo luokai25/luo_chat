@@ -1,6 +1,6 @@
 // Offline-first asset handling for the high-detail Luo Core 3D master.
 // Do not read chat contents, block authentication or alter the message database.
-export const LUO_CORE_MODEL_URL='/luo-core-master.glb';
+export const LUO_CORE_MODEL_URL='/luo-core-snow-v2.glb';
 export function luoCoreModelCacheName(win){
  const tag=win.document?.querySelector?.('meta[name="luo-core-model-hash"]')?.content||'dev';
  return 'luo-core-master-'+(/^[a-f0-9]{12}$/.test(tag)?tag:'dev');

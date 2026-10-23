@@ -1,5 +1,5 @@
 import {createLuoCoreBrain,LUO_CORE_MOTIONS} from './luo-core-brain.js';
-import {createLuoCoreRenderer} from './luo-core-renderer.js';
+import {createLuoCoreRenderer} from './luo-core-glb-renderer.js';
 import {startInstalledLuoCoreOffline,saveLuoCoreOffline} from './luo-core-offline.js';
 
 // This resident cat observes layout coordinates and message additions ONLY.
@@ -12,9 +12,9 @@ export function installLuoCore({win,getUser,random=Math.random}){
  root.setAttribute('aria-label','Luo Core cat companion');
  root.hidden=true;
  const canvas=doc.createElement('canvas');
- canvas.width=180;canvas.height=180;canvas.className='luo-core-character';
+ canvas.width=180;canvas.height=180;canvas.className='luo-core-character';canvas.style.visibility='hidden';
  canvas.tabIndex=0;canvas.setAttribute('role','button');
- canvas.setAttribute('aria-label','Luo Core the golden cat. Tap to pet; hold for play and sleep options.');
+ canvas.setAttribute('aria-label','Luo Core the snow-white 3D kitten. Tap to pet; hold for play and sleep options.');
  canvas.title='Luo Core · Tap to pet. Hold for options.';
  const menu=doc.createElement('div');
  menu.className='luo-core-menu';menu.hidden=true;
@@ -40,7 +40,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
  @media(prefers-reduced-motion:reduce){.luo-core-character{will-change:auto}}
  `;
  doc.head.append(style);
- const renderer=createLuoCoreRenderer(canvas);
+ const renderer=createLuoCoreRenderer(canvas,{win});
  let owner=null,enabled=true,manualUntil=0,disposed=false,frame=0,previous=0;
  let x=0,y=0,target=null,perchNode=null,nextJump=0,hopStart=0,hopFrom=null,hopTo=null,scrollDirty=true;
  let holdTimer=0,down=null,dragged=false,menuOpen=false,lastFrame=0,lastSignal=0;
@@ -58,7 +58,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
   owner=id;brain=createLuoCoreBrain({random});menu.hidden=true;menuOpen=false;target=null;perchNode=null;hopTo=null;nextJump=0;
   enabled=id?pref(id):false;
   root.hidden=!id||!enabled||!roomVisible();restore.hidden=!id||enabled||!roomVisible();
-  if(id)startInstalledLuoCoreOffline(win);
+  if(id){startInstalledLuoCoreOffline(win);renderer.load().then(ok=>{if(!disposed&&ok){canvas.style.visibility='visible';renderer.render(brain.snapshot(),0,reduced)}})}
   if(id&&enabled){x=width()-170;y=height()-260;setStatus('');renderer.render(brain.snapshot(),0,reduced)}
  }
  function showMenu(){

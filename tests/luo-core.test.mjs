@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {LUO_CORE_FAMILIES,LUO_CORE_MOTIONS,createLuoCoreBrain} from '../src/luo-core-brain.js';
 import {installLuoCore} from '../src/luo-core-overlay.js';
-import {LUO_CORE_POSE_FAMILIES,synthesizeLuoCorePose} from '../src/luo-core-motion.js';
+import {luoCoreAnimationTime} from '../src/luo-core-glb-renderer.js';
 
 test('Luo Core defines 336 unique parametric motion variations across 42 families',()=>{
  assert.equal(LUO_CORE_FAMILIES.length,42);
@@ -90,22 +90,15 @@ test('Luo Core is account-scoped: hiding for one user never hides for another',(
  }finally{a.core.dispose();a.dom.window.close()}
 });
 
-test('all 42 motion families produce real distinct animated poses and variant amplitudes',()=>{
- assert.equal(LUO_CORE_POSE_FAMILIES.length,42);
- const samples=LUO_CORE_POSE_FAMILIES.map(name=>synthesizeLuoCorePose({state:name,variant:3,elapsed:500},4200,false));
- const signatures=new Set(samples.map(({family,moving,playful,resting,care,alert,...p})=>JSON.stringify(p)));
- assert.equal(signatures.size,42,'each movement family has its own visible pose');
- const a=synthesizeLuoCorePose({state:'play_yarn',variant:0,elapsed:500},4200,false);
- const b=synthesizeLuoCorePose({state:'play_yarn',variant:7,elapsed:500},4200,false);
- assert.notEqual(a.frontL,b.frontL,'variant intensity changes animated limbs');
- assert.ok(a.toy>0&&b.toy>0);
- const sleeping=synthesizeLuoCorePose({state:'sleep',variant:4,elapsed:450},4200,false);
- assert.equal(sleeping.eyeClose,1);
- assert.ok(sleeping.bodySquash<.7);
- const reduced=synthesizeLuoCorePose({state:'leap',variant:4,elapsed:500},4200,true);
- assert.equal(reduced.hop,0,'reduced motion removes bouncing while preserving a pose');
+test('authored Blender timeline maps jumps, landings and sleeping to distinct frames',()=>{
+ const base=luoCoreAnimationTime({state:'idle',elapsed:0});
+ const jump=luoCoreAnimationTime({state:'leap',elapsed:450});
+ const land=luoCoreAnimationTime({state:'land',elapsed:0});
+ const nap=luoCoreAnimationTime({state:'sleep',elapsed:0});
+ assert.ok(base<2&&jump>2.5&&jump<5);
+ assert.ok(land>4.8&&nap>6.8);
+ assert.equal(luoCoreAnimationTime({state:'leap',elapsed:450},true),0);
 });
-
 test('cat anchors to real visible bubbles and follows bubble scrolling without reading text',()=>{
  const a=host();
  try{
