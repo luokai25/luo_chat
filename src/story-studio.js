@@ -78,7 +78,7 @@ export function installStoryStudio({win,getUser,getSourceFile,onApply,note}) {
    for(const file of rows){let img,url=null;
     if(typeof win.createImageBitmap==='function'){img=await win.createImageBitmap(file)}
     else {if(!win.URL?.createObjectURL)throw Error('Photo decoding is unavailable on this device.');url=win.URL.createObjectURL(file);img=await new Promise((resolve,reject)=>{const image=new win.Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error('This photo cannot be opened.'));image.src=url})}
-    if(img.width*img.height>23000000)throw Error('Photo is too large. Choose an image under 23 megapixels.');
+    if(img.width*img.height>14000000){try{img.close?.()}catch{}if(url)win.URL.revokeObjectURL(url);throw Error('Photo is too large for a stable mobile edit. Choose an image under 14 megapixels.')}
     loaded.push({image:img,url});if(seq!==epoch)break;
    }
    if(seq!==epoch||!getUser()){for(const row of loaded){row.image?.close?.();if(row.url)win.URL.revokeObjectURL(row.url)}return}
