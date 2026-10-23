@@ -67,4 +67,4 @@ test('username login does not call admin functions if attack rate threshold exce
  assert.equal(h.calls.length,1);
 });
 
-test('compatibility endpoint keeps legacy email signup, reset and resend while adding username login',async()=>{const file=await readFile('supabase/functions/luo-auth-compat/index.ts','utf8');assert.match(file,/signin_username/);assert.match(file,/action==='signup'/);assert.match(file,/action==='reset'/);assert.match(file,/action==='resend'/);assert.match(file,/signInWithPassword/);});
+test('compatibility endpoint keeps legacy email signup, reset and resend while adding username login',async()=>{const file=await readFile('supabase/functions/luo-auth-compat/index.ts','utf8');assert.match(file,/signin_username/);assert.match(file,/action==='signup'/);assert.match(file,/action==='reset'/);assert.match(file,/\['signup','reset','resend'\]\.includes\(action\)/);assert.match(file,/signInWithPassword/);});
