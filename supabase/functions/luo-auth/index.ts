@@ -10,6 +10,68 @@ Deno.serve(async req=>{
  if(origin&&!allowed(origin))return reply(403,{error:'Origin not allowed.'});
  try{
  const body=await readRequestJSON(req),email=String(body.email||'').trim().toLowerCase(),action=String(body.action||'');
+ if(action==='signup_username'){
+  const username=String(body.username||'').trim().toLowerCase(),password=String(body.password||'');
+  if(!/^[a-z0-9_]{3,24}$/.test(username)||password.length<12||password.length>128)return reply(400,{error:'Use a username of 3–24 letters, digits, or underscores and a password of at least 12 characters.'});
+  const url=Deno.env.get('SUPABASE_URL'),serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if(!url||!serviceKey)return reply(503,{error:'Registration temporarily unavailable.'});
+  const ip=req.headers.get('cf-connecting-ip')||req.headers.get('x-real-ip')||(req.headers.get('x-forwarded-for')||'').split(',')[0].trim();
+  if(!ip)return reply(503,{error:'Registration protection unavailable.'});
+  const admin=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}});
+  const digest=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(serviceKey+':'+value)))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const ip_digest=await digest('ip:'+ip),email_digest=await digest('username:'+username);
+  const limit=await admin.rpc('consume_signup_rate_limit',{email_digest,ip_digest});
+  if(limit.error)return reply(503,{error:'Registration protection unavailable.'});
+  if(limit.data!==true)return new Response(JSON.stringify({error:'Too many signup attempts. Try again later.'}),{status:429,headers:{...headers,'Retry-After':'3600'}});
+  const existing=await admin.from('profiles').select('id').eq('username',username).maybeSingle();
+  if(existing.error)return reply(503,{error:'Registration temporarily unavailable.'});
+  if(existing.data)return reply(409,{error:'That username is already taken.'});
+  // Supabase Auth still needs a unique internal identifier. Never ask for, send,
+  // or disclose an email address. A random unrouteable alias is not a mailbox.
+  const internalEmail=crypto.randomUUID()+'@accounts.invalid';
+  const created=await admin.auth.admin.createUser({email:internalEmail,password,email_confirm:true,user_metadata:{username,display_name:username,luo_username_only:true}});
+  if(created.error||!created.data?.user?.id)return reply(503,{error:'Account creation could not finish. Try again later.'});
+  const id=created.data.user.id;
+  const profile=await admin.from('profiles').select('id,username').eq('id',id).maybeSingle();
+  if(profile.error||!profile.data||profile.data.username!==username){
+   await admin.auth.admin.deleteUser(id);
+   return reply(503,{error:'Account profile could not be initialized. Try again later.'});
+  }
+  return reply(200,{ok:true,message:'Account created. Sign in with your username and password.'});
+ }
+ if(action==='signin_username'){
+  const username=String(body.username||'').trim().toLowerCase(),password=String(body.password||'');
+  if(!/^[a-z0-9_]{3,24}$/.test(username)||password.length<8||password.length>128)return reply(400,{error:'Enter a valid username and password.'});
+  const url=Deno.env.get('SUPABASE_URL')!,key=Deno.env.get('SUPABASE_ANON_KEY')!,serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  if(!url||!key||!serviceKey)return reply(503,{error:'Sign-in service temporarily unavailable.'});
+  const admin=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}});
+  const client=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}});
+  // These headers must be normalized by the hosting gateway; username quota is
+  // independent of IP and cannot be bypassed by rotating an IP header.
+  const ip=req.headers.get('cf-connecting-ip')||req.headers.get('x-real-ip')||(req.headers.get('x-forwarded-for')||'').split(',')[0].trim();
+  if(!ip)return reply(503,{error:'Sign-in protection temporarily unavailable.'});
+  const digest=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(serviceKey+':'+value)))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const ip_digest=await digest('ip:'+ip),email_digest=await digest('username:'+username);
+  const limit=await admin.rpc('consume_auth_action_limit',{action_name:'signin',email_digest,ip_digest,max_email:6,max_ip:200,window_minutes:15});
+  if(limit.error)return reply(503,{error:'Sign-in protection temporarily unavailable.'});
+  if(limit.data!==true)return new Response(JSON.stringify({error:'Too many login attempts. Try again in 15 minutes.'}),{status:429,headers:{...headers,'Retry-After':'900'}});
+  const start=Date.now(),invalid=async()=>{const pause=Math.max(0,350-(Date.now()-start));if(pause)await new Promise(resolve=>setTimeout(resolve,pause));return reply(401,{error:'Invalid username or password.'})};
+  const profile=await admin.from('profiles').select('id').eq('username',username).maybeSingle();
+  if(profile.error)return reply(503,{error:'Sign-in service temporarily unavailable.'});
+  if(!profile.data?.id)return invalid();
+  const found=await admin.auth.admin.getUserById(profile.data.id);
+  if(found.error||!found.data?.user?.email)return reply(503,{error:'Sign-in service temporarily unavailable.'});
+  // Credentials are verified exclusively by Supabase Auth, never in application SQL.
+  const signed=await client.auth.signInWithPassword({email:found.data.user.email,password});
+  if(signed.error){
+   const status=Number(signed.error.status||0);
+   if(status>=500||status===0)return reply(503,{error:'Sign-in service temporarily unavailable.'});
+   if(status===429)return new Response(JSON.stringify({error:'Too many login attempts. Try again later.'}),{status:429,headers:{...headers,'Retry-After':'900'}});
+   return invalid();
+  }
+  if(!signed.data?.session?.access_token||!signed.data.session.refresh_token)return reply(503,{error:'Sign-in session unavailable.'});
+  return reply(200,{ok:true,access_token:signed.data.session.access_token,refresh_token:signed.data.session.refresh_token});
+ }
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)return reply(400,{error:'Enter a valid email.'});
  if(!['signup','reset','resend'].includes(action))return reply(400,{error:'Unknown action.'});
  const url=Deno.env.get('SUPABASE_URL')!,key=Deno.env.get('SUPABASE_ANON_KEY')!,serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
