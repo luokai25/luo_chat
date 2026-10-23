@@ -10,7 +10,7 @@ export function validateStoryStudioFiles(files) {
 }
 export function storyLayoutSlots(count,layout='grid') {
  if(layout==='single'||count===1)return [{x:0,y:0,w:540,h:960}];
- if(layout==='duo')return [{x:0,y:0,w:270,h:960},{x:270,y:0,w:270,h:960}].slice(0,count);
+ if(layout==='duo'&&count===2)return [{x:0,y:0,w:270,h:960},{x:270,y:0,w:270,h:960}].slice(0,count);
  const slots=[{x:0,y:0,w:270,h:480},{x:270,y:0,w:270,h:480},{x:0,y:480,w:270,h:480},{x:270,y:480,w:270,h:480}];
  if(count===2)return [{x:0,y:0,w:540,h:480},{x:0,y:480,w:540,h:480}];
  if(count===3)return [{x:0,y:0,w:540,h:480},{x:0,y:480,w:270,h:480},{x:270,y:480,w:270,h:480}];
@@ -59,7 +59,7 @@ export function installStoryStudio({win,getUser,getSourceFile,onApply,note}) {
  '@media(min-width:700px){.luo-story-studio{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,1fr);column-gap:22px}.luo-story-studio-head,.luo-story-studio>p,.luo-story-studio>input,.luo-story-studio-actions{grid-column:1/-1}.luo-story-studio-stage{grid-column:1;margin:10px auto}.luo-story-studio-controls{grid-column:2;align-content:start;grid-template-columns:1fr 1fr}.luo-story-studio-controls label{grid-column:span 1}}',
  '@media(prefers-reduced-motion:reduce){.luo-story-studio::backdrop{backdrop-filter:none}}'
  ].join('\n');doc.head.append(css);
- const ctx=canvas.getContext('2d',{alpha:false});
+ let ctx=null;
  const gradients={gold:['#2f1c14','#9f6830','#130f1c'],obsidian:['#0c0c11','#27202b','#0d0c11'],rose:['#361526','#ba7076','#201622'],stars:['#0a0f2c','#25284d','#090817']};
  const paint=(x=0,y=0,w=540,h=960)=>{
   if(!ctx)return;
@@ -85,8 +85,8 @@ export function installStoryStudio({win,getUser,getSourceFile,onApply,note}) {
    dispose();source=loaded;paint();status.textContent=source.length+' photos loaded. Drag on the canvas to draw or place decorations.';
   }catch(err){for(const row of loaded){row.image?.close?.();if(row.url)win.URL.revokeObjectURL(row.url)}if(seq===epoch)status.textContent=err.message||'Could not load photo.'}
  };
- function open(){if(!getUser())return;prepared=null;const first=getSourceFile?.();layout.value='single';theme.value='gold';filter.value='none';tool.value='draw';mode='draw';layers=[];dispose();paint();status.textContent='Your Story is private until you share it.';files.value='';dialog.showModal();if(first&&['image/jpeg','image/png','image/webp'].includes(first.type))load([first]).catch(e=>{status.textContent=e.message})}
- function closeStudio(){epoch++;dispose();drag=null;dialog.close()}
+ function open(){if(!getUser())return;try{ctx=canvas.getContext('2d',{alpha:false})}catch{ctx=null}prepared=null;const first=getSourceFile?.();layout.value='single';theme.value='gold';filter.value='none';tool.value='draw';mode='draw';layers=[];dispose();paint();status.textContent='Your Story is private until you share it.';files.value='';dialog.showModal();if(first&&['image/jpeg','image/png','image/webp'].includes(first.type))load([first]).catch(e=>{status.textContent=e.message})}
+ function closeStudio(){epoch++;dispose();drag=null;if(dialog.open)dialog.close()}
  close.onclick=closeStudio;dialog.addEventListener('close',()=>{epoch++;dispose();drag=null});
  files.onchange=()=>load(files.files).catch(e=>{status.textContent=e.message||'Could not import photos.'});
  for(const node of [layout,theme,filter])node.onchange=paint;
