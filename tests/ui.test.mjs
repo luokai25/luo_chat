@@ -210,3 +210,42 @@ test('manual password sign-in clears a stale startup outage warning immediately'
  assert.equal(d.getElementById('authmsg').textContent,'');
  dom.window.close();
 });
+
+
+test('authentication tabs and keyboard Enter work without exposing hidden signup controls',async()=>{
+ const {w,dom}=await setup(false);const d=w.document;
+ assert.ok(d.getElementById('signin')&&!d.getElementById('signin').classList.contains('hidden'));
+ assert.equal(d.getElementById('authModeSignin').getAttribute('aria-pressed'),'true');
+ assert.equal(d.getElementById('authModeSignup').getAttribute('aria-pressed'),'false');
+ d.getElementById('authModeSignup').click();
+ assert.equal(d.getElementById('authHeading').textContent,'Create your space.');
+ assert.equal(d.getElementById('authModeSignup').getAttribute('aria-pressed'),'true');
+ assert.equal(d.getElementById('username').classList.contains('hidden'),false);
+ assert.equal(d.getElementById('forgot').hidden,true);
+ assert.match(d.getElementById('loginMethodNote').textContent,/email confirmation/i);
+ d.getElementById('authModeSignin').click();
+ assert.equal(d.getElementById('forgot').hidden,false);
+ assert.equal(d.getElementById('signup').classList.contains('hidden'),true);
+ d.getElementById('email').value='ui@example.invalid';
+ d.getElementById('password').value='long-password';
+ const press=new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});
+ d.getElementById('password').dispatchEvent(press);
+ assert.equal(press.defaultPrevented,true);
+ await tick();await tick();
+ assert.ok(d.getElementById('home').classList.contains('active'),'Enter signs in via existing Supabase password flow');
+ dom.window.close();
+});
+test('auth surface tells users their actual login method and has safe, labelled focus targets',async()=>{
+ const {w,dom}=await setup(false);const d=w.document;
+ assert.ok(d.querySelector('link[href="/luo-auth-premium.css"]'));
+ assert.equal(d.getElementById('email').getAttribute('type'),'email');
+ assert.match(d.getElementById('loginMethodNote').textContent,/existing accounts/i);
+ assert.ok(d.getElementById('authHeading'));
+ assert.ok(d.getElementById('authSubheading'));
+ assert.ok(d.querySelector('.luo-access-brand img'));
+ assert.equal(d.getElementById('authmsg').getAttribute('role'),'status');
+ assert.ok(d.getElementById('forgot'));
+ assert.ok(d.getElementById('resend'));
+ assert.equal(d.getElementById('googleSignIn'),null);
+ dom.window.close();
+});
