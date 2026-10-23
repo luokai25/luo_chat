@@ -23,3 +23,5 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: node --test tests/username-login-compat.test.mjs tests/username-login-edge.test.mjs tests/username-registration.test.mjs
+      - name: Isolate Android sign-in browser regression
+        run: node --test --test-name-pattern='signed-out startup validates inputs' tests/ui.test.mjs
