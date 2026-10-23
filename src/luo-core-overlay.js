@@ -58,7 +58,8 @@ export function installLuoCore({win,getUser,random=Math.random}){
   owner=id;brain=createLuoCoreBrain({random});menu.hidden=true;menuOpen=false;target=null;perchNode=null;hopTo=null;nextJump=0;
   enabled=id?pref(id):false;
   root.hidden=!id||!enabled;restore.hidden=!id||enabled;
-  if(id&&enabled){x=width()-170;y=height()-260;setStatus('');renderer.render(brain.snapshot(),0,reduced);startInstalledLuoCoreOffline(win)}
+  if(id)startInstalledLuoCoreOffline(win);
+  if(id&&enabled){x=width()-170;y=height()-260;setStatus('');renderer.render(brain.snapshot(),0,reduced)}
  }
  function showMenu(){
   if(!owner||!enabled)return;
@@ -77,6 +78,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
   ['Jump to a message','jump','Coming over!'],
   ['Follow messages','follow','I will explore.'],
   ['Save HD model offline','offline',''],
+  ['View high-detail 3D cat','gallery',''],
   ['Hide companion','hide','']
  ];
  for(const [label,command,response] of buttons){
@@ -90,6 +92,11 @@ export function installLuoCore({win,getUser,random=Math.random}){
    if(command==='offline'){
     setStatus('Saving full 3D cat offline…');dismissMenu();
     saveLuoCoreOffline(win,{force:true}).then(result=>setStatus(result.ready?'Full Luo Core model saved offline.':'Model not yet available. Check connection or storage.'));
+    return;
+   }
+   if(command==='gallery'){
+    dismissMenu();
+    import('./luo-core-master-preview.js').then(module=>module.openLuoCoreMasterViewer(win)).catch(()=>setStatus('The high-detail viewer is unavailable on this device.'));
     return;
    }
    brain.command(command);setStatus(response);dismissMenu();
