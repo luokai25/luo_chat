@@ -72,7 +72,7 @@ function node(name,geometry,key,translation,rotation){
  for(let i=0;i<positions.length;i++){const axis=i%3;minimum[axis]=Math.min(minimum[axis],positions[i]);maximum[axis]=Math.max(maximum[axis],positions[i])}
  const pos=acc(addBinary(new Float32Array(positions),34962),'VEC3',5126,positions.length/3,minimum,maximum);
  const norm=acc(addBinary(new Float32Array(geometry.normals),34962),'VEC3',5126,geometry.normals.length/3);
- const max=Math.max(...geometry.indices);
+ let max=0;for(const value of geometry.indices)if(value>max)max=value;
  const indexType=max<65536?5123:5125;
  const packed=indexType===5123?new Uint16Array(geometry.indices):new Uint32Array(geometry.indices);
  const inds=acc(addBinary(packed,34963),'SCALAR',indexType,packed.length);
