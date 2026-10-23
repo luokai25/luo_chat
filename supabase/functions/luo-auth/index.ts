@@ -43,7 +43,7 @@ Deno.serve(async req=>{
   if(!signed.data?.session?.access_token||!signed.data.session.refresh_token)return reply(503,{error:'Sign-in session unavailable.'});
   return reply(200,{ok:true,access_token:signed.data.session.access_token,refresh_token:signed.data.session.refresh_token});
  }
- if(['signup_username','recover_username','enroll_recovery'].includes(action)){
+ if(['signup_username','recover_username','enroll_recovery','forget_legacy_email'].includes(action)){
   const username=String(body.username||'').trim().replace(/^@/,'').toLowerCase();
   const password=String(body.password||'');
   const url=Deno.env.get('SUPABASE_URL')!, key=Deno.env.get('SUPABASE_ANON_KEY')!,serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -133,6 +133,35 @@ Deno.serve(async req=>{
    const rotated=await admin.rpc('replace_luo_recovery_codes',{target_user_id:id,code_hashes:hashes});
    if(rotated.error||rotated.data!==true)return reply(503,{error:'Password changed. Sign in and regenerate recovery codes from Settings.'});
    return reply(200,{ok:true,recovery_codes:codes,message:'Password changed. Keep these replacement recovery codes.'});
+  }
+  if(action==='forget_legacy_email'){
+   const jwt=String(req.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');
+   if(!jwt)return reply(401,{error:'Sign in first.'});
+   const actor=await client.auth.getUser(jwt);
+   if(actor.error||!actor.data?.user?.id||!actor.data.user.email)return reply(401,{error:'Sign in again to unlink your email.'});
+   const currentUser=actor.data.user,id=currentUser.id;
+   if(/^luo-[a-f0-9]{32}@accounts[.]invalid$/.test(currentUser.email))
+    return reply(200,{ok:true,message:'This account already uses a private internal identifier.'});
+   const code=String(body.recovery_code||'').trim().toUpperCase();
+   if(!/^[A-HJ-NP-Z2-9]{4}(?:-[A-HJ-NP-Z2-9]{4}){4}$/.test(code)||password.length<8)
+    return reply(400,{error:'Enter your current password and one saved recovery code.'});
+   const quota=await admin.rpc('consume_auth_action_limit',{
+    action_name:'password_reset',email_digest:await digest('unlink:'+id),ip_digest:ipHash,max_email:3,max_ip:100,window_minutes:60
+   });
+   if(quota.error)return reply(503,{error:'Account protection temporarily unavailable.'});
+   if(quota.data!==true)return reply(429,{error:'Too many unlink attempts. Retry later.'});
+   const authenticated=await client.auth.signInWithPassword({email:currentUser.email,password});
+   if(authenticated.error||authenticated.data?.user?.id!==id)return reply(401,{error:'Current password was not accepted.'});
+   const digestCode=(await codeHashes(id,[code]))[0];
+   const used=await admin.rpc('consume_luo_recovery_code',{target_user_id:id,code_hash:digestCode});
+   if(used.error)return reply(503,{error:'Recovery verification temporarily unavailable.'});
+   if(used.data!==true)return reply(401,{error:'Recovery code was not accepted. Generate codes first.'});
+   const aliasBytes=crypto.getRandomValues(new Uint8Array(16));
+   const alias='luo-'+Array.from(aliasBytes).map(x=>x.toString(16).padStart(2,'0')).join('')+'@accounts.invalid';
+   const updated=await admin.auth.admin.updateUserById(id,{email:alias,email_confirm:true,
+    app_metadata:{...currentUser.app_metadata,luo_registration_v2:'approved'}});
+   if(updated.error||updated.data?.user?.id!==id)return reply(503,{error:'Email removal failed. Your existing account remains unchanged.'});
+   return reply(200,{ok:true,message:'Your old email has been unlinked. Continue signing in by username. Your other recovery codes remain valid.'});
   }
   if(action==='enroll_recovery'){
    // Existing users can register backup recovery codes before opting out of
