@@ -5,7 +5,13 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.webkit.WebView;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,7 +23,6 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
@@ -32,6 +37,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import org.json.JSONObject;
 
 /**
  * Luo Chat Social Test APK: deliberately embeds reviewed GitHub-built assets.
@@ -52,6 +58,12 @@ public final class MainActivity extends Activity {
 
     private WebView web;
     private WebViewAssetLoader assets;
+    private LuoNativeFeatures nativeFeatures;
+    private FrameLayout root;
+    private View fullscreenVideo;
+    private WebChromeClient.CustomViewCallback fullscreenCallback;
+    private boolean webReady = false;
+    private String incomingSharedText;
     private ValueCallback<Uri[]> pendingFiles;
     private PermissionRequest pendingMediaPermission;
     private String[] pendingMediaResources;
@@ -91,6 +103,21 @@ public final class MainActivity extends Activity {
         settings.setMediaPlaybackRequiresUserGesture(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setGeolocationEnabled(false);
+        settings.setSupportMultipleWindows(false);
+        settings.setSafeBrowsingEnabled(true);
+        android.webkit.CookieManager.getInstance().setAcceptCookie(true);
+        android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(web, false);
+        nativeFeatures = new LuoNativeFeatures(this, web);
+        web.setDownloadListener((url,agent,disposition,mime,length) -> {
+            if (url == null) return;
+            if (LuoNativeFeatures.permittedDownload(Uri.parse(url)))
+                nativeFeatures.enqueueDownload(url, android.webkit.URLUtil.guessFileName(url, disposition, mime));
+            else if (url.startsWith("https://")) {
+                try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
+                catch (ActivityNotFoundException ignored) { showMessage("No application can open that download."); }
+            }
+        });
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return intercept(request.getUrl());
@@ -107,6 +134,12 @@ public final class MainActivity extends Activity {
                     }
                 }
                 return true;
+            }
+            @Override public void onPageFinished(WebView view, String url) {
+                if (url.startsWith(ORIGIN + "/")) {
+                    webReady = true;
+                    deliverIncomingShare();
+                }
             }
             @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
                 handler.cancel();
@@ -129,6 +162,14 @@ public final class MainActivity extends Activity {
                     return true;
                 }
             }
+            @Override public void onShowCustomView(View view, CustomViewCallback callback) {
+                if (fullscreenVideo != null) { callback.onCustomViewHidden(); return; }
+                fullscreenVideo = view;
+                fullscreenCallback = callback;
+                root.addView(view, new FrameLayout.LayoutParams(-1, -1));
+                root.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            }
+            @Override public void onHideCustomView() { hideFullscreenVideo(); }
             @Override public void onPermissionRequest(PermissionRequest request) {
                 runOnUiThread(() -> askForMediaPermission(request));
             }
@@ -141,7 +182,10 @@ public final class MainActivity extends Activity {
                 });
             }
         });
-        setContentView(web);
+        root = new FrameLayout(this);
+        root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        setContentView(root);
+        handleIncomingShare(getIntent());
         web.loadUrl(ORIGIN + "/");
     }
 
@@ -238,6 +282,10 @@ public final class MainActivity extends Activity {
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grants) {
         super.onRequestPermissionsResult(requestCode, permissions, grants);
+        if (requestCode == LuoNativeFeatures.NOTIFICATION_PERMISSION_CODE) {
+            if (nativeFeatures != null) nativeFeatures.permissionResult();
+            return;
+        }
         if (requestCode != MEDIA_PERMISSION_CODE) return;
         PermissionRequest previous = pendingMediaPermission;
         String[] resources = pendingMediaResources;
@@ -259,12 +307,65 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private void showMessage(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+    }
+
+    private void hideFullscreenVideo() {
+        if (fullscreenVideo == null) return;
+        root.removeView(fullscreenVideo);
+        fullscreenVideo = null;
+        root.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+        if (fullscreenCallback != null) fullscreenCallback.onCustomViewHidden();
+        fullscreenCallback = null;
+    }
+
+    private void handleIncomingShare(Intent intent) {
+        if (intent == null || !Intent.ACTION_SEND.equals(intent.getAction())) return;
+        if (!"text/plain".equals(intent.getType())) return;
+        String shared = intent.getStringExtra(Intent.EXTRA_TEXT);
+        if (shared == null || shared.isEmpty()) return;
+        incomingSharedText = shared.length() > 3000 ? shared.substring(0, 3000) : shared;
+        deliverIncomingShare();
+    }
+
+    private void deliverIncomingShare() {
+        if (!webReady || web == null || incomingSharedText == null) return;
+        String safe = JSONObject.quote(incomingSharedText);
+        incomingSharedText = null;
+        web.evaluateJavascript("window.__luoIncomingShare=" + safe + ";window.dispatchEvent(new CustomEvent('luo-android-share',{detail:{text:window.__luoIncomingShare}}));", null);
+    }
+
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIncomingShare(intent);
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        if (nativeFeatures != null) nativeFeatures.setForeground(true);
+    }
+
+    @Override protected void onPause() {
+        if (nativeFeatures != null) nativeFeatures.setForeground(false);
+        super.onPause();
+    }
+
     @Override public void onBackPressed() {
-        if (web != null && web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        if (fullscreenVideo != null) { hideFullscreenVideo(); return; }
+        if (web == null) { super.onBackPressed(); return; }
+        // Web SPA tabs do not add history entries. Ask the authenticated UI
+        // to close its modal / room before Android leaves the app.
+        web.evaluateJavascript("window.luoAndroidGoBack ? window.luoAndroidGoBack() : 'exit'", result -> {
+            if (result != null && result.contains("handled")) return;
+            if (web != null && web.canGoBack()) web.goBack();
+            else MainActivity.super.onBackPressed();
+        });
     }
 
     @Override protected void onDestroy() {
+        if (fullscreenVideo != null) hideFullscreenVideo();
         if (pendingFiles != null) {
             pendingFiles.onReceiveValue(null);
             pendingFiles = null;
