@@ -42,3 +42,15 @@ Approved visual: the white kitten from the October 23 conversation, not the prev
 - Next gates: image-reference comparison, fur material polish, locomotion and face-motion transitions, mobile GPU benchmarks, independent named animation clips and isolated web preview.
 
 Never deploy or replace the live cat merely because bone/poly counts and tests passed. Visual quality and realistic motions must be approved.
+
+## New model rebuild — sculpt-first V2 (2026-10-23)
+
+**Scene:** https://higgsfield.ai/3d-jutsu/3b9af2d1-2882-493b-b0cd-ca7dece1ce7b
+
+**Latest settled revision:** 3.
+
+This is a separate, from-scratch replacement instead of patching the rejected primitive/strand-heavy v1. The Blender build has a continuous sculpted kitten head and torso, curved leaf-style ears, layered storm-gray/blue eyes with catchlights, a tiny pink nose, white cheek and paw volumes, tapered tail, black collar with gold letter L, 25 named articulated animation controllers, 46 mesh components, and 12 material roles. An authored 8-second/240-frame sequence contains idle, blink, crouch, leap, midair rotation, landing, and rest. Ground check repaired 56 sampled frames and confirmed minimum paw height +0.003 meters. 
+
+**Visual quality gate remains OPEN.** Blender produced a real rendered hero PNG but the tool connection did not provide a reliable visual inspection to the assistant; no cinematic, anime or approved-identity claim is made. Current generated model is a prototype and must not be integrated/deployed without visual approval, texture/material/rig audits and real-phone performance checks.
+
+**Tool limitation:** connected Higgsfield 3D Jutsu accepts Blender Python scripts, not a freeform cinematic text prompt. The model catalog exposes image-to-3D models but the `generate_3d` connector method is not available. Do not represent the scene as autonomously created by that absent action.
