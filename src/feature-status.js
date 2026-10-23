@@ -1,5 +1,6 @@
 // Release capability ledger. "Implemented" describes source behavior; see RELEASE.md for validation scope.
 export const featureStatus=[
+['Animated message effects and reactive wallpapers','Implemented','New text emoji messages produce brief golden stars, hearts or fireworks in the active room only. Pointer-reactive gold wallpaper is controlled per chat with Off/Subtle/Full; reduced-motion and data-saver override animations. Effects are device-local and never replay historical messages.'],
 ['Voice and video calls','Browser dependent','Direct WebRTC calls with consent, mute, camera switch, decline/end and private call history. TURN relay configuration and real-device/network acceptance remain open.'],
 ['Background Web Push','Browser dependent','Opt-in device subscriptions, server VAPID credentials, private retry queue, generic message/call notifications and background worker. Closed-app delivery depends on browser/OS support and has not been verified on a physical phone.'],
 ['Photo albums','Implemented','2–20 ordered photos with captions, grouped display and retry of unfinished items using stable send IDs. Keep the album window open to retry; file bytes are not persisted across reload.'],
