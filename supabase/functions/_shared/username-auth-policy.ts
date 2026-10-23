@@ -2,7 +2,9 @@
  * Shared v2 username-auth validation. This module deliberately makes no network
  * calls and carries no Supabase service credentials. It is NOT an auth endpoint.
  */
-export const USERNAME_RE=/^[a-z][a-z0-9_]{2,23}$/;
+// Legacy accounts were allowed to begin with a number or underscore; do not lock them out.
+export const USERNAME_RE=/^[a-z0-9_]{3,24}$/;
+const NEW_USERNAME_RE=/^[a-z][a-z0-9_]{2,23}$/;
 const RESERVED=new Set(['admin','administrator','support','moderator','official','security','system','root','luo','luochat','luo_chat','help','staff','api','auth','login','signup','register','null','undefined']);
 export function canonicalUsername(input){
  if(typeof input!=='string')return null;
@@ -10,7 +12,7 @@ export function canonicalUsername(input){
  if(!USERNAME_RE.test(text))return null;
  return text;
 }
-export function isAvailableForRegistration(username){return canonicalUsername(username)!==null&&!RESERVED.has(canonicalUsername(username))&&!canonicalUsername(username).startsWith('luo_')}
+export function isAvailableForRegistration(username){const canonical=canonicalUsername(username);return canonical!==null&&NEW_USERNAME_RE.test(canonical)&&!RESERVED.has(canonical)&&!canonical.startsWith('luo_')}
 export function validatePassword(password,username){
  if(typeof password!=='string')return {ok:false,reason:'Use a password of at least 12 characters.'};
  if(password.length<12||password.length>128||password.length!==[...password].length)return {ok:false,reason:'Use a password of 12–128 characters.'};
