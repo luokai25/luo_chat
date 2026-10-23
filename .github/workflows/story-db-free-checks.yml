@@ -1,0 +1,52 @@
+name: Free interactive Stories database checks
+on:
+  push:
+    branches: [feature/social-android-test-20261023]
+    paths:
+      - 'supabase/migrations/20261023180000_story_interactive_stickers.sql'
+      - 'tests/sql/story-free-db-*.sql'
+      - '.github/workflows/story-db-free-checks.yml'
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261023180000_story_interactive_stickers.sql'
+      - 'tests/sql/story-free-db-*.sql'
+      - '.github/workflows/story-db-free-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: free-story-db
+  cancel-in-progress: true
+jobs:
+  story-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: github-fixture-only
+          POSTGRES_DB: story_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d story_ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGDATABASE: story_ci
+      PGUSER: postgres
+      PGPASSWORD: github-fixture-only
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify disposable PostgreSQL story permission tests
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/story-free-db-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261023180000_story_interactive_stickers.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/story-free-db-checks.sql
