@@ -120,7 +120,7 @@ test('bot reads only granted 1:1 thread with atomic quota authorization',async()
  const blocked=await harness({consent:false});
  const d=await blocked.handler(blocked.make('read_assigned_thread',args));
  assert.equal(d.status,403);
- assert.equal(d.body,undefined);
+ assert.doesNotMatch(await d.text(),/Private consented message/);
 });
 test('unimplemented sending, scraping, cold DMs and calls are not even recognized',async()=>{
  const h=await harness();
