@@ -30,3 +30,12 @@ Text from users is inserted through DOM textContent, not arbitrary HTML. New soc
 Vercel runs the `release:check` build and automated tests. Browser fixtures and hosted SQL checks do **not** replace testing with two real accounts on Android, iOS and desktop.
 
 Features not yet fully delivered include service-licensed Spotify/YouTube shared playback, Snapchat-like AR camera effects, advanced Story stickers and layouts, historical constellation pagination beyond the current window, duet/remix editing, richer animated text-message effects and end-to-end media encryption. Push notifications depend on permission, a valid service worker and device/browser support. Notification category settings alone cannot guarantee delivery outside the app.
+
+## October 23 follow-up: chat atmosphere and social polish
+- New text messages containing star, heart or celebration emojis trigger short gold-toned particle effects only in the active conversation. Old history never replays effects.
+- Interactive per-chat reactive gold wallpaper has Off, Subtle and Full modes, with automatic reduced-motion and data-saving suppression. Only a local setting is stored; message bodies are not copied into browser storage for effects.
+- Unlocked Time Capsules animate their wax seal and envelope flap before the letter rises. Closing or signing out during the animation prevents its stale reveal.
+- Capsule media is fully validated before opening a new draft to reduce orphaned drafts from invalid uploads.
+- Interactive questions show a safe, animated golden answer card after a confirmed server response, rather than only a transient toast.
+
+These refinements use existing database permissions and do not claim third-party licensed streaming, end-to-end encryption or physical-device notification delivery.
