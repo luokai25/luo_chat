@@ -14,10 +14,14 @@ const policy=box.module.exports;
 test('normalize existing username logins, without opening reserved account registrations',()=>{
  assert.equal(policy.canonicalUsername('  Abdo_2026  '),'abdo_2026');
  assert.equal(policy.canonicalUsername('luo_1234567890abcdef'),'luo_1234567890abcdef');
+ assert.equal(policy.canonicalUsername('2026_abdo'),'2026_abdo');
+ assert.equal(policy.canonicalUsername('_legacy'),'_legacy');
+ assert.equal(policy.isAvailableForRegistration('2026_abdo'),false);
+ assert.equal(policy.isAvailableForRegistration('_legacy'),false);
  assert.equal(policy.isAvailableForRegistration('luo_1234567890abcdef'),false);
  assert.equal(policy.isAvailableForRegistration('support'),false);
  assert.equal(policy.isAvailableForRegistration('abdo_2026'),true);
- for(const x of ['A','1abc','foo@example.com','a b c',null,'🔐username','a'.repeat(25)])assert.equal(policy.canonicalUsername(x),null);
+ for(const x of ['A','foo@example.com','a b c',null,'🔐username','a'.repeat(25)])assert.equal(policy.canonicalUsername(x),null);
 });
 test('new accounts require strong passwords but original accounts can migrate without changing password',()=>{
  assert.equal(policy.validatePassword('12345678','person').ok,false);
