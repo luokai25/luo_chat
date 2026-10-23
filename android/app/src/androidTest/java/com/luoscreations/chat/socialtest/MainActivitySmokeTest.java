@@ -68,7 +68,9 @@ public final class MainActivitySmokeTest {
                 }catch(Exception ignored){}
                 Thread.sleep(400);
             }
-            assertNotNull("No Luo Chat document. WebView URL="+web.getUrl()+", response="+lastResponse,state);
+            AtomicReference<String> currentUrl=new AtomicReference<>("(unknown)");
+            scenario.onActivity(activity -> currentUrl.set(web.getUrl()));
+            assertNotNull("No Luo Chat document. WebView URL="+currentUrl.get()+", response="+lastResponse,state);
             assertTrue("Real login controls never loaded in the packaged app",state.optBoolean("ready"));
             assertTrue("Username input was replaced with old email form",state.optBoolean("username"));
             assertTrue("The signup/login screen is missing",state.optBoolean("auth"));
