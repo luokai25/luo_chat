@@ -4,7 +4,8 @@ import {createLuoCoreRenderer} from './luo-core-renderer.js';
 // This resident cat observes layout coordinates and message additions ONLY.
 // It never examines message text, images, usernames or network traffic.
 export function installLuoCore({win,getUser,random=Math.random}){
- const doc=win.document,brain=createLuoCoreBrain({random});
+ const doc=win.document;
+ let brain=createLuoCoreBrain({random});
  const root=doc.createElement('aside');
  root.className='luo-core-layer';
  root.setAttribute('aria-label','Luo Core cat companion');
@@ -53,7 +54,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
  function changeOwner(){
   const id=active()?getUser().id:null;
   if(owner===id)return;
-  owner=id;menu.hidden=true;menuOpen=false;target=null;perchNode=null;hopTo=null;nextJump=0;
+  owner=id;brain=createLuoCoreBrain({random});menu.hidden=true;menuOpen=false;target=null;perchNode=null;hopTo=null;nextJump=0;
   enabled=id?pref(id):false;
   root.hidden=!id||!enabled;restore.hidden=!id||enabled;
   if(id&&enabled){x=width()-170;y=height()-260;setStatus('');renderer.render(brain.snapshot(),0,reduced)}
@@ -218,7 +219,7 @@ export function installLuoCore({win,getUser,random=Math.random}){
  if(raf)frame=raf(frameLoop);
  else changeOwner();
  return {
-  brain,
+  get brain(){return brain},
   get mode(){return renderer.mode},
   get motionCount(){return LUO_CORE_MOTIONS.length},
   get visible(){return !root.hidden},
