@@ -25,6 +25,7 @@ Use Supabase Auth as the only JWT/session/password verifier. Never invent homema
 - The admin.createUser API supports email_confirm true and uses built-in password hashing. Do not turn off email confirmation project-wide just to support a username frontend; the new internal-only accounts must be registered by the protected server route.
 - Existing username rules accepted numeric or underscore prefixes. Continue accepting those legacy identities for login, while applying stricter rules only to new signups.
 - Web Crypto HMAC importKey requires an algorithm descriptor with name HMAC and hash SHA-256. The matching policy helper and its CI tests now use that explicit descriptor.
+- Supabase Auth's refresh token grant returns **400** for expired, missing or invalid refresh-token sessions. **5xx** errors indicate internal failures and can include transient database connectivity faults. For 400 expired sessions, show normal re-authentication; for 500/504 with authenticated-session uncertainty, preserve recovery UX and retry safely. Never erase account records, assume password invalidity, or loop indefinitely on a failed refresh.
 - Synthetic addresses under accounts.invalid remain an unverified design until GoTrue Admin Auth rejects or accepts them in a staging account creation test. Never assume the input validator permits them.
 
 ## Fair household abuse prevention
