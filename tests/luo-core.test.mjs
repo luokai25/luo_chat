@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {LUO_CORE_FAMILIES,LUO_CORE_MOTIONS,createLuoCoreBrain} from '../src/luo-core-brain.js';
 import {installLuoCore} from '../src/luo-core-overlay.js';
-import {luoCoreAnimationTime} from '../src/luo-core-glb-renderer.js';
+import {luoCoreAnimationTime,prepareLuoCoreScene} from '../src/luo-core-glb-renderer.js';
+import * as THREE from 'three';
 
 test('Luo Core defines 336 unique parametric motion variations across 42 families',()=>{
  assert.equal(LUO_CORE_FAMILIES.length,42);
@@ -163,4 +164,16 @@ test('Luo Core never covers home navigation and only appears inside conversation
   a.doc.getElementById('room').classList.add('active');a.tick(86);
   assert.equal(a.core.visible,true,'companion returns when a chat opens');
  }finally{a.core.dispose();a.dom.window.close()}
+});
+
+test('3D companion discards Blender studio props, lights and camera without removing actual kitten',()=>{
+ const scene=new THREE.Group();
+ const cat=new THREE.Mesh(new THREE.BoxGeometry(.5,1.25,.5),new THREE.MeshStandardMaterial());cat.name='SCULPT_CONTINUOUS_BODY';cat.position.y=.65;scene.add(cat);
+ const stage=new THREE.Mesh(new THREE.BoxGeometry(10,.1,10));stage.name='STUDIO_SHADOW_PLATFORM';scene.add(stage);
+ scene.add(new THREE.DirectionalLight());scene.add(new THREE.PerspectiveCamera());
+ const prepared=prepareLuoCoreScene({scene});
+ assert.equal(scene.getObjectByName('STUDIO_SHADOW_PLATFORM'),undefined);
+ assert.ok(scene.getObjectByName('SCULPT_CONTINUOUS_BODY'));
+ assert.equal(scene.children.length,1);
+ assert.ok(prepared.height>1.0);
 });
