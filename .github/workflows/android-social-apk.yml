@@ -1,4 +1,4 @@
-name: Luo Chat Android Social Test APK
+name: Luo Chat Android Full Beta APK
 on:
   push:
     branches: [feature/social-android-test-20261023]
@@ -7,6 +7,9 @@ on:
       - '.github/workflows/android-social-apk.yml'
       - 'src/stories.js'
       - 'src/app.js'
+      - 'src/android-native.js'
+      - 'src/device-notifications.js'
+      - 'tests/android-host.test.mjs'
       - 'src/experience.js'
       - 'src/auth-recovery.js'
       - 'src/google-sign-in.js'
@@ -48,6 +51,7 @@ jobs:
       - name: Verify web release and security
         run: |
           node scripts/check-secrets.mjs
+          node --test tests/android-host.test.mjs
           npm run release:check
           npm run audit:production
       - name: Verify Story RPC schema is part of release sources
@@ -97,15 +101,15 @@ jobs:
           "$APKSIGNER" verify --verbose "$APK"
           unzip -l "$APK" | grep -q "assets/index.html"
           unzip -l "$APK" | grep -q "assets/sw.js"
-          cp "$APK" luo-chat-social-test.apk
-          sha256sum luo-chat-social-test.apk | tee luo-chat-social-test.apk.sha256
+          cp "$APK" luo-chat-android-beta.apk
+          sha256sum luo-chat-android-beta.apk | tee luo-chat-android-beta.apk.sha256
       - name: Upload APK to GitHub Actions as a free test artifact
         uses: actions/upload-artifact@v4
         with:
-          name: luo-chat-social-test-apk
+          name: luo-chat-android-beta-apk
           path: |
-            luo-chat-social-test.apk
-            luo-chat-social-test.apk.sha256
+            luo-chat-android-beta.apk
+            luo-chat-android-beta.apk.sha256
           if-no-files-found: error
           retention-days: 14
       - name: Publish Android test prerelease to GitHub
@@ -116,12 +120,12 @@ jobs:
           RUN_NO: ${{ github.run_number }}
         run: |
           set -euo pipefail
-          TAG="luo-social-test-$RUN_NO"
+          TAG="luo-android-beta-$RUN_NO"
           gh release create "$TAG" \
-            "luo-chat-social-test.apk" \
-            "luo-chat-social-test.apk.sha256" \
+            "luo-chat-android-beta.apk" \
+            "luo-chat-android-beta.apk.sha256" \
             --target "$COMMIT_SHA" \
-            --title "Luo Chat Social Android Test #$RUN_NO" \
-            --notes "Preview-only, debug-signed Android APK built from tested GitHub branch commit $COMMIT_SHA. Not a Play Store release. Uses original Supabase backend; some social interactions remain disabled until matching private database migrations are approved/deployed. Camera and microphone permission requires explicit Android consent. To install subsequent builds you may need to uninstall older debug-signed versions because GitHub runners create different debug keys." \
+            --title "Luo Chat Android Beta #$RUN_NO" \
+            --notes "Functional Android beta built from GitHub commit $COMMIT_SHA. Includes the username-only client, existing account login, chats and existing backend-backed features; Android permissions, file chooser, safe download manager, app-to-chat sharing, video fullscreen, native back navigation and generic device alerts while running. This is NOT Play Store signed, E2EE or a promise of closed-app push. New username registration and newest Story interactions require pending Supabase migrations. Debug signing keys can change per runner, requiring reinstall between beta releases." \
             --prerelease \
             --latest=false
