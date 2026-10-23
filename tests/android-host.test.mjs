@@ -111,4 +111,10 @@ test('Android manifest and bridge enforce first-party HTTPS and required permiss
  assert.match(java,/DownloadManager/);
  assert.match(java,/byjixqwpjvsgmqilmzbm\.supabase\.co/);
  assert.doesNotMatch(java,/SUPABASE_SERVICE_ROLE_KEY|cleartext|addJavascriptInterface/);
+ assert.match(java,/MIN_NOTIFICATION_INTERVAL_MS/);
+ assert.match(java,/MAX_DOWNLOADS_PER_WINDOW/);
+ const main=await readFile('android/app/src/main/java/com/luoscreations/chat/socialtest/MainActivity.java','utf8');
+ assert.match(main,/onRenderProcessGone/);
+ assert.match(main,/renderSafeRecoveryScreen/);
+ assert.match(main,/view\.destroy\(\)/);
 });
