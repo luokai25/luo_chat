@@ -1,0 +1,54 @@
+name: Luo Core installed-web offline preview
+on:
+  push:
+    branches: [feature/social-android-test-20261023]
+    paths:
+      - 'build.mjs'
+      - 'scripts/luo-core-model.mjs'
+      - 'src/luo-core-offline.js'
+      - 'src/luo-core-overlay.js'
+      - 'src/luo-core-renderer.js'
+      - 'src/luo-core-motion.js'
+      - 'src/app.js'
+      - 'scripts/verify-build.mjs'
+      - 'tests/luo-core-offline.test.mjs'
+      - '.github/workflows/luo-core-pwa-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: luo-core-pwa-branch-preview
+  cancel-in-progress: true
+jobs:
+  build-offline-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout development branch only
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Use Node 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Build installable offline preview with high-resolution Luo Core asset
+        run: npm run build
+      - name: Run offline model and existing chat regression checks
+        run: node --test tests/*.test.mjs
+      - name: Verify safe, standalone offline bundle
+        run: |
+          test -s dist/index.html
+          test -s dist/sw.js
+          test -s dist/luo-core-master.glb
+          node scripts/verify-build.mjs
+      - name: Upload build-only PWA bundle (no production deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: luo-core-web-pwa-offline-preview
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
