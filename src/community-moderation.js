@@ -6,7 +6,7 @@ export function mountCommunityModeration({win,entry,output,call,getUser,note}){
  const wrapper=make('details','luo-community-mod'),summary=make('summary','','Community moderation center');
  summary.setAttribute('aria-label','Open moderation controls for '+String(entry.title||'community'));
  wrapper.append(summary);const content=make('div','luo-community-mod-content');wrapper.append(content);
- const description=make('p','muted','Membership approval, community roles, reports and posting controls. All decisions are verified by the server.');
+ const description=make('p','muted','Membership approvals, roles and reports are server-authorized. Slow mode and posting restrictions are draft preferences until server-side enforcement ships.');
  content.append(description);
  const row=make('div','luo-community-mod-setting');
  const slowLabel=make('label','','Slow mode');
@@ -19,7 +19,7 @@ export function mountCommunityModeration({win,entry,output,call,getUser,note}){
  const restrictedLabel=make('label','luo-community-mod-restricted','Restrict member posting');
  const restricted=make('input');restricted.type='checkbox';restricted.checked=entry.data?.restricted===true;
  restrictedLabel.prepend(restricted);
- const save=make('button','primary','Save posting controls');save.type='button';
+ const save=make('button','primary','Save draft posting preferences');save.type='button';
  const status=make('p','luo-community-mod-status','');status.setAttribute('role','status');
  const buttons=make('div','luo-community-mod-buttons');
  const members=make('button','ghost','Review members');members.type='button';
@@ -52,7 +52,7 @@ export function mountCommunityModeration({win,entry,output,call,getUser,note}){
  save.onclick=()=>action(async ticket=>{
   if(!alive(ticket))return;
   await call('community.moderate',{id,slow_seconds:Number(slow.value),restricted:restricted.checked});
-  if(alive(ticket))response('Posting controls saved to this community.');},save);
+  if(alive(ticket))response('Draft preferences saved. Enforcement is not active yet.');},save);
  members.onclick=()=>action(async ticket=>{
   results.replaceChildren(make('p','muted','Loading membership requests…'));
   const records=await call('responses',{id,kind:'member'});
