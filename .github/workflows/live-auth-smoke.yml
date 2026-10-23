@@ -1,0 +1,55 @@
+name: Free live Luo Chat authentication smoke
+on:
+  push:
+    branches: [feature/social-android-test-20261023]
+    paths:
+      - '.github/workflows/live-auth-smoke.yml'
+      - 'supabase/functions/luo-auth/**'
+      - 'supabase/functions/luo-auth-compat/**'
+      - 'src/app.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: luo-live-auth-smoke
+  cancel-in-progress: true
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate deployed auth API without real account credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENDPOINT='https://byjixqwpjvsgmqilmzbm.supabase.co/functions/v1/luo-auth'
+          USERNAME="ci_probe_$GITHUB_RUN_NUMBER"
+          BODY=$(printf '{"action":"signin_username","username":"%s","password":"not-a-real-account-password"}' "$USERNAME")
+          HTTP=$(curl -sS --max-time 18 -o /tmp/luo-auth-probe.json -w '%{http_code}' \
+            -X POST "$ENDPOINT" \
+            -H 'Origin: https://luo-chat-luokai25.vercel.app' \
+            -H 'Content-Type: application/json' \
+            --data "$BODY") || { echo "Auth endpoint network failure"; exit 1; }
+          case "$HTTP" in
+            401)
+              node -e '
+                const fs=require("fs");
+                const body=JSON.parse(fs.readFileSync("/tmp/luo-auth-probe.json","utf8"));
+                if (!/Invalid username or password/.test(body.error||"")) process.exit(1);
+                console.log("PASS: live username login reaches credential verification and safely rejects nonexistent user.");
+              '
+              ;;
+            429)
+              echo "Auth server is reachable, but server-side anti-abuse throttling is active."
+              exit 1
+              ;;
+            503)
+              echo "BLOCKED: username login backend reports unavailable DB, IP origin or rate-limiter. Login is not operational."
+              exit 1
+              ;;
+            *)
+              echo "Unexpected login endpoint status $HTTP (expected 401 for nonexistent username)."
+              exit 1
+              ;;
+          esac
+          rm -f /tmp/luo-auth-probe.json
