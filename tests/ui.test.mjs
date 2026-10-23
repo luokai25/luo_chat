@@ -185,3 +185,28 @@ test('a successful auth session with a temporary profile outage never claims inv
  assert.ok(d.getElementById('home').classList.contains('active'));
  dom.window.close();
 });
+
+
+test('a newer successful SIGNED_IN supersedes an earlier hung account restoration',async()=>{
+ const {w,dom,holdNextQuery,event}=await setup(false);
+ const release=holdNextQuery('profiles');
+ event('SIGNED_IN');await tick();
+ event('SIGNED_IN');await tick();await tick();
+ assert.ok(w.document.getElementById('home').classList.contains('active'),'fresh sign-in must not be ignored by an earlier pending boot');
+ release();await tick();await tick();
+ assert.ok(w.document.getElementById('home').classList.contains('active'),'older restore may not replace active session');
+ dom.window.close();
+});
+
+test('manual password sign-in clears a stale startup outage warning immediately',async()=>{
+ const {w,dom,setSessionFailure}=await setup(true,false,null,'https://luo-chat-luokai25.vercel.app/',{sessionFailure:{status:504,message:'context deadline exceeded'}});
+ const d=w.document;
+ assert.match(d.getElementById('authmsg').textContent,/cannot reach/);
+ setSessionFailure(null);
+ d.getElementById('email').value='ui@example.invalid';
+ d.getElementById('password').value='right-password';
+ d.getElementById('signin').click();await tick();await tick();
+ assert.ok(d.getElementById('home').classList.contains('active'));
+ assert.equal(d.getElementById('authmsg').textContent,'');
+ dom.window.close();
+});
