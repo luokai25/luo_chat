@@ -144,3 +144,21 @@ test('Rejected capsule attachments never create an orphan server-side draft',asy
  assert.match(h.doc.querySelector('.luo-social-status').textContent,/supported photos or audio/);
  h.window.close();
 });
+
+
+test('Interactive question reveals a decorated safe answer only after server confirmation and prevents duplicate votes',async()=>{
+ const h=harness({'feed':[{id:'q1',kind:'question',body:'Which surprise?',data:{choices:[{label:'Moon',followup:'Moonlight'},{label:'Stars',followup:'Starlight'}]}}],'response':{followup:'<img src=x onerror=alert(1)> A golden surprise'}});
+ h.doc.querySelector('[data-tab="social"]').click();await h.flush();
+ [...h.doc.querySelectorAll('.luo-social-chip')].find(b=>b.textContent==='Questions').click();await h.flush();
+ const pick=[...h.doc.querySelectorAll('#social button')].find(b=>b.textContent==='Moon');
+ assert.ok(pick);
+ pick.click();await h.flush();
+ const reveal=h.doc.querySelector('.luo-question-reveal');
+ assert.ok(reveal);
+ assert.match(reveal.textContent,/golden surprise/);
+ assert.equal(reveal.querySelector('img'),null);
+ assert.equal(reveal.getAttribute('role'),'status');
+ pick.click();await h.flush();
+ assert.equal(h.requests.filter(r=>r.action==='response').length,1);
+ h.window.close();
+});
