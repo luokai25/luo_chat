@@ -1,0 +1,57 @@
+name: Free Luo Chat Android emulator acceptance tests
+on:
+  push:
+    branches: [feature/social-android-test-20261023]
+    paths:
+      - 'android/app/**'
+      - '.github/workflows/android-emulator-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: luo-android-emulator
+  cancel-in-progress: true
+jobs:
+  device-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - run: |
+          npm ci --ignore-scripts
+          npm run release:check
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Package compiled production web assets for real Android test
+        run: |
+          set -euo pipefail
+          mkdir -p android/app/src/main/assets android/app/src/main/res/drawable-nodpi
+          cp -a dist/. android/app/src/main/assets/
+          icon="$(find dist -maxdepth 1 -type f -name 'icon-192-*.png' | head -n1)"
+          test -n "$icon"
+          cp "$icon" android/app/src/main/res/drawable-nodpi/luo_icon.png
+      - name: Enable hardware virtualization
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Boot Android and test real Luo Chat login rendering
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 1536M
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect -no-boot-anim
+          script: gradle --no-daemon -p android :app:connectedDebugAndroidTest
