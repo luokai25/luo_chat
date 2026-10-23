@@ -51,12 +51,20 @@ jobs:
           cache: npm
       - name: Install tested web dependencies
         run: npm ci --ignore-scripts
-      - name: Verify web release and security
+      - name: Verify credentials and Android controls
+        timeout-minutes: 2
         run: |
           node scripts/check-secrets.mjs
           node --test tests/android-host.test.mjs tests/auth-capabilities.test.mjs
-          npm run release:check
-          npm run audit:production
+      - name: Build final bundled web assets
+        timeout-minutes: 6
+        run: npm run build
+      - name: Run every web regression test
+        timeout-minutes: 6
+        run: node --test tests/*.test.mjs
+      - name: Production dependency audit
+        timeout-minutes: 3
+        run: npm run audit:production
       - name: Verify Story RPC schema is part of release sources
         run: |
           test -s supabase/migrations/20261023180000_story_interactive_stickers.sql
