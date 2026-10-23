@@ -24,4 +24,10 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: node --test tests/username-login-compat.test.mjs tests/username-login-edge.test.mjs tests/username-registration.test.mjs
       - name: Isolate Android sign-in browser regression
-        run: node --test --test-name-pattern='signed-out startup validates inputs' tests/ui.test.mjs
+        run: |
+          set +e
+          timeout 25s node --test --test-name-pattern='signed-out startup validates inputs' tests/ui.test.mjs > isolated-auth.log 2>&1
+          result=$?
+          tail -180 isolated-auth.log
+          if [ "$result" -eq 124 ]; then echo 'The regression process hung and was terminated by timeout.'; fi
+          exit "$result"
