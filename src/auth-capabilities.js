@@ -58,11 +58,13 @@ export function installAuthCapabilities({win,check,note=()=>{}}){
  const stop=(e)=>{e.preventDefault();e.stopImmediatePropagation()};
  function onSignupClick(e){
   if(support())return;
+  // currentTarget becomes null after dispatch, so capture the user-selected
+  // mode before awaiting the backend. Never auto-submit the signup form.
+  const openingSignup=e.currentTarget===signupTab;
   stop(e);
   inform('signup');
-  // The UI never submits while the capability check is pending.
   if(!pending)void poll(Date.now()-lastCheck>=staleMs).then(ok=>{
-    if(ok&&e.currentTarget===signupTab&&!disposed)signupTab.click();
+    if(ok&&openingSignup&&!disposed)signupTab.click();
     else if(!ok)inform('signup');
   });
  }
