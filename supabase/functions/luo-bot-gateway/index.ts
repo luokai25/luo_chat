@@ -49,7 +49,7 @@ Deno.serve(async(req)=>{
   if(identified.error||!owner?.id)return reply(401,{error:'Human owner session invalid.'});
   if(owner.app_metadata?.luo_account_type==='bot')return reply(403,{error:'Bots cannot own other bots.'});
   if(action==='apply'){
-   if(!username)return reply(400,{error:'Choose a username beginning with bot_.');
+   if(!username)return reply(400,{error:'Choose a username beginning with bot_.'});
    const result=await admin.rpc('request_luo_bot_account',{p_owner_id:owner.id,p_username:username});
    if(result.error)return reply(503,{error:'Bot registration currently unavailable.'});
    if(!result.data)return reply(409,{error:'Bot username unavailable or application limit reached.'});
