@@ -67,7 +67,10 @@ function cone(radius,height,segments){
 }
 function node(name,geometry,key,translation,rotation){
  if(nodeNames.has(name))throw Error('Duplicate Luo Core node '+name);
- const pos=acc(addBinary(new Float32Array(geometry.positions),34962),'VEC3',5126,geometry.positions.length/3);
+ const positions=geometry.positions;
+ const minimum=[Infinity,Infinity,Infinity],maximum=[-Infinity,-Infinity,-Infinity];
+ for(let i=0;i<positions.length;i++){const axis=i%3;minimum[axis]=Math.min(minimum[axis],positions[i]);maximum[axis]=Math.max(maximum[axis],positions[i])}
+ const pos=acc(addBinary(new Float32Array(positions),34962),'VEC3',5126,positions.length/3,minimum,maximum);
  const norm=acc(addBinary(new Float32Array(geometry.normals),34962),'VEC3',5126,geometry.normals.length/3);
  const max=Math.max(...geometry.indices);
  const indexType=max<65536?5123:5125;
