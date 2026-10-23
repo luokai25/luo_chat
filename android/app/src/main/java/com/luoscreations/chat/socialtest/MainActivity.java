@@ -144,6 +144,9 @@ public final class MainActivity extends Activity {
                 // A crashed Android System WebView must not terminate Luo Chat's
                 // entire Activity. No passwords, tokens or page contents are logged.
                 if (web == view) web = null;
+                if (view.getParent() instanceof ViewGroup) {
+                    ((ViewGroup)view.getParent()).removeView(view);
+                }
                 view.destroy();
                 renderSafeRecoveryScreen();
                 return true;
