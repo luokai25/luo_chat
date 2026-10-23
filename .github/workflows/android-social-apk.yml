@@ -16,6 +16,7 @@ on:
       - 'tests/username-login-compat.test.mjs'
       - 'tests/username-registration.test.mjs'
       - 'tests/ui.test.mjs'
+      - 'tests/auth-route-guard.test.mjs'
       - 'tests/android-username-auth.test.mjs'
       - 'supabase/functions/luo-auth/index.ts'
       - 'src/story-interactions.js'
