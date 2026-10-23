@@ -82,3 +82,24 @@ test('Notification controls use account-scoped RPC and save explicit categories'
  assert.equal(written.input.categories.messages,true);
  h.window.close();
 });
+
+
+test('Interest recommendations require explicit public tag visibility as well as opt-in',async()=>{
+ const h=harness({'profile.get':{interests:['anime'],discoverable:false,sections:{tags:'friends',music:'friends'},music:'',presence:'online',grid:'classic'}});
+ h.doc.querySelector('[data-tab="social"]').click();await h.flush();
+ [...h.doc.querySelectorAll('.luo-social-chip')].find(b=>b.textContent==='My interests').click();await h.flush();
+ const form=h.doc.querySelector('#social form');
+ assert.ok(form);
+ form.querySelector('input[type=checkbox]').checked=true;
+ form.dispatchEvent(new h.window.Event('submit',{cancelable:true,bubbles:true}));
+ await h.flush();
+ assert.match(h.doc.querySelector('.luo-social-status').textContent,/Public interest tags are required/);
+ assert.equal(h.requests.filter(c=>c.action==='profile.save').length,0);
+ form.querySelectorAll('select')[0].value='public';
+ form.dispatchEvent(new h.window.Event('submit',{cancelable:true,bubbles:true}));
+ await h.flush();
+ const saved=h.requests.find(c=>c.action==='profile.save');
+ assert.equal(saved.input.discoverable,true);
+ assert.equal(saved.input.sections.tags,'public');
+ h.window.close();
+});
