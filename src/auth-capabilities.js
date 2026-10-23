@@ -62,19 +62,23 @@ export function installAuthCapabilities({win,check,note=()=>{}}){
   inform('signup');
   // The UI never submits while the capability check is pending.
   if(!pending)void poll(Date.now()-lastCheck>=staleMs).then(ok=>{
-    if(!ok)inform('signup');
+    if(ok&&e.currentTarget===signupTab&&!disposed)signupTab.click();
+    else if(!ok)inform('signup');
   });
  }
  function onRecoveryClick(e){
   if(current?.username_recovery===true)return;
   stop(e);
   inform('recovery');
-  if(!pending)void poll(Date.now()-lastCheck>=staleMs);
+  if(!pending)void poll(Date.now()-lastCheck>=staleMs).then(()=>{
+    if(!disposed&&current?.username_recovery===true)forgot?.click();
+  });
  }
  signupTab.addEventListener('click',onSignupClick,true);
  signupButton.addEventListener('click',onSignupClick,true);
  forgot?.addEventListener('click',onRecoveryClick,true);
- void poll();
+ // Do not add a server round trip to existing-user sign-in startup.
+ // Check lazily when signup/recovery is opened or a test explicitly probes.
  return {
   ready:poll,
   ensureSignup:()=>poll().then(ok=>{if(!ok)inform('signup');return ok}),
