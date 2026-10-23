@@ -13,6 +13,8 @@ console.log('PASS: hashed assets, manifest icons, and offline-shell references a
 const release=JSON.parse(await readFile('package.json','utf8')).version;
 assert.ok(html.includes('<meta name="luo-version" content="'+release+'">'));assert.ok(html.includes('<span id="appVersion">'+release+'</span>'));
 assert.match(html,/google-site-verification/);
+for(const id of ['googleSignIn','googleAuthStatus','retryGoogleAuth'])assert.ok(!html.includes('id="'+id+'"'), 'Unconfigured Google OAuth control must not be included in production HTML: '+id);
+assert.ok(html.includes('id="signin"')&&html.includes('id="forgot"'),'Email password sign-in and recovery must remain available');
 console.log('PASS: version '+release+', app identity, and Google verification are retained');
 const names=await readdir('dist/stickers/luo-family');
 assert.equal(names.length,50);assert.ok(names.every(n=>/^luo50-(?:0[1-9]|[1-4][0-9]|50)\.png$/.test(n)));
