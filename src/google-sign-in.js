@@ -1,6 +1,9 @@
 // Google credentials stay on Google's page. This app only starts Supabase's OAuth flow.
 export function installGoogleSignIn({win,db,$,projectUrl,publicKey,onStart=()=>{},setBusy=()=>{},navigate=url=>win.location.assign(url)}){
  const button=$('googleSignIn'),status=$('googleAuthStatus'),retry=$('retryGoogleAuth');
+ // Username-only Luo Chat intentionally has no Google OAuth controls.
+ // Do not access removed DOM nodes or poll the Google settings endpoint.
+ if(!button||!status||!retry)return {reset(){},sessionReady(){},dispose(){}};
  const backend=new URL(projectUrl),callback=win.location.origin+'/?auth=google';
  let available=false,running=false,disposed=false,checkId=0,attempt=0,controller=null;
  function render(){button.disabled=!available||running;button.textContent=running?'Opening Google…':'Continue with Google'}
