@@ -231,14 +231,14 @@ test('authentication tabs and keyboard Enter work without exposing hidden signup
  const press=new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});
  d.getElementById('password').dispatchEvent(press);
  assert.equal(press.defaultPrevented,true);
- assert.match(d.getElementById('authmsg').textContent,/valid email/i,'Enter dispatches the existing sign-in validation');
+ assert.match(d.getElementById('authmsg').textContent,/username or email/i,'Enter dispatches the updated sign-in validation');
  assert.equal(d.getElementById('home').classList.contains('active'),false);
  dom.window.close();
 });
 test('auth surface tells users their actual login method and has safe, labelled focus targets',async()=>{
  const {w,dom}=await setup(false);const d=w.document;
  assert.ok(d.querySelector('link[href="/luo-auth-premium.css"]'));
- assert.equal(d.getElementById('email').getAttribute('type'),'email');
+ assert.equal(d.getElementById('email').getAttribute('type'),'text');
  assert.match(d.getElementById('loginMethodNote').textContent,/existing accounts/i);
  assert.ok(d.getElementById('authHeading'));
  assert.ok(d.getElementById('authSubheading'));
@@ -276,5 +276,5 @@ test('existing email login is unaffected, while registration still demands an em
  d.getElementById('signin').click();await tick();await tick();
  assert.equal(calls.some(c=>c.name==='function:luo-auth'&&c.args.action==='signin_username'),false);
  assert.ok(d.getElementById('home').classList.contains('active'));
- dom.window.close();
+ }finally{dom.window.close()}
 });
