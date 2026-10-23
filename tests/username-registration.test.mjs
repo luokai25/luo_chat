@@ -79,7 +79,7 @@ test('registration quotas deny suspicious bursts and unavailable recovery storag
  assert.ok(!JSON.stringify(await response.json()).includes('service-secret'));
 });
 test('recovery accepts one server-verified code, updates Auth password and rotates codes',async()=>{
- const h=harness(),code='ABCD-EFGH-JKLM-NPQR-STUV';
+ const h=harness({exists:true}),code='ABCD-EFGH-JKLM-NPQR-STUV';
  const response=await h.handler(h.post('recover_username',{username:'legacy01',recovery_code:code,new_password:'this-is-another-password'}));
  const body=await response.json();
  assert.equal(response.status,200);
