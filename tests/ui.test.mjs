@@ -252,7 +252,7 @@ test('auth surface tells users their actual login method and has safe, labelled 
 
 
 test('legacy account can sign in using username without revealing internal email in a browser request',async()=>{
- const {w,dom,calls}=await setup(false);
+ const {w,dom,calls}=await setup(false);try{
  const d=w.document;
  d.getElementById('email').value='@UiTest';
  d.getElementById('password').value='example-password';
@@ -267,10 +267,10 @@ test('legacy account can sign in using username without revealing internal email
  assert.ok(signed);
  assert.equal(signed.args.access_token,'test-access-token');
  assert.ok(d.getElementById('home').classList.contains('active'));
- dom.window.close();
+ }finally{dom.window.close()}
 });
 test('existing email login is unaffected, while registration still demands an email',async()=>{
- const {w,dom,calls}=await setup(false);
+ const {w,dom,calls}=await setup(false);try{
  const d=w.document;
  d.getElementById('email').value='ui@example.invalid';d.getElementById('password').value='example-password';
  d.getElementById('signin').click();await tick();await tick();
