@@ -25,3 +25,17 @@ assert.ok(app.includes('luo50-01')&&app.includes('luo50-50'));
 assert.ok(!app.includes('200 original stickers'));
 assert.ok(app.includes('50 premium stickers'));
 console.log('PASS: exactly 50 new stickers packaged and picker updated; none of the original 200 packaged.');
+
+const model=await readFile('dist/luo-core-master.glb');
+assert.ok(model.byteLength>1_000_000,'Full Luo Core GLB must be packaged, not a thumbnail');
+assert.equal(model.toString('ascii',0,4),'glTF');
+assert.equal(model.readUInt32LE(4),2);
+assert.equal(model.readUInt32LE(8),model.byteLength);
+const meta=JSON.parse(model.subarray(20,20+model.readUInt32LE(12)).toString('utf8'));
+assert.ok(meta.extras?.luoCore?.triangularFaces>=100000,'Luo Core model must exceed 100,000 real triangle faces');
+assert.equal(meta.animations.length,28);
+assert.ok(meta.meshes.length>=60);
+assert.match(sw,/CORE_MODEL="\/luo-core-master\.glb"/);
+assert.match(sw,/LUO_CORE_SAVE_OFFLINE/);
+assert.ok(!shell.includes('/luo-core-master.glb'),'Large optional model must not make PWA installation fail');
+console.log('PASS: complete offline-ready Luo Core GLB, 28 3D clips, and resilient cache route verified');
