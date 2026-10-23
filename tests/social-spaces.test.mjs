@@ -163,3 +163,16 @@ test('Interactive question reveals a decorated safe answer only after server con
  assert.equal(h.requests.filter(r=>r.action==='response').length,1);
  h.window.close();
 });
+
+
+test('non-owner can browse community rooms without touching owner-only moderation state',async()=>{
+ const h=harness({'feed':[{kind:'community',id:'community-1',owner_id:'different-owner',title:'Dragon Library',body:'Books and dragons'}],'community.rooms':[{id:'room-1',title:'Fantasy readers'}]});
+ h.doc.querySelector('[data-tab="social"]').click();await h.flush();
+ [...h.doc.querySelectorAll('.luo-social-chip')].find(b=>b.textContent==='Communities').click();await h.flush();
+ const browse=[...h.doc.querySelectorAll('#social button')].find(b=>b.textContent==='Browse rooms');assert.ok(browse);
+ browse.click();await h.flush();
+ assert.match(h.doc.getElementById('social').textContent,/Fantasy readers/);
+ assert.equal(h.doc.querySelector('.luo-community-mod'),null,'owner moderation must not render for visitors');
+ assert.equal(h.messages.length,0);
+ h.window.close();
+});
