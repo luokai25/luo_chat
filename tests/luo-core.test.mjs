@@ -127,3 +127,32 @@ test('cat anchors to real visible bubbles and follows bubble scrolling without r
   assert.ok(!a.core.brain.snapshot().eventCount,'scroll is not a message-read event');
  }finally{a.core.dispose();a.dom.window.close()}
 });
+
+test('pet, play and nap are sustained life activities rather than split-second actions',()=>{
+ const brain=createLuoCoreBrain({random:()=>.18});
+ brain.command('play');
+ for(let k=0;k<9;k++)brain.tick(400);
+ assert.ok(['play_yarn','bat','paw_tap','chase'].includes(brain.snapshot().state));
+ assert.ok(brain.snapshot().activityRemaining>5000);
+ brain.command('nap');
+ for(let k=0;k<16;k++)brain.tick(400);
+ assert.ok(['curl_up','sleep','dream','lie_down'].includes(brain.snapshot().state));
+ assert.ok(brain.snapshot().activityRemaining>10000);
+ const before=brain.snapshot().activityRemaining;
+ brain.tick(450,{visible:false,motion:true});
+ assert.equal(brain.snapshot().activityRemaining,before,'background tabs do not consume nap time');
+ brain.command('pet');
+ assert.equal(brain.snapshot().state,'purr');
+});
+
+test('switching accounts resets the companion mind without leaking the previous user\'s pet state',()=>{
+ const a=host();
+ try{
+  a.signIn('account-one');a.tick();
+  a.core.brain.command('pet');
+  assert.ok(a.core.brain.snapshot().affection>.53);
+  a.signOut();a.core.signedOut();a.tick(32);
+  a.signIn('account-two');a.tick(70);
+  assert.equal(a.core.brain.snapshot().affection,.53);
+ }finally{a.core.dispose();a.dom.window.close()}
+});
