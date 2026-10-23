@@ -61,8 +61,10 @@ test('missing login controls do not crash restoration on a signed-in page',async
 test('capability check does not leak a request to the backend after dispose',async()=>{
  let finish;
  const h=env(()=>new Promise(resolve=>{finish=resolve}));
+ const pending=h.api.ready();
  h.api.dispose();
  finish({username_signup:true,username_recovery:true,username_signin:true});
+ assert.equal(await pending,false);
  assert.equal(await h.api.ready(),false);
  assert.equal(h.dom.window.document.getElementById('luoAuthCapabilitiesStatus'),null);
  h.dom.window.close();
