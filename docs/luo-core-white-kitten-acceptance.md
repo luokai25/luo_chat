@@ -28,3 +28,17 @@ Approved visual: the white kitten from the October 23 conversation, not the prev
 - Procedural white/pearl/silver coat: 8,000 body hairs, 9,300 head hairs, 1,900 cheek hairs, and 6,180 six-joint tail hairs. Facial and body hairs have morph-based tip motion; tail coats move with articulated joints. Total **25,380 authored strand units**, realized as strips/geometry, not true physics-simulated follicles.
 - Hidden internal driver proxies: lungs, diaphragm and heart with animated breathing/pulse. **NOT** a realistic organ simulator; it does not purport to replicate veterinary anatomy or physiology.
 - Generated still audit at rest and aerial apex in progress. Live website is not changed. Mesh still requires visual inspection and further corrective sculpting, testing and app integration before release.
+
+## Rig verification: revision 8 (2026-10-23)
+
+- 64 Blender bones with authored keyframes, including spine, fore/hind limbs, facial and tail bones.
+- 26 additional articulated visible controls for segmented tail, ears, eye gaze, wrists, hind knees and individual paws/toes.
+- 25,380 authored fur strips grouped into nine animated coat meshes. Torso fur is skinned to four-nearest spine bones; other groom regions are parented to moving anatomy. These are procedural cards/morphs, **not real per-follicle physics**.
+- Three facial shape keys: smile, yawn and curiosity. Blink lids, whiskers and blue-gray eye gaze move independently.
+- Heart, lungs and diaphragm are **hidden motion proxies** for life-like breathing/pulsing, not accurate organ simulations.
+- Ground-contact solver sampled all 168 frames, corrected penetration at 106 frames and verified sampled paw geometry never falls below z=-0.003m.
+- Blender editable master about 20.6 MB and portable GLB about 11.2 MB; authored motion sequence lasts 5.96 seconds at 28 fps.
+- EEVEE renders were generated for resting and aerial poses; structural audit passed but final photorealism has NOT been visually approved and is NOT deployed into live chat.
+- Next gates: image-reference comparison, fur material polish, locomotion and face-motion transitions, mobile GPU benchmarks, independent named animation clips and isolated web preview.
+
+Never deploy or replace the live cat merely because bone/poly counts and tests passed. Visual quality and realistic motions must be approved.
