@@ -175,15 +175,15 @@ test('failed refresh leaves an explicit retry control and restores the previous 
  assert.equal(button.hidden,true);
  dom.window.close();
 });
-test('a successful auth session with a temporary profile outage never claims invalid credentials',async()=>{
+test('a valid Supabase session opens Luo Chat even when profile synchronization is unavailable',async()=>{
  const {w,dom,setProfileFailure}=await setup(true,false,null,'https://luo-chat-luokai25.vercel.app/',{profileFailure:{status:504,message:'database timeout'}});
- const d=w.document;
- assert.ok(d.getElementById('auth').classList.contains('active'));
- assert.match(d.getElementById('authmsg').textContent,/saved session may still be valid/);
- setProfileFailure(null);
- d.getElementById('retryAuthRestore').click();await tick();await tick();
- assert.ok(d.getElementById('home').classList.contains('active'));
- dom.window.close();
+ try{
+  const d=w.document;
+  assert.ok(d.getElementById('home').classList.contains('active'));
+  assert.equal(d.querySelector('.app').dataset.screen,'home');
+  assert.ok(['SYNCING','SYNC PAUSED'].includes(d.getElementById('state').textContent));
+  setProfileFailure(null);
+ }finally{dom.window.close()}
 });
 
 
