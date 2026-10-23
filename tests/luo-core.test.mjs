@@ -118,7 +118,7 @@ test('cat anchors to real visible bubbles and follows bubble scrolling without r
   const canvas=a.doc.querySelector('.luo-core-character');
   // The first perch may use a hop; reduced-motion state snaps to the target.
   a.tick(50);
-  assert.match(canvas.style.transform,/translate3d\\(/);
+  assert.ok(canvas.style.transform.startsWith('translate3d('));
   const first=canvas.style.transform;
   top=360;
   a.w.dispatchEvent(new a.w.Event('scroll'));
