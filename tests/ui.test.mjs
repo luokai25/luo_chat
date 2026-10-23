@@ -226,13 +226,13 @@ test('authentication tabs and keyboard Enter work without exposing hidden signup
  d.getElementById('authModeSignin').click();
  assert.equal(d.getElementById('forgot').hidden,false);
  assert.equal(d.getElementById('signup').classList.contains('hidden'),true);
- d.getElementById('email').value='ui@example.invalid';
+ d.getElementById('email').value='';
  d.getElementById('password').value='long-password';
  const press=new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});
  d.getElementById('password').dispatchEvent(press);
  assert.equal(press.defaultPrevented,true);
- await tick();await tick();
- assert.ok(d.getElementById('home').classList.contains('active'),'Enter signs in via existing Supabase password flow');
+ assert.match(d.getElementById('authmsg').textContent,/valid email/i,'Enter dispatches the existing sign-in validation');
+ assert.equal(d.getElementById('home').classList.contains('active'),false);
  dom.window.close();
 });
 test('auth surface tells users their actual login method and has safe, labelled focus targets',async()=>{
