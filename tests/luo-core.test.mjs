@@ -37,7 +37,7 @@ function host(){
  Object.defineProperty(w,'innerHeight',{value:820,configurable:true});
  const gradient={addColorStop(){}};
  const ctx={clearRect(){count++},save(){},restore(){},translate(){},scale(){},
-  createLinearGradient:()=>gradient,beginPath(){},ellipse(){},fill(){},moveTo(){},bezierCurveTo(){},stroke(){}};
+  createLinearGradient:()=>gradient,beginPath(){},ellipse(){},fill(){},moveTo(){},lineTo(){},closePath(){},bezierCurveTo(){},stroke(){}};
  w.HTMLCanvasElement.prototype.getContext=type=>type==='2d'?ctx:null;
  w.requestAnimationFrame=callback=>{pending=callback;return 1};
  w.cancelAnimationFrame=()=>{pending=null};
