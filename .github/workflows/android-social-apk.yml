@@ -123,7 +123,8 @@ jobs:
             luo-chat-android-beta.apk.sha256
           if-no-files-found: error
           retention-days: 14
-      - name: Publish Android test prerelease to GitHub
+      - name: Publish optional Android prerelease to GitHub
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -140,3 +141,9 @@ jobs:
             --notes "Functional Android beta built from GitHub commit $COMMIT_SHA. Includes the username-only client, existing account login, chats and existing backend-backed features; Android permissions, file chooser, safe download manager, app-to-chat sharing, video fullscreen, native back navigation and generic device alerts while running. This is NOT Play Store signed, E2EE or a promise of closed-app push. New username registration and newest Story interactions require pending Supabase migrations. Debug signing keys can change per runner, requiring reinstall between beta releases." \
             --prerelease \
             --latest=false
+      - name: Surface the verified APK artifact when Releases permission is unavailable
+        if: always()
+        run: |
+          echo "### Luo Chat Android Beta build" >> "$GITHUB_STEP_SUMMARY"
+          echo "Verified signed APK + SHA-256 checksum: **Actions → this run → Artifacts → luo-chat-android-beta-apk**." >> "$GITHUB_STEP_SUMMARY"
+          echo "This artifact works even when the GitHub token cannot create public releases. Installing the APK never requires disabling Play Protect." >> "$GITHUB_STEP_SUMMARY"
