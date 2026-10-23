@@ -23,9 +23,12 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - run: |
-          npm ci --ignore-scripts
-          npm run release:check
+      - name: Install cached dependencies
+        timeout-minutes: 4
+        run: npm ci --ignore-scripts --prefer-offline --no-audit --no-fund
+      - name: Build tested web app for Android emulator
+        timeout-minutes: 7
+        run: npm run release:check
       - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
         with:
           distribution: temurin
