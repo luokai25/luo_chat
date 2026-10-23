@@ -1,5 +1,5 @@
 import {build} from 'esbuild';
-import {buildLuoCoreModel,LUO_CORE_ASSET} from './scripts/luo-core-model.mjs';
+import {buildLuoCoreModel,LUO_CORE_ASSET} from './scripts/luo-core-source.mjs';
 import {cp,mkdir,readFile,writeFile,rm,rename} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {SUPABASE_URL,SUPABASE_KEY} from './src/config.js';
@@ -11,7 +11,7 @@ const release=JSON.parse(await readFile('package.json','utf8')).version;
 if(!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(release))throw Error('A valid release version is required.');
 await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});await cp('public','dist',{recursive:true});
 const luoCoreModel=await buildLuoCoreModel('dist'+LUO_CORE_ASSET);
-console.log('Luo Core offline GLB generated: '+luoCoreModel.faces+' faces, '+luoCoreModel.clips+' clips, '+luoCoreModel.bytes+' bytes');
+console.log('Luo Core authored Blender GLB verified: '+luoCoreModel.faces+' meshes, '+luoCoreModel.clips+' animated controllers, '+luoCoreModel.bytes+' bytes');
 const result=await build({entryPoints:{app:'src/entry.js'},entryNames:'[name]-[hash]',outdir:'dist',metafile:true,define:{'process.env.LUO_SUPABASE_URL':JSON.stringify(process.env.LUO_SUPABASE_URL||''),'process.env.LUO_SUPABASE_KEY':JSON.stringify(process.env.LUO_SUPABASE_KEY||'')},bundle:true,format:'esm',target:['es2022'],minify:true,legalComments:'eof'});
 const js=Object.keys(result.metafile.outputs).find(path=>path.endsWith('.js')).replace('dist/','');
 const cssContents=await readFile('dist/style.css'),css='style-'+createHash('sha256').update(cssContents).digest('hex').slice(0,12)+'.css';await rename('dist/style.css','dist/'+css);

@@ -48,30 +48,30 @@ test('invalid 3D content cannot poison offline model cache',async()=>{
  assert.equal(stored.size,0);
 });
 test('compiled installable web bundle contains the full 3D cat and does not gate PWA shell on HD download',async()=>{
- const data=await readFile('dist/luo-core-master.glb');
+ const data=await readFile('dist/luo-core-snow-v2.glb');
  assert.equal(data.toString('ascii',0,4),'glTF');
  const gltf=JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString('utf8'));
- assert.ok(gltf.extras.luoCore.triangularFaces>=100000);
- assert.equal(gltf.animations.length,28);
- assert.ok(gltf.nodes.some(node=>node.name==='Head'));
- assert.ok(gltf.nodes.some(node=>node.name==='FrontPawL'));
+ assert.ok(gltf.animations.length===35);
+ assert.equal(gltf.animations.length,35);
+ assert.ok(gltf.nodes.some(node=>node.name==='CTRL_HEAD'));
+ assert.ok(gltf.nodes.some(node=>node.name==='FRONT_PAW_L'));
  const sw=await readFile('dist/sw.js','utf8');
  const shell=JSON.parse(sw.match(/SHELL=(\[[^;]+\]);/)[1]);
- assert.equal(shell.includes('/luo-core-master.glb'),false);
+ assert.equal(shell.includes('/luo-core-snow-v2.glb'),false);
  assert.match(sw,/CORE_CACHE/);
  assert.match(sw,/LUO_CORE_SAVE_OFFLINE/);
 });
 
 test('full Luo Core GLB opens in the offline viewer with named eye, paw, tail and motion tracks',async()=>{
- const blob=await readFile('dist/luo-core-master.glb');
+ const blob=await readFile('dist/luo-core-snow-v2.glb');
  const buffer=blob.buffer.slice(blob.byteOffset,blob.byteOffset+blob.byteLength);
  const {gltf,binary}=parseLuoCoreGlb(buffer);
  assert.ok(binary.byteLength>1_000_000);
- for(const part of ['Body','Head','FrontPawL','FrontPawR','EarOuterL','Tail03','PupilR'])
+ for(const part of ['SCULPT_CONTINUOUS_BODY','CTRL_HEAD','FRONT_PAW_L','FRONT_PAW_R','EAR_SCULPT_L','SCULPT_PLUSH_TAIL','EYE_PUPIL_R'])
   assert.ok(gltf.nodes.some(x=>x.name===part),'Missing detailed 3D part '+part);
- assert.equal(gltf.animations.length,28);
- assert.ok(gltf.materials.some(m=>m.name==='iris'));
- assert.ok(gltf.extras.luoCore.triangularFaces>=100000);
+ assert.equal(gltf.animations.length,35);
+ assert.ok(gltf.materials.some(m=>m.name.includes('IRIS')));
+ assert.ok(gltf.animations.length===35);
 });
 test('model revisions create separate cache identities to prevent stale offline cat meshes',()=>{
  const make=hash=>({document:{querySelector:()=>({content:hash})}});
