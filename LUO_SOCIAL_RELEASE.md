@@ -46,3 +46,9 @@ These refinements use existing database permissions and do not claim third-party
 - **Two-second voice reactions:** tap Voice 2s on a text or media message, explicitly grant microphone permission, record a short clip, preview, and send. This uses the *existing secure audio-attachment reply RPC* and links the result to the original message. It is an audio reply rather than a new `space_voice_reactions` record. No new database migration is required.
 - Audio and image capture are local until the user explicitly sends; canceled or sign-out interrupted recordings release microphone tracks. Real Android/iOS permission and media compatibility still need acceptance testing.
 - The existing limits remain: social media is **not end-to-end encrypted**; interactive Story polls/quizzes and Snapchat-grade AR are not yet delivered; Spotify URLs do not permit in-app licensed music playback.
+
+### Memory Constellations request isolation
+
+Changing conversations now immediately clears the previous timeline and restores the Explore button even while its request is pending. Refreshing removes the old stars and letter detail before checking access again. Responses, detached star buttons, and special-mark completions are scoped to the original account, conversation, and mounted view. Repeated special-mark clicks submit only once while the request is pending. The selector has an accessible label and loading feedback is announced as status.
+
+The Android APK and emulator workflows now watch all source modules, public assets, build scripts, and regression tests so changes to social features cannot silently miss the next GitHub-only build. This change does not deploy the website or apply database migrations.
