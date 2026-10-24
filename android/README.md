@@ -18,8 +18,8 @@ The APK does not deploy database migrations. New interactions work only if the e
 
 ## Install and test
 
-1. Open the latest GitHub prerelease named Luo Chat Social Android Test, or the matching green GitHub Actions run.
-2. Download the APK named luo-chat-social-test.apk. Optionally compare its SHA-256 with the included .sha256 file.
+1. Open the latest GitHub prerelease named Luo Chat Android Beta, or the matching green GitHub Actions run.
+2. Download the APK named luo-chat-android-beta.apk. Optionally compare its SHA-256 with the included .sha256 file.
 3. Review Android's app installation prompts. Never disable Play Protect.
 4. Launch Luo Chat Social Test and sign in using your own Luo Chat account. Features requiring undeployed backend migrations remain unavailable.
 5. Grant microphone or camera permission only when you explicitly start a recording or a call.
@@ -41,3 +41,9 @@ Version 1.0.0-beta.8 removes the retired Luo Core cat overlay and GLB from the A
 Version 1.0.0-beta.9 removes the current Notes interface from Chats and Social, and places Social fifth in the mobile navigation. Photo posts show local previews with individual removal before upload. Clip creation provides a local video preview and duration feedback. Photo albums support horizontal swipes. Visible media loads lazily; clips start muted, while Save-Data and reduced-motion preferences retain manual playback. The media picker releases object URLs and pauses previews on navigation and signout. Creation forms use the existing black-and-gold theme, with media first and optional post settings collapsed. Browser tests exercise photo removal, photo publication and WebM preview/publication using a synthetic backend.
 
 The separate web release `72434734931b5b847cf09cac2767b6e58522a7a6` was selectively deployed from the production backup. This APK update does not redeploy production.
+
+## Email/password account flow restored
+
+Version 1.0.0-beta.10 restores the same email/password account flow used by the production website. Use your Gmail address (or another account email) and your Luo Chat password. Sign-in calls Supabase Auth directly, without username lookup or the username-login Edge function. Public usernames still identify profiles and chats. A successful provider response must include a session before the app opens Chats.
+
+Signup, confirmation resend and password recovery use the existing protected email backend and preserve its rate limits and email confirmation behavior. Their browser tests use synthetic delivery, and do not send real mail. Username-only registration gates, recovery-code migration controls and the remove-email button are removed from the client. No existing account, email, password or database setting is changed. The live email Auth smoke checks only rejection of a nonexistent reserved-domain account; physical-device acceptance with real accounts remains separate.

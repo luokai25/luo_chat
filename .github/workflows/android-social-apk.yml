@@ -42,7 +42,7 @@ jobs:
         timeout-minutes: 2
         run: |
           node scripts/check-secrets.mjs
-          node --test tests/android-host.test.mjs tests/auth-capabilities.test.mjs
+          node --test tests/android-host.test.mjs tests/email-password-auth.test.mjs
       - name: Build final bundled web assets
         timeout-minutes: 6
         run: npm run build
@@ -54,12 +54,19 @@ jobs:
         env:
           LUO_BROWSER_CHANNEL: chrome
         run: node tests/browser/social-feed.mjs
+      - name: Verify email login, signup and recovery UI
+        timeout-minutes: 5
+        env:
+          LUO_BROWSER_CHANNEL: chrome
+        run: node tests/browser/email-login.mjs
       - name: Upload Social browser evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: luo-social-browser-evidence
-          path: test-results/social-feed/
+          path: |
+            test-results/social-feed/
+            test-results/email-login/
           if-no-files-found: ignore
           retention-days: 14
       - name: Production dependency audit
@@ -138,7 +145,7 @@ jobs:
             "luo-chat-android-beta.apk.sha256" \
             --target "$COMMIT_SHA" \
             --title "Luo Chat Android Beta #$RUN_NO" \
-            --notes "Functional Android beta built from GitHub commit $COMMIT_SHA. Includes the username-only client, existing account login, chats and existing backend-backed features; Android permissions, file chooser, safe download manager, app-to-chat sharing, video fullscreen, native back navigation and generic device alerts while running. This is NOT Play Store signed, E2EE or a promise of closed-app push. New username registration and newest Story interactions require pending Supabase migrations. Debug signing keys can change per runner, requiring reinstall between beta releases." \
+            --notes "Functional Android beta built from GitHub commit $COMMIT_SHA. Includes the email/password client, existing account login, chats and existing backend-backed features; Android permissions, file chooser, safe download manager, app-to-chat sharing, video fullscreen, native back navigation and generic device alerts while running. This is NOT Play Store signed, E2EE or a promise of closed-app push. Email signup and recovery use the existing backend with email confirmation. Newest Story interactions require a pending Supabase migration. Debug signing keys can change per runner, requiring reinstall between beta releases." \
             --prerelease \
             --latest=false
       - name: Surface the verified APK artifact when Releases permission is unavailable

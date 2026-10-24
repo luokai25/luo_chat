@@ -46,7 +46,7 @@ public final class MainActivitySmokeTest {
             String script="(function(){"
                     +"var f=document.getElementById('email');"
                     +"return JSON.stringify({ready:!!document.getElementById('signin'),"
-                    +"username:!!f&&f.type==='text',"
+                    +"email:!!f&&f.type==='email',"
                     +"google:!!document.getElementById('googleSignIn'),"
                     +"auth:!!document.getElementById('auth'),"
                     +"packaged:!!document.querySelector('.app')})"
@@ -72,7 +72,7 @@ public final class MainActivitySmokeTest {
             scenario.onActivity(activity -> currentUrl.set(web.getUrl()));
             assertNotNull("No Luo Chat document. WebView URL="+currentUrl.get()+", response="+lastResponse,state);
             assertTrue("Real login controls never loaded in the packaged app",state.optBoolean("ready"));
-            assertTrue("Username input was replaced with old email form",state.optBoolean("username"));
+            assertTrue("Email and password login must be available",state.optBoolean("email"));
             assertTrue("The signup/login screen is missing",state.optBoolean("auth"));
             assertTrue("Main Luo Chat app did not render",state.optBoolean("packaged"));
             assertFalse("Removed Google OAuth button was unexpectedly restored",state.optBoolean("google"));

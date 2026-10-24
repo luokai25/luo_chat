@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {installGoogleSignIn} from '../src/google-sign-in.js';
 
-test('username-only Android screen starts with no removed OAuth fields and does not request Google',async()=>{
+test('email/password Android screen starts with no removed OAuth fields and does not request Google',async()=>{
  const dom=new JSDOM('<!doctype html><html><body><div id="auth"></div></body></html>',{url:'https://luo-chat-luokai25.vercel.app/',pretendToBeVisual:true});
  let fetched=0,oauthCalls=0;
  const win=dom.window;

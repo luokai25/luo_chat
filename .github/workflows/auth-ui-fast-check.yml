@@ -1,12 +1,12 @@
-name: Fast username login to Chats check
+name: Fast email/password login to Chats check
 on:
   push:
     branches: [feature/social-android-test-20261023]
     paths:
       - '.github/workflows/auth-ui-fast-check.yml'
       - 'src/app.js'
-      - 'src/auth-capabilities.js'
-      - 'tests/auth-capabilities.test.mjs'
+      - 'src/auth-recovery.js'
+      - 'tests/email-password-auth.test.mjs'
       - 'tests/ui.test.mjs'
   workflow_dispatch:
 permissions:
@@ -26,9 +26,9 @@ jobs:
       - name: Install offline-friendly cached dependencies
         timeout-minutes: 3
         run: npm ci --ignore-scripts --prefer-offline --no-audit --no-fund
-      - name: Assert username login opens authenticated Chats
+      - name: Assert email/password login opens authenticated Chats
         timeout-minutes: 2
-        run: node --test --test-name-pattern='valid username and password produce a session' tests/ui.test.mjs
-      - name: Assert signup and recovery fail closed if backend lacks migrations
+        run: node --test --test-name-pattern='valid email and password produce a session' tests/ui.test.mjs
+      - name: Verify email/password controls and error handling
         timeout-minutes: 2
-        run: node --test tests/auth-capabilities.test.mjs
+        run: node --test tests/email-password-auth.test.mjs

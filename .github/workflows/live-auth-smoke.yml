@@ -1,11 +1,11 @@
-name: Free live Luo Chat authentication smoke
+name: Free live email password authentication smoke
 on:
   push:
     branches: [feature/social-android-test-20261023]
     paths:
       - '.github/workflows/live-auth-smoke.yml'
-      - 'supabase/functions/luo-auth/**'
-      - 'supabase/functions/luo-auth-compat/**'
+      - 'scripts/check-live-email-auth.mjs'
+      - 'src/config.js'
       - 'src/app.js'
   workflow_dispatch:
 permissions:
@@ -15,56 +15,14 @@ concurrency:
   cancel-in-progress: true
 jobs:
   probe:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Validate deployed auth API without real account credentials
-        shell: bash
-        run: |
-          set -euo pipefail
-          ENDPOINT='https://byjixqwpjvsgmqilmzbm.supabase.co/functions/v1/luo-auth'
-          USERNAME="ci_probe_$GITHUB_RUN_NUMBER"
-          BODY=$(printf '{"action":"signin_username","username":"%s","password":"not-a-real-account-password"}' "$USERNAME")
-          HTTP=$(curl -sS --max-time 18 -o /tmp/luo-auth-probe.json -w '%{http_code}' \
-            -X POST "$ENDPOINT" \
-            -H 'Origin: https://luo-chat-luokai25.vercel.app' \
-            -H 'Content-Type: application/json' \
-            --data "$BODY") || { echo "Auth endpoint network failure"; exit 1; }
-          case "$HTTP" in
-            401)
-              node -e '
-                const fs=require("fs");
-                const body=JSON.parse(fs.readFileSync("/tmp/luo-auth-probe.json","utf8"));
-                if (!/Invalid username or password/.test(body.error||"")) process.exit(1);
-                console.log("PASS: live username login reaches credential verification and safely rejects nonexistent user.");
-              '
-              ;;
-            429)
-              echo "Auth server is reachable, but server-side anti-abuse throttling is active."
-              exit 1
-              ;;
-            503)
-              echo "BLOCKED: username login backend reports unavailable DB, IP origin or rate-limiter. Login is not operational."
-              exit 1
-              ;;
-            *)
-              echo "Unexpected login endpoint status $HTTP (expected 401 for nonexistent username)."
-              exit 1
-              ;;
-          esac
-          rm -f /tmp/luo-auth-probe.json
-          STATUS=$(curl -sS --max-time 18 -o /tmp/luo-capabilities.json -w '%{http_code}' \
-            -X POST "$ENDPOINT" \
-            -H 'Origin: https://luo-chat-luokai25.vercel.app' \
-            -H 'Content-Type: application/json' \
-            --data '{"action":"capabilities"}') || { echo "Capability endpoint network failure"; exit 1; }
-          test "$STATUS" = "200" || { echo "Capability endpoint returned $STATUS"; exit 1; }
-          node -e '
-            const fs=require("fs");
-            const d=JSON.parse(fs.readFileSync("/tmp/luo-capabilities.json","utf8"));
-            if(d.ok!==true||d.username_signin!==true)throw Error("Existing account login wrongly disabled");
-            if(d.username_signup!==false||d.username_recovery!==false)
-              throw Error("Server advertised undeployed registration/recovery");
-            console.log("PASS: deployed auth v5 honestly reports signup and recovery unavailable.");
-          '
-          rm -f /tmp/luo-capabilities.json
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Verify email Auth API with a nonexistent reserved-domain account
+        run: node scripts/check-live-email-auth.mjs
