@@ -176,3 +176,34 @@ test('non-owner can browse community rooms without touching owner-only moderatio
  assert.equal(h.messages.length,0);
  h.window.close();
 });
+
+test('photo posts upload validated images before publishing and return to the feed',async()=>{
+ const h=harness({'feed':[]});
+ try{
+  h.doc.querySelector('[data-tab="social"]').click();await h.flush();
+  h.doc.querySelector('[data-section="compose"]').click();await h.flush();
+  const f=h.doc.querySelector('#social form'),photo=new h.window.File(['photo'],'gold.png',{type:'image/png'});
+  Object.defineProperty(f.querySelector('input[type=file]'),'files',{value:[photo]});
+  f.dispatchEvent(new h.window.Event('submit',{cancelable:true,bubbles:true}));await h.flush();
+  const created=h.requests.findIndex(x=>x.action==='entry.create'),uploaded=h.requests.findIndex(x=>x.name==='upload'),published=h.requests.findIndex(x=>x.action==='entry.publish');
+  assert.ok(created>=0&&created<uploaded&&uploaded<published);
+  assert.equal(h.requests[published].input.media.length,1);
+  assert.match(h.requests[published].input.media[0].path,/\.png$/);
+  assert.equal(h.doc.querySelector('[data-section="feed"]').getAttribute('aria-pressed'),'true');
+ }finally{h.window.close()}
+});
+
+test('invalid photo files are rejected before creating a post draft',async()=>{
+ const h=harness({'feed':[]});try{
+  h.doc.querySelector('[data-tab="social"]').click();await h.flush();h.doc.querySelector('[data-section="compose"]').click();await h.flush();
+  const f=h.doc.querySelector('#social form');Object.defineProperty(f.querySelector('input[type=file]'),'files',{value:[new h.window.File(['bad'],'bad.svg',{type:'image/svg+xml'})]});
+  f.dispatchEvent(new h.window.Event('submit',{cancelable:true,bubbles:true}));await h.flush();
+  assert.equal(h.requests.filter(x=>x.action==='entry.create').length,0);assert.match(h.doc.querySelector('.luo-social-status').textContent,/six JPG, PNG or WebP/);
+ }finally{h.window.close()}
+});
+
+test('real tab callbacks load Social once and leaving invalidates pending results',async()=>{
+ const dom=new JSDOM('<div class="app" data-tab="chats"><nav class="workspace-nav"></nav><div><section id="chats"></section></div></div>',{url:'https://luo.example'}),w=dom.window,d=w.document;
+ let hub;const calls=[];hub=installSocialSpaces({win:w,db:{rpc:async(name,args)=>{calls.push(args);return{data:[]}}},$:id=>d.getElementById(id),getUser:()=>({id:'me'}),getChats:()=>[],note:()=>{},tab:key=>{d.querySelector('.app').dataset.tab=key;hub.onTab(key)}});
+ try{d.querySelector('[data-tab="social"]').click();await new Promise(r=>setImmediate(r));assert.equal(calls.filter(x=>x.action==='feed').length,2,'one post stream and one clip stream');hub.onTab('chats');assert.equal(d.querySelector('.luo-feed'),null)}finally{w.close()}
+});

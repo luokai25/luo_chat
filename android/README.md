@@ -31,3 +31,7 @@ The Android package is com.luoscreations.chat.socialtest, separate from the norm
 The workflow runs the full web release checks, dependency audit, and Story interaction tests, compiles a signed debug APK, checks its bundled assets and signing, uploads a checksum, and creates a GitHub prerelease. A separate free PostgreSQL workflow verifies Story privacy and voting rules.
 
 These automated checks do not replace physical Android, push, WebRTC, and two-account acceptance tests. No payments, Play Store bypasses, or Google signing keys are involved.
+
+## Social redesign beta
+
+Version 1.0.0-beta.8 removes the retired Luo Core cat overlay and GLB from the APK. Social uses a compact black-and-gold Friends/Public feed and full-height Clips with inline reactions, saves, profile navigation, photo albums and a comments sheet. The + button opens post or clip creation; Explore more retains the other social tools. New photo posts are validated before upload. No production deployment or new backend migration is performed by this build. Browser evidence uses synthetic data; existing live signup/recovery and physical-device limitations above still apply.

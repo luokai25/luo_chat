@@ -49,6 +49,19 @@ jobs:
       - name: Run every web regression test
         timeout-minutes: 6
         run: node --test tests/*.test.mjs
+      - name: Verify Social layouts and actual video playback
+        timeout-minutes: 5
+        env:
+          LUO_BROWSER_CHANNEL: chrome
+        run: node tests/browser/social-feed.mjs
+      - name: Upload Social browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: luo-social-browser-evidence
+          path: test-results/social-feed/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Production dependency audit
         timeout-minutes: 3
         run: npm run audit:production
