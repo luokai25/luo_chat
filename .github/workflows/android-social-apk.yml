@@ -149,7 +149,7 @@ jobs:
             --prerelease \
             --latest=false
       - name: Surface the verified APK artifact when Releases permission is unavailable
-        if: always()
+        if: success()
         run: |
           echo "### Luo Chat Android Beta build" >> "$GITHUB_STEP_SUMMARY"
           echo "Verified signed APK + SHA-256 checksum: **Actions → this run → Artifacts → luo-chat-android-beta-apk**." >> "$GITHUB_STEP_SUMMARY"

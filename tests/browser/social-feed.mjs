@@ -40,7 +40,7 @@ try{
   assert.equal(await page.locator('[data-entry-id="post-one"]').count(),0);
   await page.getByRole('button',{name:'Clips',exact:true}).click();await page.locator('.luo-feed-reels').waitFor();await page.locator('.luo-feed-card').first().waitFor();
   const card=await page.locator('.luo-feed-card').first().boundingBox();const viewport=await page.locator('.luo-feed-list').boundingBox();assert.ok(Math.abs(card.height-viewport.height)<3,'One clip per viewport at '+width);
-  if(await page.getByRole('button',{name:'Play clip',exact:true}).first().isVisible())await page.getByRole('button',{name:'Play clip',exact:true}).first().click();await page.locator('video').first().waitFor();await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2});
+  await page.locator('.luo-feed-reels video').first().waitFor();await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2});
   await page.screenshot({path:folder+'/clips-'+width+'.png'});
   await page.getByRole('button',{name:'Love · 12',exact:true}).first().click();await page.getByRole('button',{name:'Love · 13',exact:true}).waitFor();
   await page.getByRole('button',{name:'Comments · 2',exact:true}).first().click();await page.getByRole('dialog',{name:'Comments',exact:true}).waitFor();
