@@ -5,7 +5,7 @@ The Social tab connects to the existing `public.luo_space` authenticated Supabas
 
 - Friends' posts and comments, six expressive reactions, friend-approved collaborative posts and post visibility
 - Short-video Clips with uploaded videos, preview playback, comments and saves. Browser metadata validation checks the 90-second limit; no transcoding service is installed
-- 24-hour Notes, shared interest tags and opt-in friend recommendations
+- Shared interest tags and opt-in friend recommendations (the current Notes UI has been removed)
 - Time Capsules addressed to approved friends with server-enforced future unlock, animated 3D-like envelope, progressively revealed letter, and up to six private photos or audio recordings
 - Shared themes with recipient approval; shared cat/fox/dragon companions with interactive offline 3D mesh renderer, decoration and ownership approvals
 - Memory Constellations with consent-protected conversation-history visualization and mutual star marking (recent history window)
@@ -60,3 +60,9 @@ The Social landing screen now opens a black-and-gold Friends feed, a separately 
 Feeds use the existing `luo_space` modes and visibility checks. Public presentation additionally excludes anything whose audience is not public. Videos request authorized signed URLs only when needed, start muted after a user gesture, pause offscreen and on backgrounding, and release their sources on navigation/signout. Reduced motion and Save-Data suppress automatic next-clip playback. Browser checks cover 320, 390, 768 and 1440 px widths with synthetic backend responses and a locally generated test video; they do not prove live two-account media access.
 
 The retired Luo Core chat-overlay code, model generator, optional GLB, and viewer are removed from this branch's build. The service worker deletes prior `luo-core-master-*` caches without deleting unrelated caches. The PWA manifest and the separate mutually approved shared companions feature remain. No production website deployment or database change is part of this release.
+
+### Current APK: Notes removal and media creation polish
+
+The Notes ribbon and Social Notes screen are removed; existing Notes backend records retain their normal expiry. Social is fifth in the mobile navigation. Photo/video creation now shows local previews, validates media, supports removing selected photos, and releases preview URLs on exit. Removing a photo also synchronizes the browser file selection where supported. Media comes first, with optional title/collaboration controls collapsed. Albums accept horizontal swipes without intercepting vertical scrolling. Visible photos load lazily and clips begin muted unless reduced motion or Save-Data calls for manual playback. No extra third-party services or database migration is required.
+
+The browser suite now exercises both photo and recorded WebM publication using a synthetic storage/RPC fixture, in addition to four-width layout checks, real video decoding, inline reactions, comments, navigation cleanup and absence of Notes. This does not claim live two-account storage testing or physical-device network acceptance.

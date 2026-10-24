@@ -21,11 +21,11 @@ export function mountSocialFeed({win,db,getUser,output,note,openPerson,mode='fri
  const streams=new Map(kinds.map(kind=>[kind,{before:null,before_id:null,more:true}]));
  const seen=new Set(),media=new Map();
  const reduced=!!win.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
- const saver=!!win.navigator.connection?.saveData;
+ const saver=!!win.navigator.connection?.saveData;allowPlayback=!reduced&&!saver;
  let observer;
  if(win.IntersectionObserver)observer=new win.IntersectionObserver(entries=>{
   if(!valid())return;
-  for(const entry of entries){const state=media.get(entry.target);if(!state)continue;if(entry.isIntersecting&&entry.intersectionRatio>=.65){activeCard=entry.target;for(const [card,s]of media)if(card!==activeCard)s.video?.pause();if(allowPlayback&&!saver&&!reduced&&!doc.hidden)state.play().catch(()=>{})}else{state.video?.pause();if(activeCard===entry.target)activeCard=null}}
+  for(const entry of entries){const state=media.get(entry.target);if(!state)continue;if(entry.isIntersecting&&entry.intersectionRatio>=.65){activeCard=entry.target;for(const [card,s]of media)if(card!==activeCard)s.video?.pause();if(!doc.hidden&&(state.photo?!saver:allowPlayback&&!saver&&!reduced))state.play().catch(()=>{})}else{state.video?.pause();if(activeCard===entry.target)activeCard=null}}
  },{root:list,threshold:[0,.65]});
  const visibility=()=>{if(doc.hidden)for(const s of media.values())s.video?.pause()};doc.addEventListener('visibilitychange',visibility);
 
@@ -75,6 +75,11 @@ export function mountSocialFeed({win,db,getUser,output,note,openPerson,mode='fri
     img.onerror=()=>{if(!valid())return;img.remove();load.hidden=false;note('This photo could not load. Try again.')};
     image?.remove();image=img;stage.prepend(img);index=next;load.hidden=true;count.textContent=(index+1)+' / '+photos.length;
    }
+   let start=null,photoPending=false;
+   stage.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY}});
+   stage.addEventListener('pointercancel',()=>{start=null});
+   stage.addEventListener('pointerup',e=>{if(!start||!valid())return;const dx=e.clientX-start.x,dy=e.clientY-start.y;start=null;if(photos.length>1&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3)showPhoto((index+(dx<0?1:photos.length-1))%photos.length).catch(err=>{if(valid())note(err.message)})});
+   media.set(article,{photo:true,async play(){if(image||photoPending||!photos.length)return;photoPending=true;try{await showPhoto(0)}catch(e){if(valid())note(e.message||'Tap to load this photo.')}finally{photoPending=false}}});observer?.observe(article);
    const count=el('span','','1 / '+photos.length);
    if(photos.length>1){carousel.append(button('Previous photo',()=>showPhoto((index+photos.length-1)%photos.length),'luo-feed-photo-nav'),count,button('Next photo',()=>showPhoto((index+1)%photos.length),'luo-feed-photo-nav'));stage.append(carousel)}
   }

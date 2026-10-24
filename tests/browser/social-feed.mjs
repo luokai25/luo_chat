@@ -21,7 +21,7 @@ try{
    if(args.action==='feed'){if(args.input.before)return{data:[]};if(args.input.kind==='post')return{data:[row('post-one','post','friends','The best moments are the ones we share. ✦'),row('post-two','post','public','A little light in an ordinary day.')]};if(args.input.kind==='clip')return{data:[row('clip-one','clip','public','Golden hour, wherever we are. ✨'),row('clip-two','clip','friends','A small moment, just for friends.')]};return{data:[]}}
    if(args.action==='responses')return{data:[{username:owner.username,body:'Love this moment ✨'}]};return{data:{}};
   };
-  db.storage={from:()=>({createSignedUrl:async path=>({data:{signedUrl:'https://byjixqwpjvsgmqilmzbm.supabase.co/storage/v1/object/sign/luo-social/'+path}})})};
+  window.__socialUploads=[];db.storage={from:()=>({upload:async(path,file)=>{window.__socialUploads.push({path,type:file.type});return{data:{path}}},createSignedUrl:async path=>({data:{signedUrl:'https://byjixqwpjvsgmqilmzbm.supabase.co/storage/v1/object/sign/luo-social/'+path}})})};
  });
  // Short test video created locally in the browser, with no external assets.
  await page.goto('http://127.0.0.1:'+server.address().port);await page.locator('.chatrow').first().waitFor();
@@ -31,7 +31,7 @@ try{
   await page.setViewportSize({width,height:width===320?740:900});
   await page.locator('.workspace-nav [data-tab="social"]').evaluate(e=>e.click());
   await page.getByRole('button',{name:'Friends',exact:true}).click();await page.locator('.luo-feed-card').first().waitFor();
-  assert.equal(await page.locator('.luo-core-character,.luo-core-overlay,.luo-core-restore').count(),0);
+  assert.equal(await page.locator('.luo-core-character,.luo-core-overlay,.luo-core-restore,.luo-chat-notes,[data-section=notes]').count(),0);assert.deepEqual(await page.locator('#luoApprovedNav button').evaluateAll(nodes=>nodes.map(n=>n.dataset.target)),['chats','updates','group','calls','social']);
   const box=await page.locator('#social').boundingBox();assert.ok(box&&box.height>350,'Social has usable height at '+width);assert.equal(await page.locator('#social').evaluate(e=>getComputedStyle(e).padding),'0px','No duplicated legacy padding at '+width);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No page overflow at '+width);
   const friends=await page.evaluate(()=>window.__socialCalls.filter(x=>x.action==='feed'&&x.input.mode==='friends'));assert.ok(friends.length>=2);
@@ -40,7 +40,7 @@ try{
   assert.equal(await page.locator('[data-entry-id="post-one"]').count(),0);
   await page.getByRole('button',{name:'Clips',exact:true}).click();await page.locator('.luo-feed-reels').waitFor();await page.locator('.luo-feed-card').first().waitFor();
   const card=await page.locator('.luo-feed-card').first().boundingBox();const viewport=await page.locator('.luo-feed-list').boundingBox();assert.ok(Math.abs(card.height-viewport.height)<3,'One clip per viewport at '+width);
-  await page.getByRole('button',{name:'Play clip',exact:true}).first().click();await page.locator('video').first().waitFor();await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2});
+  if(await page.getByRole('button',{name:'Play clip',exact:true}).first().isVisible())await page.getByRole('button',{name:'Play clip',exact:true}).first().click();await page.locator('video').first().waitFor();await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2});
   await page.screenshot({path:folder+'/clips-'+width+'.png'});
   await page.getByRole('button',{name:'Love · 12',exact:true}).first().click();await page.getByRole('button',{name:'Love · 13',exact:true}).waitFor();
   await page.getByRole('button',{name:'Comments · 2',exact:true}).first().click();await page.getByRole('dialog',{name:'Comments',exact:true}).waitFor();
@@ -48,5 +48,20 @@ try{
   await page.locator('.workspace-nav [data-tab="chats"]').evaluate(e=>e.click());assert.equal(await page.locator('#social video').count(),0);
   checks.push({width,viewport:Math.round(viewport.height),clipHeight:Math.round(card.height),passed:true});
  }
+ await page.setViewportSize({width:390,height:900});
+ await page.locator('.workspace-nav [data-tab="social"]').evaluate(e=>e.click());
+ await page.locator('.luo-social-tools summary').click();await page.getByRole('button',{name:'Create post',exact:true}).click();
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j2ioAAAAASUVORK5CYII=','base64');
+ await page.locator('#social input[type=file]').setInputFiles([{name:'first.png',mimeType:'image/png',buffer:png},{name:'second.png',mimeType:'image/png',buffer:png}]);
+ assert.equal(await page.locator('.luo-media-preview-tile img').count(),2);await page.getByRole('button',{name:'Remove photo 2',exact:true}).click();assert.equal(await page.locator('.luo-media-preview-tile img').count(),1);
+ await page.locator('#social textarea').fill('A photo with a golden moment.');await page.screenshot({path:folder+'/create-photo-390.png'});
+ await page.getByRole('button',{name:'Publish post',exact:true}).click();await page.locator('.luo-feed').waitFor();
+ assert.equal(await page.evaluate(()=>window.__socialUploads.length),1);
+ await page.locator('.luo-social-tools summary').click();await page.getByRole('button',{name:'Publish clip',exact:true}).click();
+ await page.locator('#social input[type=file]').setInputFiles({name:'golden.webm',mimeType:'video/webm',buffer:Buffer.from(bytes)});
+ await page.waitForFunction(()=>document.querySelector('.luo-media-preview-tile video')?.readyState>=1);
+ assert.match(await page.locator('.luo-media-selection-status').textContent(),/ready to publish/);assert.ok(await page.locator('.luo-media-preview-tile video').evaluate(v=>Number.isFinite(v.duration)&&v.duration>0&&v.duration<=90));
+ await page.screenshot({path:folder+'/create-video-390.png'});await page.locator('#social textarea').fill('A short golden clip.');await page.getByRole('button',{name:'Publish clip',exact:true}).click();await page.locator('.luo-feed-reels').waitFor();assert.equal(await page.evaluate(()=>window.__socialUploads.length),2);assert.ok(await page.evaluate(()=>window.__socialUploads.some(x=>x.type==='video/webm')));
+ await page.locator('.workspace-nav [data-tab="chats"]').evaluate(e=>e.click());assert.equal(await page.locator('.luo-media-picker').count(),0);
  assert.deepEqual(errors,[]);await writeFile(folder+'/results.json',JSON.stringify({checks,errors,scope:'Actual app/CSS; synthetic backend and locally generated video; no hosted writes.'},null,2));console.log(JSON.stringify({checks,errors}));
 }finally{await browser.close();await new Promise(r=>server.close(r))}

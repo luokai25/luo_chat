@@ -5,7 +5,7 @@ This is an Android testing build, not a Google Play release. The APK is compiled
 ## Contents
 
 - The GitHub social-preview web bundle, embedded directly inside the APK
-- Chats, groups, Story Studio, chat effects, Time Capsules, Friends Feed, Clips, Communities, Notes, shared media sessions, social profiles, 3D companions, and Memory Constellations already included in the Social branch
+- Chats, groups, Story Studio, chat effects, Time Capsules, Friends Feed, Clips, Communities, shared media sessions, social profiles, 3D companions, and Memory Constellations already included in the Social branch
 - Poll and quiz stickers that activate only when their private backend functions are deployed
 - Android file chooser and explicit microphone/camera system permission prompts
 - Outside music and website links open in the device browser
@@ -35,3 +35,9 @@ These automated checks do not replace physical Android, push, WebRTC, and two-ac
 ## Social redesign beta
 
 Version 1.0.0-beta.8 removes the retired Luo Core cat overlay and GLB from the APK. Social uses a compact black-and-gold Friends/Public feed and full-height Clips with inline reactions, saves, profile navigation, photo albums and a comments sheet. The + button opens post or clip creation; Explore more retains the other social tools. New photo posts are validated before upload. No production deployment or new backend migration is performed by this build. Browser evidence uses synthetic data; existing live signup/recovery and physical-device limitations above still apply.
+
+## Media polish beta
+
+Version 1.0.0-beta.9 removes the current Notes interface from Chats and Social, and places Social fifth in the mobile navigation. Photo posts show local previews with individual removal before upload. Clip creation provides a local video preview and duration feedback. Photo albums support horizontal swipes. Visible media loads lazily; clips start muted, while Save-Data and reduced-motion preferences retain manual playback. The media picker releases object URLs and pauses previews on navigation and signout. Creation forms use the existing black-and-gold theme, with media first and optional post settings collapsed. Browser tests exercise photo removal, photo publication and WebM preview/publication using a synthetic backend.
+
+The separate web release `72434734931b5b847cf09cac2767b6e58522a7a6` was selectively deployed from the production backup. This APK update does not redeploy production.

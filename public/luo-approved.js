@@ -48,7 +48,7 @@ function create(){
  for(const [btn,kind] of [[voice,'audio'],[video,'video']])btn.addEventListener('click',()=>{source.click();let n=0;const handle=()=>{if(app.dataset.screen==='room'){obs.disconnect();makeCall(kind)}else if(++n>25)obs.disconnect()};const obs=new MutationObserver(handle);obs.observe(app,{attributes:true,attributeFilter:['data-screen']});setTimeout(()=>{obs.disconnect();if(app.dataset.screen==='room')makeCall(kind)},450)});
  row.append(label,voice,video);callList.append(row)}if(!list.length){const empty=document.createElement('p');empty.className='empty';empty.textContent='Start a conversation to call someone.';callList.append(empty)}}
  const nav=document.createElement('nav');nav.id='luoApprovedNav';nav.setAttribute('aria-label','Main mobile navigation');
- const entries=[['Chats','chat','chats'],['Updates','updates','updates'],['Groups','users','group'],['Social','social','social'],['Calls','phone','calls']];
+ const entries=[['Chats','chat','chats'],['Updates','updates','updates'],['Groups','users','group'],['Calls','phone','calls'],['Social','social','social']];
  let active='chats';let callsOpen=false;
  function refresh(){for(const b of nav.querySelectorAll('button'))b.setAttribute('aria-current',b.dataset.target===active?'page':'false')}
  function closeCalls(){callsOpen=false;app.classList.remove('luo-calls-open')}

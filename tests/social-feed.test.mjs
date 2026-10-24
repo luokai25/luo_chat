@@ -78,3 +78,12 @@ test('photo carousel signs only owned paths and advances without replacing the p
  const h=setup({rpc:async args=>({data:args.input.kind==='post'?[entry('album','post',{media:[{path:'friend/album/first.png'},{path:'friend/album/second.webp'}]})]:[]})});
  try{await tick();const card=h.d.querySelector('.luo-feed-card');find(h,'View photo').click();await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/first\.png/);find(h,'Next photo').click();await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/second\.webp/);assert.equal(h.d.querySelector('.luo-feed-card'),card);assert.match(h.d.querySelector('.luo-feed-carousel').textContent,/2 \/ 2/)}finally{h.close()}
 });
+
+test('photo albums respond to horizontal swipes and ignore vertical scrolling',async()=>{
+ const h=setup({rpc:async args=>({data:args.input.kind==='post'?[entry('album','post',{media:[{path:'friend/album/first.png'},{path:'friend/album/second.webp'}]})]:[]})});
+ try{await tick();find(h,'View photo').click();await tick();const stage=h.d.querySelector('.luo-feed-stage');stage.dispatchEvent(new h.w.MouseEvent('pointerdown',{clientX:200,clientY:200}));stage.dispatchEvent(new h.w.MouseEvent('pointerup',{clientX:190,clientY:90}));await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/first\.png/);stage.dispatchEvent(new h.w.MouseEvent('pointerdown',{clientX:250,clientY:100}));stage.dispatchEvent(new h.w.MouseEvent('pointerup',{clientX:50,clientY:104}));await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/second\.webp/)}finally{h.close()}
+});
+test('visible clips start muted automatically unless data saving or reduced motion is enabled',async()=>{
+ const h=setup({clipsOnly:true,rpc:async()=>({data:[entry('a','clip',{media:[{path:'friend/a/video.mp4'}]})]})});
+ try{await tick();h.observers[0].callback([{target:h.d.querySelector('.luo-feed-card'),isIntersecting:true,intersectionRatio:1}]);await tick();assert.equal(h.playing.length,1);assert.equal(h.playing[0].muted,true)}finally{h.close()}
+});
