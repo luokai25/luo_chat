@@ -45,7 +45,7 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
     }finally{win.clearTimeout(watchdog)}
    }
    await Promise.race([video.play(),new Promise((_,reject)=>{timeout=win.setTimeout(()=>reject(Error('Camera preview timed out.')),5000)})]);
-   if(!alive()||pipeline!==p)throw Error('Call ended.');
+   if(!alive()||p.disposed)throw Error('Call ended.');
    const settings=getStream().getVideoTracks()[0]?.getSettings?.()||{};
    const width=video.videoWidth||settings.width||640,height=video.videoHeight||settings.height||480;
    const scale=Math.min(1,1280/width,720/height);canvas.width=Math.max(2,Math.round(width*scale));canvas.height=Math.max(2,Math.round(height*scale));
