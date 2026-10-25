@@ -5,16 +5,17 @@ import {mountSocialFeed} from '../src/social-feed.js';
 const tick=()=>new Promise(r=>setImmediate(r));
 const entry=(id='one',kind='post',overrides={})=>({id,kind,owner_id:'friend',published:true,audience:'friends',body:'A small golden moment',created_at:'2026-10-24T08:00:00Z',author:{id:'friend',username:'kai',display_name:'Kai'},media:[],mine:{},...overrides});
 function pending(){let resolve;const promise=new Promise(r=>{resolve=r});return {promise,resolve}}
-function setup({mode='friends',clipsOnly=false,rpc,sign,reduced=false,saver=false}={}){
+function setup({mode='friends',clipsOnly=false,rpc,sign,reduced=false,saver=false,initialClip=null}={}){
  const dom=new JSDOM('<div id="out"></div>',{url:'https://luo.example',pretendToBeVisual:true}),w=dom.window,d=w.document;
  const calls=[],notes=[],profiles=[],observers=[],playing=[],paused=[];let actor={id:'me'},stopped=false;
  w.matchMedia=()=>({matches:reduced});Object.defineProperty(w.navigator,'connection',{value:{saveData:saver}});
- w.HTMLMediaElement.prototype.play=function(){playing.push(this);this.dispatchEvent(new w.Event('play'));return Promise.resolve()};
- w.HTMLMediaElement.prototype.pause=function(){paused.push(this);this.dispatchEvent(new w.Event('pause'))};w.HTMLMediaElement.prototype.load=function(){};
+ const playback=new WeakMap();Object.defineProperty(w.HTMLMediaElement.prototype,'paused',{get(){return !playback.get(this)},configurable:true});
+ w.HTMLMediaElement.prototype.play=function(){playback.set(this,true);playing.push(this);this.dispatchEvent(new w.Event('play'));return Promise.resolve()};
+ w.HTMLMediaElement.prototype.pause=function(){playback.set(this,false);paused.push(this);this.dispatchEvent(new w.Event('pause'))};w.HTMLMediaElement.prototype.load=function(){};
  w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','')};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new w.Event('close'))};
  w.IntersectionObserver=class{constructor(callback){this.callback=callback;observers.push(this)}observe(){}unobserve(){}disconnect(){this.disconnected=true}};
  const db={rpc:async(name,args)=>{calls.push(args);return rpc?await rpc(args):{data:args.action==='feed'&&args.input.kind==='post'?[entry()]:[]}},storage:{from:()=>({createSignedUrl:async path=>sign?sign(path):{data:{signedUrl:'https://byjixqwpjvsgmqilmzbm.supabase.co/storage/v1/object/sign/luo-social/'+path+'?token=test'}}})}};
- const stop=mountSocialFeed({win:w,db,getUser:()=>actor,output:d.getElementById('out'),note:s=>notes.push(s),openPerson:id=>profiles.push(id),mode,clipsOnly});
+ const stop=mountSocialFeed({win:w,db,getUser:()=>actor,output:d.getElementById('out'),note:s=>notes.push(s),openPerson:id=>profiles.push(id),mode,clipsOnly,initialClip});
  return {w,d,calls,notes,profiles,observers,playing,paused,stop:()=>{if(!stopped){stop();stopped=true}},actor:value=>{actor=value},close(){this.stop();w.close()}};
 }
 const find=(h,name)=>[...h.d.querySelectorAll('button')].find(b=>b.getAttribute('aria-label')===name);
@@ -77,4 +78,41 @@ test('closing comments or switching account discards pending comments',async()=>
 test('photo carousel signs only owned paths and advances without replacing the post',async()=>{
  const h=setup({rpc:async args=>({data:args.input.kind==='post'?[entry('album','post',{media:[{path:'friend/album/first.png'},{path:'friend/album/second.webp'}]})]:[]})});
  try{await tick();const card=h.d.querySelector('.luo-feed-card');find(h,'View photo').click();await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/first\.png/);find(h,'Next photo').click();await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/second\.webp/);assert.equal(h.d.querySelector('.luo-feed-card'),card);assert.match(h.d.querySelector('.luo-feed-carousel').textContent,/2 \/ 2/)}finally{h.close()}
+});
+
+const clipRows=(n=2)=>Array.from({length:n},(_,i)=>entry('clip-'+i,'clip',{media:[{path:'friend/clip-'+i+'/video.mp4'}]}));
+test('Reels single tap pauses; double tap likes once without accidentally unliking',async()=>{
+ const h=setup({clipsOnly:true,rpc:async a=>({data:a.action==='feed'?clipRows(1):{}})});
+ try{await tick();find(h,'Play clip').click();await tick();const video=h.d.querySelector('video');video.click();await new Promise(r=>setTimeout(r,270));assert.ok(h.paused.includes(video));
+  video.dispatchEvent(new h.w.MouseEvent('dblclick',{bubbles:true,cancelable:true}));await tick();assert.equal(find(h,'Love · 1').getAttribute('aria-pressed'),'true');
+  video.dispatchEvent(new h.w.MouseEvent('dblclick',{bubbles:true}));await tick();assert.equal(h.calls.filter(a=>a.action==='response').length,1);assert.ok(h.d.querySelector('.luo-reels-heart'));
+ }finally{h.close()}
+});
+test('seeking validates duration and restores hold playback speed on cancellation',async()=>{
+ const h=setup({clipsOnly:true,rpc:async()=>({data:clipRows(1)})});try{await tick();find(h,'Play clip').click();await tick();const video=h.d.querySelector('video'),seek=h.d.querySelector('input[type=range]');Object.defineProperty(video,'duration',{value:80});Object.defineProperty(video,'paused',{get:()=>false});video.dispatchEvent(new h.w.Event('loadedmetadata'));seek.value='25';seek.dispatchEvent(new h.w.Event('input'));assert.equal(video.currentTime,20);
+  const stage=h.d.querySelector('.luo-feed-stage');stage.onpointerdown({target:video,button:0,clientX:20,clientY:20});await new Promise(r=>setTimeout(r,470));assert.equal(video.playbackRate,2);stage.onpointercancel();assert.equal(video.playbackRate,1);
+ }finally{h.close()}
+});
+test('only active clip and immediate neighbours keep their media resident',async()=>{
+ const h=setup({clipsOnly:true,rpc:async()=>({data:clipRows(6)})});try{await tick();for(let i=0;i<6;i++){h.d.querySelectorAll('.luo-feed-play')[i].click();await tick()}assert.ok(h.d.querySelectorAll('video').length<=3);assert.ok(!h.d.querySelector('.luo-feed-card').querySelector('video'))}finally{h.close()}
+});
+test('comment pagination uses server UUID cursor and deduplicates repeated rows',async()=>{
+ const rows=Array.from({length:50},(_,i)=>({id:'comment-'+i,username:'reader',body:'Reply '+i,created_at:'2026-10-25T10:00:00Z'}));
+ const h=setup({rpc:async a=>({data:a.action==='feed'?(a.input.kind==='post'?[entry()]:[]):a.input.after?[rows[49],{id:'older',body:'More'}]:rows})});
+ try{await tick();find(h,'Comments · 0').click();await tick();find(h,'More comments').click();await tick();assert.equal(h.calls.find(a=>a.input.after)?.input.after,'comment-49');assert.equal(h.d.querySelectorAll('.luo-feed-comment').length,51);assert.equal(find(h,'More comments').hidden,true)}finally{h.close()}
+});
+test('share links contain only the entry ID, never signed media URLs',async()=>{
+ let copied;const h=setup({clipsOnly:true,rpc:async()=>({data:clipRows(1)})});Object.defineProperty(h.w.navigator,'clipboard',{value:{writeText:async x=>{copied=x}}});
+ try{await tick();find(h,'Share clip').click();await tick();find(h,'Copy link').click();await tick();assert.equal(copied,'https://luo.example/#luo-clip=clip-0');assert.doesNotMatch(copied,/token|storage/)}finally{h.close()}
+});
+test('report is persisted only after a valid reason, with no fabricated success',async()=>{
+ const h=setup({clipsOnly:true,rpc:async a=>a.action==='feed'?{data:clipRows(1)}:{error:{message:'Report denied'}}});try{await tick();find(h,'More options').click();await tick();find(h,'Submit report').click();await tick();assert.equal(h.calls.filter(a=>a.action==='response').length,0);h.d.querySelector('.luo-report-reason').value='Harmful content';find(h,'Submit report').click();await tick();assert.equal(h.calls.at(-1).input.kind,'report');assert.match(h.notes.at(-1),/Report denied/);assert.doesNotMatch(h.d.querySelector('dialog').textContent,/Report submitted/)}finally{h.close()}
+});
+test('a shared clip requires an authorized entry lookup and cannot expose denied content',async()=>{
+ const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';const h=setup({clipsOnly:true,initialClip:id,rpc:async a=>a.action==='entry.get'?{error:{message:'Content unavailable'}}:{data:[]}});
+ try{await tick();assert.equal(h.calls[0].action,'entry.get');assert.equal(h.calls[0].input.id,id);assert.equal(h.d.querySelectorAll('.luo-feed-card').length,0);assert.match(h.notes[0],/unavailable/);assert.ok(h.calls.some(a=>a.action==='feed'))}finally{h.close()}
+});
+test('shared clip lookup is discarded when the account changes before completion',async()=>{
+ const p=pending(),h=setup({clipsOnly:true,initialClip:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',rpc:()=>p.promise});
+ try{h.actor({id:'other'});p.resolve({data:entry('private','clip',{body:'Private shared clip'})});await tick();assert.equal(h.d.querySelectorAll('.luo-feed-card').length,0);assert.equal(h.calls.length,1)}finally{h.close()}
 });

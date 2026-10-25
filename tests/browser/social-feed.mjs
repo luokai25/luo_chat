@@ -11,7 +11,7 @@ const bundle=await build({entryPoints:['src/app.js'],bundle:true,write:false,for
 const root=resolve('public'),server=createServer(async(req,res)=>{try{const url=new URL(req.url,'http://localhost');if(url.pathname==='/app.js'){res.setHeader('Content-Type','text/javascript');return res.end(bundle.outputFiles[0].contents)}const file=resolve(root,'.'+(url.pathname==='/'?'/index.html':decodeURIComponent(url.pathname)));if(!file.startsWith(root+'/')){res.writeHead(403);return res.end()}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.json':'application/json'})[extname(file)]||'application/octet-stream');res.end(await readFile(file))}catch{res.writeHead(404);res.end()}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch({headless:true,...(process.env.LUO_BROWSER_CHANNEL?{channel:process.env.LUO_BROWSER_CHANNEL}:{}),args:['--no-sandbox']}),checks=[],errors=[];
 try{
- const context=await browser.newContext({serviceWorkers:'block'});const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+ const context=await browser.newContext({serviceWorkers:'block'});const page=await context.newPage();page.setDefaultTimeout(10000);page.on('pageerror',e=>{errors.push(e.message);console.error('Browser exception:',e.message)});
  await context.addInitScript(installBrowserFixture);
  await context.addInitScript(()=>{
   const {db,data}=window.__luoBrowserFixture,old=db.rpc.bind(db),friend=data.profiles[1],owner=data.profiles[0];
@@ -30,6 +30,7 @@ try{
  for(const width of [320,390,768,1440]){
   await page.setViewportSize({width,height:width===320?740:900});
   await page.locator('.workspace-nav [data-tab="social"]').evaluate(e=>e.click());
+  if(await page.getByRole('button',{name:'Back to Social',exact:true}).count())await page.getByRole('button',{name:'Back to Social',exact:true}).click();
   await page.getByRole('button',{name:'Friends',exact:true}).click();await page.locator('.luo-feed-card').first().waitFor();
   assert.equal(await page.locator('.luo-core-character,.luo-core-overlay,.luo-core-restore').count(),0);
   const box=await page.locator('#social').boundingBox();assert.ok(box&&box.height>350,'Social has usable height at '+width);assert.equal(await page.locator('#social').evaluate(e=>getComputedStyle(e).padding),'0px','No duplicated legacy padding at '+width);
@@ -40,11 +41,17 @@ try{
   assert.equal(await page.locator('[data-entry-id="post-one"]').count(),0);
   await page.getByRole('button',{name:'Clips',exact:true}).click();await page.locator('.luo-feed-reels').waitFor();await page.locator('.luo-feed-card').first().waitFor();
   const card=await page.locator('.luo-feed-card').first().boundingBox();const viewport=await page.locator('.luo-feed-list').boundingBox();assert.ok(Math.abs(card.height-viewport.height)<3,'One clip per viewport at '+width);
-  await page.getByRole('button',{name:'Play clip',exact:true}).first().click();await page.locator('video').first().waitFor();await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2});
+  await page.locator('video').first().waitFor();await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2});
+  assert.equal(await page.locator('video').first().evaluate(v=>getComputedStyle(v).objectFit),'cover');
+  const surface=page.locator('.luo-feed-stage video').first();await surface.click({position:{x:35,y:180}});await page.waitForFunction(()=>document.querySelector('video').paused);
+  await surface.dblclick({position:{x:35,y:180}});await page.getByRole('button',{name:'Love · 13',exact:true}).first().waitFor();
+  assert.equal(await page.locator('video').first().evaluate(v=>v.paused),true,'Double tap does not toggle playback');
+  try{await page.getByRole('button',{name:'Play clip',exact:true}).first().click()}catch(e){console.log('Overlay failure',await page.locator('.luo-feed-play').first().evaluate(b=>{const r=b.getBoundingClientRect();return {rect:r.toJSON(),html:b.outerHTML,atCenter:document.elementsFromPoint(r.x+r.width/2,r.y+r.height/2).map(n=>n.tagName+'.'+n.className),scroll:b.closest('.luo-feed-list').scrollTop}}));await page.screenshot({path:folder+'/overlay-failure.png'});throw e}await page.waitForFunction(()=>!document.querySelector('video').paused);
   await page.screenshot({path:folder+'/clips-'+width+'.png'});
-  await page.getByRole('button',{name:'Love · 12',exact:true}).first().click();await page.getByRole('button',{name:'Love · 13',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Love · 13',exact:true}).first().click();await page.getByRole('button',{name:'Love · 12',exact:true}).first().waitFor();
   await page.getByRole('button',{name:'Comments · 2',exact:true}).first().click();await page.getByRole('dialog',{name:'Comments',exact:true}).waitFor();
-  await page.getByRole('textbox',{name:'Your comment',exact:true}).fill('This looks lovely.');await page.getByRole('button',{name:'Send',exact:true}).click();await page.getByText('Comment sent.',{exact:true}).waitFor();await page.getByRole('button',{name:'Close comments',exact:true}).click();
+  assert.equal(await page.locator('video').first().evaluate(v=>v.paused),true,'Opening comments pauses playback');
+  await page.getByRole('textbox',{name:'Your comment',exact:true}).fill('This looks lovely.');await page.getByRole('button',{name:'Send',exact:true}).click();await page.getByText('Comment sent.',{exact:true}).waitFor();await page.getByRole('button',{name:'Close comments',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('video').paused);
   await page.locator('.workspace-nav [data-tab="chats"]').evaluate(e=>e.click());assert.equal(await page.locator('#social video').count(),0);
   checks.push({width,viewport:Math.round(viewport.height),clipHeight:Math.round(card.height),passed:true});
  }

@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-25",
+  "scope": "Development source only; no production deployment, hosted write, or APK build",
+  "base_commit": "72434734931b5b847cf09cac2767b6e58522a7a6",
+  "build": "passed",
+  "automated_tests": {"passed": 388, "failed": 0},
+  "production_dependency_audit": {"reported_vulnerabilities": 0},
+  "clean_install_reproduction": {"matching_production_files": 100},
+  "browser": {
+    "engine": "Chromium 141",
+    "viewport_widths": [320, 390, 768, 1440],
+    "checks": ["one clip per viewport", "cover fit", "single tap pause", "double tap like", "play control hitbox", "comment submission", "sheet pause/resume", "tab cleanup", "no page exceptions"],
+    "backend": "Synthetic responses and locally generated video; not live account acceptance"
+  },
+  "hosted_inspection": {
+    "read_only": true,
+    "anonymous_luo_space_execute": false,
+    "authenticated_luo_space_execute": true,
+    "visibility_checks_reviewed": true
+  },
+  "remaining_scope": "See docs/IMMERSIVE_REELS.md; follows/reposts, threaded comment interactions, recipient sharing, captions/media editing and APK acceptance are not completed"
+}
