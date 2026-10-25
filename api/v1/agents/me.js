@@ -1,2 +1,2 @@
-import {notActivated} from '../../../src/server/agent-platform.js';
-export default notActivated;
+import {createAgentAccountHandler} from '../../../src/server/agent-account.js';
+export default createAgentAccountHandler({mode:'profile'});
