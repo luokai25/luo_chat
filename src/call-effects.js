@@ -1,3 +1,5 @@
+import {CALL_AR_EFFECTS,drawFaceOverlay} from './call-ar-effects.js';
+import {createFaceTracker} from './call-face-tracker.js';
 // Local processing only. The canvas track is the actual WebRTC sender, not a CSS preview.
 export const CALL_EFFECTS=Object.freeze([
  {id:'original',label:'Original',filter:'none'},
@@ -14,18 +16,20 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
  const allocated=new Set();
  const alive=()=>!stopped&&isCurrent();
  const sender=()=>peer.getSenders().find(s=>s.track?.kind==='video');
- function dispose(p){if(!p||p.disposed)return;p.disposed=true;allocated.delete(p);win.clearInterval(p.timer);p.video.pause();p.video.srcObject=null;p.track?.stop();p.canvas.width=p.canvas.height=1;}
+ function dispose(p){if(!p||p.disposed)return;p.disposed=true;allocated.delete(p);win.clearInterval(p.timer);p.tracker?.close();p.video.pause();p.video.srcObject=null;p.track?.stop();p.canvas.width=p.canvas.height=1;}
  function preview(track){onPreview(new win.MediaStream([...getStream().getAudioTracks(),track]));}
  async function build(id){
   const video=win.document.createElement('video'),canvas=win.document.createElement('canvas');
   video.muted=true;video.playsInline=true;video.srcObject=new win.MediaStream(getStream().getVideoTracks());
   const context=canvas.getContext('2d');
   if(!context||!canvas.captureStream||!('filter' in context)){video.srcObject=null;throw Error('Live color effects are unavailable in this browser.');}
-  const p={video,canvas,context,track:null,timer:null,failed:false};allocated.add(p);
+  const preset=CALL_AR_EFFECTS.find(e=>e.id===id)||CALL_EFFECTS.find(e=>e.id===id);
+  const p={video,canvas,context,track:null,timer:null,tracker:null,failed:false};allocated.add(p);
   // Register early so closing while play() is pending always detaches the source.
   pipeline=p;
   let timeout;
   try{
+   if(preset.kind==='ar')p.tracker=await createFaceTracker({win});
    await Promise.race([video.play(),new Promise((_,reject)=>{timeout=win.setTimeout(()=>reject(Error('Camera preview timed out.')),5000)})]);
    if(!alive()||pipeline!==p)throw Error('Call ended.');
    const settings=getStream().getVideoTracks()[0]?.getSettings?.()||{};
@@ -35,7 +39,7 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
     if(!alive()||pipeline!==p||p.failed)return;
     try{
      context.filter='none';context.fillStyle='#000';context.fillRect(0,0,canvas.width,canvas.height);
-     if(enabled&&video.readyState>=2){context.filter=CALL_EFFECTS.find(e=>e.id===id).filter;context.drawImage(video,0,0,canvas.width,canvas.height)}
+     if(enabled&&video.readyState>=2){context.filter=preset.filter;context.drawImage(video,0,0,canvas.width,canvas.height);context.filter='none';if(p.tracker){const face=p.tracker.detect(video);if(face)drawFaceOverlay(context,face,canvas.width,canvas.height,preset,win.performance.now())}}
     }catch{
      p.failed=true;p.track&&(p.track.enabled=false);win.clearInterval(p.timer);
      if(p.track&&sender()?.track===p.track)onFailure('Video effect stopped. Video is paused; choose Original to restore the camera.');
@@ -52,7 +56,7 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
   get effect(){return effect},get busy(){return busy},
   async select(id){
    if(busy||!alive())return false;
-   if(!CALL_EFFECTS.some(e=>e.id===id))throw Error('Unknown effect.');
+   if(!CALL_EFFECTS.some(e=>e.id===id)&&!CALL_AR_EFFECTS.some(e=>e.id===id))throw Error('Unknown effect.');
    if(id===effect)return true;
    const s=sender(),raw=getStream()?.getVideoTracks()[0];if(!s||!raw)throw Error('Start a video call first.');
    busy=true;const previous=pipeline;let next=null;
