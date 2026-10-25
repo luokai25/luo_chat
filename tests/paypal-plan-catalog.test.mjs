@@ -26,11 +26,15 @@ test('No merchant setup or invented product IDs can silently activate checkout',
  assert.equal(paypalMerchantConfigured({}),false);
  assert.throws(()=>buildPayPalPlanDefinition({plan:'pro',productId:'a-bad-product'}),/product/);
  assert.throws(()=>buildPayPalPlanDefinition({plan:'madeup',productId}),/product/);
- assert.equal(paypalRequiredPlanSettings().length,6);
+ assert.equal(paypalRequiredPlanSettings().length,3);assert.equal(paypalRequiredPlanSettings({promotions:true}).length,6);
  const env={LUO_PAYPAL_ENV:'sandbox',LUO_PAYPAL_CLIENT_ID:'01234567890123456789',
  LUO_PAYPAL_CLIENT_SECRET:'a'.repeat(32),LUO_PAYPAL_WEBHOOK_ID:'WEBHOOKTESTID'};
  for(const key of paypalRequiredPlanSettings())env[key]='P-ABCDEFGHIJKLM';
  assert.equal(paypalMerchantConfigured(env),true);
- delete env.LUO_PAYPAL_PLAN_PRO_PROMO;
+ delete env.LUO_PAYPAL_PLAN_PRO_REGULAR;
+ assert.equal(paypalMerchantConfigured(env),false);
+ env.LUO_PAYPAL_PLAN_PRO_REGULAR='P-ABCDEFGHIJKLM';
+ env.LUO_AGENT_PROMOTIONS_ENABLED='true';
+ delete env.LUO_PAYPAL_PLAN_MAXIMUM_PROMO;
  assert.equal(paypalMerchantConfigured(env),false);
 });
