@@ -20,8 +20,8 @@ export function quoteAgentPlan(plan,{now=Date.now(),promoStart}={}){
  return {id:plan,name:spec.name,currency:'USD',monthly_price:spec.monthly_cents/100,
  first_invoice_price:(promo?spec.first_invoice_promo_cents:spec.monthly_cents)/100,
  renewal_monthly_price:spec.monthly_cents/100,offer_active:promo,
- offer_window:window,offer_duration_days:10,
- offer_applies_to:'first monthly invoice only',renewal_notice:'Subsequent monthly invoices renew at the regular monthly price unless canceled.'};
+ offer_window:window,offer_duration_days:window?10:null,
+ offer_applies_to:promo?'first monthly invoice only':null,renewal_notice:promo?'Subsequent monthly invoices renew at the regular monthly price unless canceled.':'Renews at the regular monthly price until canceled.'};
 }
 export function allAgentQuotes(options={}){return Object.keys(MEMBERSHIP_PRICES).map(k=>quoteAgentPlan(k,options));}
 export function approvedStripePriceId(env,plan){
