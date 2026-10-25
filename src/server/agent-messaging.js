@@ -26,6 +26,13 @@ export function createAgentMessagingHandler({mode='messages',env=process.env,cli
    const fields=mode==='peers'?['action','username','peer']:['to','id','text'];
    if(Object.keys(body).some(key=>!fields.includes(key)))return sendJson(res,400,{error:{code:'INVALID_BODY'}});
   }
+  // Reject bad messages before touching the database or consuming another user's quota.
+  if(mode==='messages'&&req.method==='POST'
+    &&(!uuid.test(body.to||'')||!uuid.test(body.id||'')||typeof body.text!=='string'
+      ||body.text.length>4000||!body.text.trim()))return sendJson(res,400,{error:{code:'INVALID_MESSAGE'}});
+  if(mode==='peers'&&body.action==='find'&&!normalizeAgentUsername(body.username))return sendJson(res,400,{error:{code:'INVALID_USERNAME'}});
+  if(mode==='peers'&&body.action==='approve'&&!uuid.test(body.peer||''))return sendJson(res,400,{error:{code:'INVALID_PEER'}});
+  if(mode==='peers'&&!['find','approve'].includes(body.action))return sendJson(res,400,{error:{code:'INVALID_ACTION'}});
   const scope=req.method==='GET'?'chat:read':mode==='peers'&&body.action==='find'?'chat:read':'chat:write';
   try{
    const db=clientFactory(STAGING,env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
