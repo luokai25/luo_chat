@@ -16,7 +16,7 @@ function harness(responses={}) {
 }
 
 test('Social hub attaches a dedicated tab and renders server-backed posts without using unsafe HTML',async()=>{
- const h=harness({'feed':[{kind:'post',id:'abc',author:{username:'friend'},body:'<img src=x onerror=alert(1)>',reactions:0,comments:0}]});
+ const h=harness({'feed':[{kind:'clip',id:'abc',owner_id:'friend',published:true,audience:'public',media:[],author:{username:'friend'},body:'<img src=x onerror=alert(1)>',reactions:0,comments:0}]});
  assert.ok(h.doc.getElementById('social'));
  assert.equal(h.doc.querySelectorAll('[data-tab="social"]').length,1);
  h.doc.querySelector('[data-tab="social"]').click();
@@ -36,7 +36,7 @@ test('Sealed capsules never render private body and cannot be opened early',asyn
 });
 
 test('Closing the social interface on signout removes private rendered content',async()=>{
- const h=harness({'feed':[{id:'one',kind:'post',body:'Private',author:{username:'friend'}}]});
+ const h=harness({'feed':[{id:'one',kind:'clip',owner_id:'friend',published:true,audience:'public',media:[],body:'Private',author:{username:'friend'}}]});
  h.doc.querySelector('[data-tab="social"]').click();await h.flush();
  assert.match(h.doc.querySelector('#social').textContent,/Private/);
  h.setOwner(null);h.hub.signedOut();
@@ -205,5 +205,5 @@ test('invalid photo files are rejected before creating a post draft',async()=>{
 test('real tab callbacks load Social once and leaving invalidates pending results',async()=>{
  const dom=new JSDOM('<div class="app" data-tab="chats"><nav class="workspace-nav"></nav><div><section id="chats"></section></div></div>',{url:'https://luo.example'}),w=dom.window,d=w.document;
  let hub;const calls=[];hub=installSocialSpaces({win:w,db:{rpc:async(name,args)=>{calls.push(args);return{data:[]}}},$:id=>d.getElementById(id),getUser:()=>({id:'me'}),getChats:()=>[],note:()=>{},tab:key=>{d.querySelector('.app').dataset.tab=key;hub.onTab(key)}});
- try{d.querySelector('[data-tab="social"]').click();await new Promise(r=>setImmediate(r));assert.equal(calls.filter(x=>x.action==='feed').length,2,'one post stream and one clip stream');hub.onTab('chats');assert.equal(d.querySelector('.luo-feed'),null)}finally{w.close()}
+ try{d.querySelector('[data-tab="social"]').click();await new Promise(r=>setImmediate(r));assert.equal(calls.filter(x=>x.action==='feed').length,1,'Social directly requests only the clips stream');hub.onTab('chats');assert.equal(d.querySelector('.luo-feed'),null)}finally{w.close()}
 });
