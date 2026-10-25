@@ -4,6 +4,7 @@
 const html=__HTML__;
 const css=__CSS__;
 const app=__APP__;
+const insights=__INSIGHTS__;
 const headers={
  'X-Content-Type-Options':'nosniff',
  'X-Frame-Options':'DENY',
@@ -48,6 +49,7 @@ addEventListener('fetch',event=>event.respondWith((async()=>{
  if(path==='/'||path==='/index.html')return respond(req.method==='HEAD'?null:html,'text/html; charset=utf-8');
  if(path==='/style.css')return respond(req.method==='HEAD'?null:css,'text/css; charset=utf-8',200,{'Cache-Control':'public, max-age=300'});
  if(path==='/app.js')return respond(req.method==='HEAD'?null:app,'application/javascript; charset=utf-8',200,{'Cache-Control':'public, max-age=300'});
+ if(path==='/insights.js')return respond(req.method==='HEAD'?null:insights,'application/javascript; charset=utf-8',200,{'Cache-Control':'public, max-age=300'});
  if(path==='/favicon.ico')return new Response(null,{status:204,headers});
  return respond('Not Found','text/plain; charset=utf-8',404);
 })()));
