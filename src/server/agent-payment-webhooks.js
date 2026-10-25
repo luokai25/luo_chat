@@ -5,7 +5,8 @@ import {verifyStripeWebhook,paymentNeedsReconciliation} from './stripe-webhook-v
 import {checkoutReady,paypalAccessToken,paypalPlanId} from './agent-billing.js';
 import {approvedStripePriceId} from './agent-pricing.js';
 import {sendJson} from './agent-platform.js';
-const STAGING='https://itecovbwilcrvjqkdoyd.supabase.co';
+import {agentRuntime,paypalMerchantSettings} from './agent-environment.js';
+import {verifyLivePayPalWebhook} from './paypal-live-preflight.js';
 const hexId=/^[a-f0-9-]{36}$/i;
 export async function readWebhookBytes(req){
  if(Buffer.isBuffer(req.rawBody))return req.rawBody.length<=65536?req.rawBody:null;
@@ -13,6 +14,13 @@ export async function readWebhookBytes(req){
  try{for await(const chunk of req){total+=chunk.length;if(total>65536)return null;chunks.push(chunk)}return Buffer.concat(chunks)}catch{return null}
 }
 export function webhookReady(env,provider){
+ const runtime=agentRuntime(env);
+ if(!runtime)return false;
+ if(runtime.mode==='live')return provider==='paypal'
+  &&env.LUO_AGENT_LIVE_WEBHOOK_ENABLED==='true'
+  &&!!paypalMerchantSettings(env)
+  &&typeof env.LUO_PAYPAL_LIVE_WEBHOOK_ID==='string'
+  &&/^[A-Za-z0-9]{12,48}$/.test(env.LUO_PAYPAL_LIVE_WEBHOOK_ID);
  if(!checkoutReady(env,provider))return false;
  if(provider==='stripe')return env.LUO_AGENT_STRIPE_WEBHOOK_ENABLED==='true'
   &&typeof env.LUO_STRIPE_WEBHOOK_SECRET==='string'&&/^whsec_[A-Za-z0-9_]{16,}$/.test(env.LUO_STRIPE_WEBHOOK_SECRET);
@@ -117,7 +125,7 @@ async function handlePayPal(event,db,env,fetcher){
  if(typeof subId!=='string'||!/^I-[A-Za-z0-9]+$/.test(subId))return 'ignored';
  const access=await paypalAccessToken(env,fetcher);
  const auth={Authorization:'Bearer '+access};
- const sub=await remoteJson(fetcher,'https://api-m.sandbox.paypal.com/v1/billing/subscriptions/'+encodeURIComponent(subId),{headers:auth});
+ const sub=await remoteJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions/'+encodeURIComponent(subId),{headers:auth});
  const intentId=sub.custom_id;
  if(typeof intentId!=='string'||!hexId.test(intentId))return 'ignored';
  const record=await db.rpc('luo_agent_checkout_snapshot',{p_intent:intentId,p_provider:'paypal'});
@@ -133,7 +141,7 @@ async function handlePayPal(event,db,env,fetcher){
  const now=new Date(),then=new Date(now.getTime()-100*86400000);
  const end=new Date(now.getTime()+86400000);
  const params='?start_time='+encodeURIComponent(then.toISOString())+'&end_time='+encodeURIComponent(end.toISOString());
- const paid=await remoteJson(fetcher,'https://api-m.sandbox.paypal.com/v1/billing/subscriptions/'+encodeURIComponent(sub.id)+'/transactions'+params,{headers:auth});
+ const paid=await remoteJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions/'+encodeURIComponent(sub.id)+'/transactions'+params,{headers:auth});
  const proof=paypalPaidEvidence({intent,subscription:sub,transactions:paid.transactions,planId:paypalPlanId(env,intent.plan,intent.promo)});
  if(!proof||typeof proof.customer!=='string')return 'ignored';
  const applied=await db.rpc('luo_agent_record_reconciled_checkout',{
@@ -159,17 +167,24 @@ export function createPaymentWebhookHandler({provider='stripe',env=process.env,f
   }else{
    try{event=JSON.parse(raw.toString('utf8'))}catch{return sendJson(res,400,{error:{code:'INVALID_WEBHOOK_JSON'}})}
    if(!event||typeof event!=='object'||Array.isArray(event)||typeof event.id!=='string')return sendJson(res,400,{error:{code:'INVALID_WEBHOOK_EVENT'}});
+   // Confirm the event is registered under the same app used to obtain this token.
+   // A renamed NVP/SOAP special-app webhook cannot satisfy this check.
+   if(agentRuntime(env).mode==='live'){
+    const sameApp=await verifyLivePayPalWebhook({env,fetcher});
+    if(!sameApp.ok)return sendJson(res,503,{error:{code:'PAYPAL_LIVE_WEBHOOK_IDENTITY_UNVERIFIED'}});
+   }
    const access=await paypalAccessToken(env,fetcher);
-   const verification=await remoteJson(fetcher,'https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature',{
+   const verification=await remoteJson(fetcher,paypalMerchantSettings(env).api+'/v1/notifications/verify-webhook-signature',{
     method:'POST',headers:{Authorization:'Bearer '+access,'Content-Type':'application/json'},
     body:JSON.stringify({auth_algo:req.headers?.['paypal-auth-algo'],cert_url:req.headers?.['paypal-cert-url'],
      transmission_id:req.headers?.['paypal-transmission-id'],transmission_sig:req.headers?.['paypal-transmission-sig'],
-     transmission_time:req.headers?.['paypal-transmission-time'],webhook_id:env.LUO_PAYPAL_WEBHOOK_ID,webhook_event:event})
+     transmission_time:req.headers?.['paypal-transmission-time'],webhook_id:agentRuntime(env).mode==='live'?env.LUO_PAYPAL_LIVE_WEBHOOK_ID:env.LUO_PAYPAL_WEBHOOK_ID,webhook_event:event})
    });
    if(verification.verification_status!=='SUCCESS')return sendJson(res,400,{error:{code:'INVALID_WEBHOOK_SIGNATURE'}});
   }
   try{
-   const db=clientFactory(STAGING,env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+   const runtime=agentRuntime(env);
+   const db=clientFactory(runtime.url,runtime.serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
    const result=provider==='stripe'?await handleStripe(event,db,env,fetcher):await handlePayPal(event,db,env,fetcher);
    return sendJson(res,200,{received:true,activation:result==='active',result});
   }catch{logger.error('LUO_AGENT_WEBHOOK_RECONCILIATION_FAILED');return sendJson(res,503,{error:{code:'RECONCILIATION_RETRY'}})}
