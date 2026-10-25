@@ -1,16 +1,9 @@
 import {createHash,randomBytes} from 'node:crypto';
 import {createClient} from '@supabase/supabase-js';
 import {sendJson} from './agent-platform.js';
+import {agentRuntime} from './agent-environment.js';
 
-const STAGING_URL='https://itecovbwilcrvjqkdoyd.supabase.co';
-const BRANCH='feature/reels-immersive-20261025';
-export function paidAgentApiEnabled(env){
- return env.VERCEL_ENV==='preview'&&env.VERCEL_GIT_COMMIT_REF===BRANCH
- &&env.LUO_AGENT_PAID_API_ENABLED==='true'
- &&env.LUO_AGENT_STAGING_URL===STAGING_URL
- &&typeof env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY==='string'
- &&env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY.length>=32;
-}
+export function paidAgentApiEnabled(env){return !!agentRuntime(env)&&env.LUO_AGENT_PAID_API_ENABLED==='true'}
 export function newAgentCredential(random=randomBytes){
  const secret=random(32);
  if(!Buffer.isBuffer(secret)||secret.length!==32)throw Error('Secure randomness unavailable');
@@ -34,7 +27,7 @@ export function createAgentAccountHandler({mode='profile',env=process.env,client
   const token=tokenFromHeaders(req);
   if(!token)return sendJson(res,401,{error:{code:'INVALID_AGENT_CREDENTIAL'}});
   try{
-   const db=clientFactory(STAGING_URL,env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+   const db=clientFactory(agentRuntime(env).url,agentRuntime(env).serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
    const hash='\\x'+createHash('sha256').update(token).digest('hex');
    const scope=mode==='profile'?'profile:read':'usage:read';
    const result=await db.rpc('luo_agent_resolve_api_key',{p_hash:hash,p_scope:scope});
