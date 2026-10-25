@@ -68,6 +68,7 @@
    </section>
    <section data-page="finance" hidden>
     <div class="page-intro"><div><p class="overline">PAYPAL · INVOICES · SUBSCRIPTIONS</p><h2>Financial intelligence</h2><p>Connected merchant-account snapshots, not invented Luo Chat revenue. Existing membership controls remain under Memberships & billing.</p></div><a href="https://www.paypal.com/myaccount/transactions" class="secondary actionlink" target="_blank" rel="noopener noreferrer">Transactions in PayPal ↗</a></div>
+    <article id="luo-live-revenue" class="panel workspace-expansion" aria-live="polite"><div class="panel-head"><div><p class="overline">VERIFIED COMPLETED TRANSACTIONS</p><h3>Money received · live counter</h3></div><span class="status-tag warn" id="luo-revenue-status">Awaiting verified payment ledger</span></div><div style="font-size:clamp(28px,4vw,45px);font-weight:750;color:var(--gold2)" id="luo-revenue-value">Not connected</div><p class="footnote" id="luo-revenue-meta">Only provider-confirmed, production transactions are eligible. Never count pending payments or test transactions.</p></article>
     <div id="finance-stats" class="metrics"></div>
     <div class="two-col"><article class="panel"><div class="panel-head"><h3>Payment visibility</h3><span class="warning-pill">Read-only snapshot</span></div><div id="finance-detail" class="insight-stack"></div></article><article class="panel"><div class="panel-head"><h3>Subscription economics</h3></div><div id="finance-memberships" class="insight-stack"></div></article></div>
     <p class="footnote" id="finance-asof">Payment records are refreshed through connected-service checks, not by clicking the website's Refresh button. Billing cannot be activated from this page.</p>
@@ -84,4 +85,5 @@
 </div>
 <script type="module" src="/app.js"></script>
 <script type="module" src="/insights.js"></script>
+<script type="module" src="/revenue-live.js"></script>
 </body></html>
