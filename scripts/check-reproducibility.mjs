@@ -10,7 +10,7 @@ const run=(args,cwd)=>{const result=spawnSync(npm,args,{cwd,stdio:'inherit'});if
 try{
  // Freeze one allowlisted snapshot before making two independent install/build workspaces.
  // Never copy credentials, modules or generated output, or separately reread moving inputs.
- const inputs=['package.json','package-lock.json','build.mjs','vercel.json','src','public','scripts','tests','api','integrations','supabase/functions','supabase/proposals','supabase/migrations'];
+ const inputs=['package.json','package-lock.json','build.mjs','vercel.json','src','public','scripts','tests','api','integrations','supabase/functions','supabase/proposals','supabase/migrations','workspace'];
  for(const path of inputs)await cp(join(root,path),join(snapshot,path),{recursive:true});
  for(const folder of [fresh,second])for(const path of inputs)await cp(join(snapshot,path),join(folder,path),{recursive:true});
  run(['ci','--ignore-scripts','--no-audit','--no-fund'],fresh);
