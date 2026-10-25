@@ -2,7 +2,7 @@
 (()=>{
  const key='luo-consent-v1';
  const blocked=()=>navigator.globalPrivacyControl||navigator.doNotTrack==='1';
- const read=()=>{try{const c=JSON.parse(localStorage.getItem(key)||sessionStorage.getItem(key));return c?.version===1&&typeof c.diagnostics==='boolean'?c:null}catch{return null}};
+ const read=()=>{try{const c=JSON.parse(localStorage.getItem(key)||sessionStorage.getItem(key));return c?.version===1&&typeof c.diagnostics==='boolean'?{...c,diagnostics:!!(c.diagnostics&&Number.isFinite(c.at)&&Date.now()-c.at>=0&&Date.now()-c.at<180*86400000)}:null}catch{return null}};
  let choice=read();
  window.luoDiagnosticsAllowed=()=>!!choice?.diagnostics&&!blocked();
  const panel=document.createElement('section');panel.className='luo-consent';panel.setAttribute('aria-label','Cookie and storage preferences');
