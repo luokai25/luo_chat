@@ -1,3 +1,4 @@
+import {CALL_AR_EFFECTS} from './call-ar-effects.js';
 import {CALL_EFFECTS,createCallEffects} from './call-effects.js';
 import {createCallScreenShare} from './call-screen-share.js';
 import {installCallShell} from './call-shell.js';
@@ -19,9 +20,9 @@ export function installCallExperience({win,dialog,$,note,onEnd}){
  const heading=doc.createElement('div');heading.className='luo-effects-heading';
  const title=doc.createElement('strong');title.textContent='Live effects';
  const close=doc.createElement('button');close.type='button';close.textContent='Close effects';heading.append(title,close);
- const rail=doc.createElement('div');rail.className='luo-effects-carousel';rail.setAttribute('role','group');rail.setAttribute('aria-label','Choose a live color effect');
- for(const effect of CALL_EFFECTS){const button=doc.createElement('button');button.type='button';button.dataset.effect=effect.id;button.textContent=effect.label;button.setAttribute('aria-pressed',String(effect.id==='original'));rail.append(button)}
- const hint=doc.createElement('p');hint.textContent='These colors are sent to the other person. Original restores full camera quality. Face masks and background replacement are not installed.';
+ const rail=doc.createElement('div');rail.className='luo-effects-carousel';rail.setAttribute('role','group');rail.setAttribute('aria-label','Choose an AR lens or live color effect');
+ for(const effect of [...CALL_EFFECTS,...CALL_AR_EFFECTS]){const button=doc.createElement('button');button.type='button';button.dataset.effect=effect.id;button.textContent=effect.label;button.setAttribute('aria-pressed',String(effect.id==='original'));rail.append(button)}
+ const hint=doc.createElement('p');hint.textContent='Face-tracked masks are drawn locally and sent in the video call. Selecting an AR lens downloads the tracking model on demand; no face data is uploaded. Original restores raw camera quality. These are Luo-designed filters, not official Snapchat or Instagram lenses.';
  sheet.append(heading,rail,hint);dialog.append(sheet);
  let current=null,engine=null,sharing=null,held=false,cameraSwitch=false,outputBusy=false,revision=0;
  const alive=()=>current?.isCurrent()===true;
