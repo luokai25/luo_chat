@@ -2,6 +2,14 @@
 
 Status on 25 October 2026: DEVELOPMENT / FEATURE-GATED. No charges and no agent activation.
 
+## Current decision: regular monthly subscriptions only
+
+The operator postponed the launch discount. Only three PayPal regular plans are required: Standard USD 12/month, Pro USD 24/month, and Maximum USD 30/month. Those three plan IDs are configured in Vercel Production.
+
+No introductory plans are necessary now. Keep LUO_AGENT_PROMOTIONS_ENABLED unset or off. The existing six-plan setup described below is a future optional campaign, not part of the current launch.
+
+Regular plan IDs alone do not enable billing. Live API wiring, verified webhook delivery and reconciliation, approved merchant eligibility, and end-to-end membership testing are still required before charging customers.
+
 ## PayPal belongs to the platform operator
 Money should settle directly in the operator's own eligible PayPal BUSINESS merchant account. We do not need an intermediary collecting money first.
 
