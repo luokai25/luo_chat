@@ -62,6 +62,8 @@ export function installCallExperience({win,dialog,$,note,onEnd}){
  $('callHold').onclick=()=>{if(!alive())return;held=!held;$('callHold').setAttribute('aria-pressed',String(held));$('callHold').textContent=held?'Resume':'Hold';syncEnabled();note(held?'On hold: your microphone and camera are paused. The other person is not placed on hold remotely.':'Call resumed.');};
  $('callFit').textContent='Fit Video';$('callFit').setAttribute('aria-pressed','true');
  $('callFit').onclick=()=>{const fill=dialog.classList.toggle('luo-call-cover');$('callFit').setAttribute('aria-pressed',String(fill));$('callFit').textContent=fill?'Fit Video':'Fill Screen'};
+ const local=$('callLocal');
+ function syncPreviewFacing(){dialog.classList.toggle('luo-selfie-preview',current?.getFacing?.()==='user'&&!sharing?.active)}
  const local=$('callLocal');local.tabIndex=0;local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');
  let drag=null,x=0,y=0;
  function move(dx,dy){const grid=local.parentElement.getBoundingClientRect(),box=local.getBoundingClientRect(),tray=sheet.hidden?grid.bottom:sheet.getBoundingClientRect().top,bottom=Math.min(tray,actions.getBoundingClientRect().top||grid.bottom);x=Math.min(Math.max(x+dx,-grid.width+box.width+24),0);y=Math.min(Math.max(y+dy,0),Math.max(0,bottom-(box.top-y)-box.height-12));local.style.setProperty('--call-pip-x',x+'px');local.style.setProperty('--call-pip-y',y+'px');}
@@ -72,16 +74,16 @@ export function installCallExperience({win,dialog,$,note,onEnd}){
  win.addEventListener('resize',()=>move(0,0));local.addEventListener('dblclick',()=>{x=y=0;delete local.dataset.dragged});
  const shell=installCallShell({win,dialog,$,onEnd});
  const lenses=installCallLensBrowser({win,sheet,rail,getStream:()=>current?.getStream(),isCurrent:alive});
- function stop(preserveIdentity=false){if(!preserveIdentity)lenses.clear();revision++;current=null;shell.stop(preserveIdentity);sharing?.stop();sharing=null;engine?.stop();engine=null;held=false;cameraSwitch=false;outputBusy=false;drag=null;x=y=0;local.style.removeProperty('--call-pip-x');local.style.removeProperty('--call-pip-y');dialog.classList.remove('luo-screen-sharing');hide();controls.hidden=true;network.hidden=true;network.textContent='';shareStatus.hidden=true;shareStatus.textContent='';shareButton.textContent='Share screen';shareButton.setAttribute('aria-pressed','false');shareButton.setAttribute('aria-busy','false');busy(false);$('callHold').textContent='Hold';$('callHold').setAttribute('aria-pressed','false');$('callAudioOutput').disabled=false;local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');selectState();}
+ function stop(preserveIdentity=false){if(!preserveIdentity)lenses.clear();revision++;current=null;shell.stop(preserveIdentity);sharing?.stop();sharing=null;engine?.stop();engine=null;held=false;cameraSwitch=false;outputBusy=false;drag=null;x=y=0;local.style.removeProperty('--call-pip-x');local.style.removeProperty('--call-pip-y');dialog.classList.remove('luo-screen-sharing','luo-selfie-preview');hide();controls.hidden=true;network.hidden=true;network.textContent='';shareStatus.hidden=true;shareStatus.textContent='';shareButton.textContent='Share screen';shareButton.setAttribute('aria-pressed','false');shareButton.setAttribute('aria-busy','false');busy(false);$('callHold').textContent='Hold';$('callHold').setAttribute('aria-pressed','false');$('callAudioOutput').disabled=false;local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');selectState();}
  stop();
  return{
-  start(options){stop(true);current=options;controls.hidden=false;playback.hidden=true;const video=options.getStream().getVideoTracks().length>0;dialog.classList.toggle('luo-live-video',video);dialog.classList.toggle('luo-video-layout',video);dialog.classList.toggle('luo-audio-layout',!video);$('callEffectsToggle').hidden=$('callFit').hidden=!video;
+  start(options){stop(true);current=options;syncPreviewFacing();controls.hidden=false;playback.hidden=true;const video=options.getStream().getVideoTracks().length>0;dialog.classList.toggle('luo-live-video',video);dialog.classList.toggle('luo-video-layout',video);dialog.classList.toggle('luo-audio-layout',!video);$('callEffectsToggle').hidden=$('callFit').hidden=!video;
    if(video)engine=createCallEffects({win,peer:options.peer,getStream:options.getStream,isCurrent:options.isCurrent,onPreview:stream=>{$('callLocal').srcObject=stream;$('callLocal').play().catch(()=>{})},onFailure:message=>{if(alive()){shell.mediaState({video:false,held});$('callStatus').textContent=message;note(message)}}});
    shareButton.hidden=!video||!win.navigator.mediaDevices?.getDisplayMedia;
    if(video)sharing=createCallScreenShare({win,peer:options.peer,isCurrent:options.isCurrent,
     onState:state=>{dialog.classList.toggle('luo-screen-sharing',state.active);shareStatus.hidden=!state.active&&!state.busy;shareStatus.textContent=state.failed?'Screen stopped · camera restoration needs attention.':state.busy?(state.active?'Stopping or switching shared video…':'Choose a screen in your browser. Only share content you intend the other person to see.'):'Sharing screen · your selected screen is visible to the other person.';shareButton.textContent=state.failed?'Retry camera':state.active?'Stop sharing':'Share screen';shareButton.setAttribute('aria-pressed',String(state.active));shareButton.setAttribute('aria-busy',String(state.busy));busy(false);syncEnabled()},
-    onPreview:track=>{local.srcObject=new win.MediaStream([...options.getStream().getAudioTracks(),track]);local.setAttribute('aria-label','Your shared screen preview. Drag to move, or use arrow keys.');local.play().catch(()=>{})},
-    onRestore:()=>{engine?.refreshPreview();local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');syncEnabled()},
+    onPreview:track=>{syncPreviewFacing();local.srcObject=new win.MediaStream([...options.getStream().getAudioTracks(),track]);local.setAttribute('aria-label','Your shared screen preview. Drag to move, or use arrow keys.');local.play().catch(()=>{})},
+    onRestore:()=>{syncPreviewFacing();engine?.refreshPreview();local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');syncEnabled()},
     onFailure:message=>{if(alive()){$('callStatus').textContent=message;note(message)}}});
    shell.start(options);busy(false);
   },
@@ -92,6 +94,6 @@ export function installCallExperience({win,dialog,$,note,onEnd}){
   connectionState(){if(alive()){busy(!!engine?.busy);shell.connectionState()}},
   playbackBlocked(){if(alive()){playback.hidden=false;$('callStatus').textContent='Tap More → Play call audio to enable sound.'}},
   metrics(value){if(!alive())return;shell.metrics(value);const video=current.getStream().getVideoTracks().length>0,ms=n=>n===null?'unknown':Math.round(n*1000)+' ms';network.hidden=false;network.textContent=(video?value.profile+' budget':'Audio')+' · RTT '+ms(value.rtt)+' · jitter '+ms(value.jitter)+(video?' · video loss '+(value.loss===null?'unknown':Math.round(value.loss*100)+'%'):'')+' · '+value.route;},
-  cameraReplaced(){engine?.refreshPreview();syncEnabled()},syncEnabled,stop
+  cameraReplaced(){syncPreviewFacing();engine?.refreshPreview();syncEnabled()},syncEnabled,stop
  };
 }
