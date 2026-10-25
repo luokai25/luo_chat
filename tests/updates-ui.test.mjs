@@ -34,12 +34,12 @@ test('Updates is a safe workspace shortcut, and opens the existing private stori
     const d=dom.window.document;
     assert.equal(d.querySelectorAll('#luoUpdatesNav').length,1);
     assert.equal(d.getElementById('luoUpdatesNav').dataset.tab,undefined);
-    assert.ok(d.getElementById('luoUpdatesStrip'));
+    assert.equal(d.getElementById('luoUpdatesStrip'),null);
     d.getElementById('luoUpdatesNav').click();
     assert.equal(d.getElementById('storiesDialog').open,true);
     assert.equal(d.getElementById('luoStoryRail').querySelectorAll('.luo-story-bubble').length,3);
     assert.equal(d.getElementById('storiesDialogHeading').textContent,'Updates');
-    d.querySelector('#luoUpdatesStrip .luo-story-new').click();
+    d.getElementById('newStory').click();
     assert.equal(d.getElementById('storyComposer').open,true);
     d.querySelector('.app').dataset.screen='auth';await tick();
     assert.equal(d.getElementById('storiesDialog').open,false);
