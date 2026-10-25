@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {mountSocialFeed} from '../src/social-feed.js';
+import {SUPABASE_URL} from '../src/config.js';
 const tick=()=>new Promise(r=>setImmediate(r));
 const entry=(id='one',kind='post',overrides={})=>({id,kind,owner_id:'friend',published:true,audience:'friends',body:'A small golden moment',created_at:'2026-10-24T08:00:00Z',author:{id:'friend',username:'kai',display_name:'Kai'},media:[],mine:{},...overrides});
 function pending(){let resolve;const promise=new Promise(r=>{resolve=r});return {promise,resolve}}
@@ -14,7 +15,7 @@ function setup({mode='friends',clipsOnly=false,rpc,sign,reduced=false,saver=fals
  w.HTMLMediaElement.prototype.pause=function(){playback.set(this,false);paused.push(this);this.dispatchEvent(new w.Event('pause'))};w.HTMLMediaElement.prototype.load=function(){};
  w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','')};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new w.Event('close'))};
  w.IntersectionObserver=class{constructor(callback){this.callback=callback;observers.push(this)}observe(){}unobserve(){}disconnect(){this.disconnected=true}};
- const db={rpc:async(name,args)=>{calls.push(args);return rpc?await rpc(args):{data:args.action==='feed'&&args.input.kind==='post'?[entry()]:[]}},storage:{from:()=>({createSignedUrl:async path=>sign?sign(path):{data:{signedUrl:'https://byjixqwpjvsgmqilmzbm.supabase.co/storage/v1/object/sign/luo-social/'+path+'?token=test'}}})}};
+ const db={rpc:async(name,args)=>{calls.push(args);return rpc?await rpc(args):{data:args.action==='feed'&&args.input.kind==='post'?[entry()]:[]}},storage:{from:()=>({createSignedUrl:async path=>sign?sign(path):{data:{signedUrl:SUPABASE_URL+'/storage/v1/object/sign/luo-social/'+path+'?token=test'}}})}};
  const stop=mountSocialFeed({win:w,db,getUser:()=>actor,output:d.getElementById('out'),note:s=>notes.push(s),openPerson:id=>profiles.push(id),mode,clipsOnly,initialClip});
  return {w,d,calls,notes,profiles,observers,playing,paused,stop:()=>{if(!stopped){stop();stopped=true}},actor:value=>{actor=value},close(){this.stop();w.close()}};
 }
@@ -58,7 +59,7 @@ test('invalid media host is rejected before any video is created',async()=>{
 });
 test('a clip scrolled away while loading cannot start playing after its signed URL arrives',async()=>{
  const p=pending(),h=setup({clipsOnly:true,rpc:async()=>({data:[entry('a','clip',{media:[{path:'friend/a/video.mp4'}]})]}),sign:()=>p.promise});
- try{await tick();find(h,'Play clip').click();const card=h.d.querySelector('.luo-feed-card');h.observers[0].callback([{target:card,isIntersecting:false,intersectionRatio:0}]);p.resolve({data:{signedUrl:'https://byjixqwpjvsgmqilmzbm.supabase.co/storage/v1/object/sign/luo-social/friend/a/video.mp4'}});await tick();assert.equal(h.playing.length,0)}finally{h.close()}
+ try{await tick();find(h,'Play clip').click();const card=h.d.querySelector('.luo-feed-card');h.observers[0].callback([{target:card,isIntersecting:false,intersectionRatio:0}]);p.resolve({data:{signedUrl:SUPABASE_URL+'/storage/v1/object/sign/luo-social/friend/a/video.mp4'}});await tick();assert.equal(h.playing.length,0)}finally{h.close()}
 });
 test('reduced motion and data saving prevent automatic next-clip playback',async()=>{
  for(const options of [{reduced:true},{saver:true}]){
