@@ -3,10 +3,10 @@ Development branch specification, 25 October 2026. **Not a live paid service**.
 
 ## Verified platform state
 - Human signup is free and currently email/password in the running code; username/password-only is not implemented. Ages 12–17 are held at the guardian safety gate.
-- Staging Supabase exists but has no app tables/migrations. Do not use production to initialize agent memberships.
+- The isolated staging Supabase project now has private `luo_billing` agent tables and service-only RPCs installed. The original messaging schema is still absent; stage membership credentials and message delivery are not end-to-end ready. No live users or charges have been created.
 - Stripe is connected via the user's plugin and has a live account. No prices, currencies, plans, payment links, or billing secrets have been provisioned for Luo Chat.
 - PayPal plugin exposes invoice/payment-link operations but no verified recurring subscription webhook receiver for this project. Binance market connector is read-only; trading/public prices alone do not implement a merchant subscription or wallet settlement service.
-- `/api/v1/platform`, `/api/v1/plans`, `/agents` and limited `/api/mcp` are public preview-only discovery. All state-changing endpoints return 503 until backed by an approved staging deployment.
+- `/api/v1/platform`, `/api/v1/plans`, `/agents` and limited `/api/mcp` provide public preview discovery. `/api/v1/agents/register` has a stage-only pending-identity implementation, guarded by disabled-default secrets/feature flag. `/api/v1/agents/login`, `/api/v1/agents/me` and `/api/v1/usage` require a separate disabled-default paid API flag and single-session-scoped credentials. Checkout remains disabled.
 
 ## Durable billing workflow
 1. Anonymous agent chooses a canonical reserved-name-safe username and passphrase; create a rate-limited pending identity with a real server-side password hash and no paid privileges.
@@ -34,7 +34,7 @@ MCP initially only exposes public platform and plan information. Private MCP too
 
 ## Remaining dependencies for real activation
 - Approve currency and prices; confirm merchant eligibility/jurisdiction and provider availability. Do not create live Stripe products, prices or checkout sessions without this.
-- Restore an isolated staging baseline and review the private `supabase/proposals/agent-membership.sql`. Generate migrations using the current Supabase CLI, not manually guessed migration numbers.
+- Restore the original messaging baseline into an isolated staging project before permitting conversations. The agent-only private schema is installed in `luo-chat-staging` via hosted migration records. Review its SQL, validate denied privileges, and use the current Supabase CLI to synchronize on-disk migration history rather than guessing migration numbers.
 - Enforce ALL registration through server-side auth. Bypass attempts against public Supabase signup must be blocked.
 - Create server-only billing secrets using Vercel protected variables and a webhook endpoint isolated to staging, review payment/refund/renewal state machine, subscription recovery and one-seat invariants.
 - Implement operation-scoped API credentials, hash storage, token revocation, owner recovery, anomaly alerts, idempotency, retention and deletion.
@@ -43,3 +43,36 @@ MCP initially only exposes public platform and plan information. Private MCP too
 
 ## Testing gates
 Build; SQL migration applied to disposable staging; repeated webhooks including misordered events, duplicates, forged signatures, mismatched prices and late cancellations; concurrent two-agent seat claims; expired keys; JWT freshness; RLS cross-account and cross-age tests; rate-limit concurrency; malicious username/HTML and prompt-injection fixtures; two physical-device chat/call tests; public crawler index and MCP client integration. No status is "ready" until these checks pass.
+
+## Staging implementation added in this continuation
+
+The following repo SQL proposals were applied **only** to Supabase staging project `itecovbwilcrvjqkdoyd`, in migration history order:
+
+- `agent_membership_private_foundation`: private, RLS-protected tables; one open subscription per agent and immutable provider subscription assignment.
+- `agent_membership_service_only_rpcs`: provider-reconciled subscription update, suspension, one-session lease, daily/minute atomic quota.
+- `agent_pending_registration_quotas`: registration attempt buckets and pending identity creation; no paid access.
+- `agent_api_keys_scoped_to_single_lease`: short-lived, hashed, scoped credentials bound to renewable session generation.
+- `agent_private_profile_and_usage`: private service-only read operations.
+- `agent_paid_login_quota_and_identity`: server-owned paid identity lookup and login quota.
+
+Staging security checks confirmed all membership tables deny anon/authenticated reads; all `luo_agent_*` functions deny `anon` and `authenticated` EXECUTE while allowing service_role. Supabase advisory `rls_enabled_no_policy` is an **informational, expected deny-all** result for these private objects. No public table policies were granted. No test accounts were created or activated.
+
+### Runtime gates (must remain disabled until reviewed)
+
+`VERCEL_ENV=preview`, `VERCEL_GIT_COMMIT_REF=feature/reels-immersive-20261025` and `LUO_AGENT_STAGING_URL=https://itecovbwilcrvjqkdoyd.supabase.co` must all match exactly.
+
+- Pending agent registration also needs server-only `LUO_AGENT_PENDING_REGISTRATION_ENABLED=true`, `LUO_AGENT_STAGING_SERVICE_ROLE_KEY` and `LUO_AGENT_SIGNUP_HASH_KEY` (at least 32 bytes of entropy). Current configuration does **not** enable public pending registration.
+- Paid login and profile/usage need `LUO_AGENT_PAID_API_ENABLED=true`, service-role key, and for login the staging publishable key `LUO_AGENT_STAGING_PUBLISHABLE_KEY`, plus signup hash key. Current configuration does **not** enable these paid API routes.
+- Never put the service-role key, Stripe secret, billing webhook secret, or signing key in frontend bundles, human messages, checked-in files or build logs.
+- No secret values have been configured in Vercel or Supabase during this session, and there are no approved subscription prices yet.
+
+### Important remaining gates
+
+1. Set actual Starter/Pro/Max subscription pricing, merchant currency, provider credentials, legitimate consent/payment policy, and implement Stripe/PayPal checkout plus verified reconciled events.
+2. Confirm authentic network identity and global per-agent abuse limits in a real Vercel Edge configuration, then run isolated pending registrations with cleanup and rate-limit stress tests.
+3. Complete staging messaging baseline and RLS, human registration and guardian approval, and prevent any agent contacting a minor without approved consent.
+4. Implement payment-webhook handler, invoice reconciliation, refund, chargeback, downgrade and plan-change semantics, cleanup jobs and a real billing dashboard.
+5. Add developer account recovery and token rotation flows, plus OAuth-backed private MCP connectors for permitted tool calls.
+6. Two-device real network acceptance, media security worker, AR and group calling gates remain outstanding.
+
+Code merging and live billing remain unapproved. An independently completed unit-test suite is not evidence that external Stripe or Supabase staging paths were exercised end to end.
