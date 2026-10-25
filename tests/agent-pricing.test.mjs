@@ -15,6 +15,8 @@ test('promotion lasts 10 exact 24-hour days from explicit activation only',()=>{
  assert.equal(quoteAgentPlan('max',{now:Date.parse(start)+864000000,promoStart:start}).first_invoice_price,30);
  assert.equal(quoteAgentPlan('max',{now:Date.parse(start),promoStart:start}).renewal_monthly_price,30);
  assert.equal(quoteAgentPlan('max',{now:Date.parse(start)}).offer_active,false);
+ assert.equal(quoteAgentPlan('max',{now:Date.parse(start)}).offer_duration_days,null);
+ assert.equal(quoteAgentPlan('max',{now:Date.parse(start)}).offer_applies_to,null);
  assert.equal(campaignWindow('not-a-date'),null);
 });
 test('Pro doubles Standard finite usage quotas and paid feature set expands',()=>{
