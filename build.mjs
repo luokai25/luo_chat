@@ -17,10 +17,13 @@ const appBytes=await readFile('dist/app.js'),js='app-'+createHash('sha256').upda
 for(const name of await readdir('dist'))if(/^app-[A-Z0-9]+\.js$/.test(name)&&name!==js)await rm('dist/'+name);
 const cssContents=await readFile('dist/style.css'),css='style-'+createHash('sha256').update(cssContents).digest('hex').slice(0,12)+'.css';await rename('dist/style.css','dist/'+css);
 const socialBytes=await readFile('dist/luo-social-feed.css'),socialCSS='luo-social-feed-'+createHash('sha256').update(socialBytes).digest('hex').slice(0,12)+'.css';await rename('dist/luo-social-feed.css','dist/'+socialCSS);
+const callBytes=await readFile('dist/luo-call-quality.css'),callCSS='luo-call-quality-'+createHash('sha256').update(callBytes).digest('hex').slice(0,12)+'.css';await rename('dist/luo-call-quality.css','dist/'+callCSS);
+for(const name of await readdir('dist'))if(/^luo-call-quality-[a-f0-9]+\.css$/.test(name)&&name!==callCSS)await rm('dist/'+name);
 const iconMap={};for(const old of ['icon.svg','icon-32.png','icon-180.png','icon-192.png','icon-512.png','icon-1024.png','icon-maskable-512.png']){const bytes=await readFile('dist/'+old),ext=old.slice(old.lastIndexOf('.')),stem=old.slice(0,old.lastIndexOf('.')),fresh=stem+'-'+createHash('sha256').update(bytes).digest('hex').slice(0,12)+ext;await rename('dist/'+old,'dist/'+fresh);iconMap['/'+old]='/'+fresh;}
 const manifest=JSON.parse(await readFile('dist/manifest.json','utf8'));for(const icon of manifest.icons)icon.src=iconMap[icon.src]||icon.src;const manifestText=JSON.stringify(manifest),manifestName='manifest-'+createHash('sha256').update(manifestText).digest('hex').slice(0,12)+'.json';await writeFile('dist/manifest.json',manifestText);await writeFile('dist/'+manifestName,manifestText);
 let html=await readFile('dist/index.html','utf8');html=html.replace('<span id="appVersion">development</span>','<span id="appVersion">'+release+'</span>').replace('</head>','<meta name="luo-version" content="'+release+'"></head>');for(const [old,fresh] of Object.entries(iconMap))html=html.replaceAll(old,fresh);html=html.replace('src="/app.js"','src="/'+js+'"').replace('href="/style.css"','href="/'+css+'"').replace('href="/luo-social-feed.css"','href="/'+socialCSS+'"');await writeFile('dist/index.html',html);
-const shell=['/index.html','/'+js,'/'+css,'/'+socialCSS,...Object.values(iconMap),'/'+manifestName];
+html=html.replace(/href="\/luo-call-quality\.css(?:\?[^"]*)?"/,'href="/'+callCSS+'"');await writeFile('dist/index.html',html);
+const shell=['/index.html','/'+js,'/'+css,'/'+socialCSS,'/'+callCSS,...Object.values(iconMap),'/'+manifestName];
 const version=createHash('sha256').update(html).digest('hex').slice(0,12);
 await writeFile('dist/sw.js',`const CACHE='luo-chat-${version}',SHELL=${JSON.stringify(shell)};
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE_UPDATE')event.waitUntil(self.skipWaiting());});

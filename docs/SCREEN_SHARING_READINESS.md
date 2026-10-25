@@ -1,5 +1,7 @@
 # Screen-sharing continuation
 
+Newer UI/lifecycle work is detailed in `docs/IMMERSIVE_CALL_UI_READINESS.md`; this document records the preceding screen-sharing increment.
+
 Date: 2026-10-25. Base commit: `ae21f2983e65edf67d8ebb14a6414d84e6f72475`. Same development branch as Reels and live color effects. No production, hosted Supabase, account, TURN provisioning or APK release changes.
 
 ## Implemented

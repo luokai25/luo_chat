@@ -38,7 +38,7 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
      if(enabled&&video.readyState>=2){context.filter=CALL_EFFECTS.find(e=>e.id===id).filter;context.drawImage(video,0,0,canvas.width,canvas.height)}
     }catch{
      p.failed=true;p.track&&(p.track.enabled=false);win.clearInterval(p.timer);
-     onFailure('Video effect stopped. Video is paused; choose Original to restore the camera.');
+     if(p.track&&sender()?.track===p.track)onFailure('Video effect stopped. Video is paused; choose Original to restore the camera.');
     }
    }
    frame();if(p.failed)throw Error('Video effects could not start.');

@@ -29,3 +29,72 @@
 #luoCall.luo-live-call #callEffectsSheet p{font-size:12px;color:#e3d9c7;line-height:1.5}
 @keyframes luo-call-sheet-in{from{transform:translateY(20px);opacity:.3}to{transform:translateY(0);opacity:1}}
 @media(prefers-reduced-motion:reduce){#luoCall.luo-live-call #callEffectsSheet{animation:none}}
+
+/* Video-first shell. Override the earlier panel-based call layout in one scoped layer. */
+dialog#luoCall.luo-live-call.luo-immersive-call[open]{padding:0!important;background:#050505!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .call-video-grid{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;z-index:0!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .dialog-heading{position:absolute!important;inset:0 0 auto!important;width:100%!important;max-height:none!important;min-height:0!important;box-sizing:border-box;display:grid!important;grid-template-columns:48px minmax(0,1fr) 48px!important;gap:0 6px;align-items:center!important;padding:calc(10px + env(safe-area-inset-top)) 12px 24px!important;background:linear-gradient(#000b,transparent)!important;z-index:6!important;text-align:center!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .dialog-heading h2#callTitle{grid-column:2;grid-row:1;max-height:44px!important;font-size:16px!important;text-align:center!important;margin:0!important;line-height:1.3!important;overflow:hidden}
+dialog#luoCall.luo-live-call.luo-immersive-call #callMinimize{grid-column:1;grid-row:1}
+dialog#luoCall.luo-live-call.luo-immersive-call #callMore{grid-column:3;grid-row:1}
+dialog#luoCall.luo-live-call.luo-immersive-call .dialog-heading button{width:44px;height:44px;min-height:44px;border-radius:50%;border:1px solid #ffffff30;background:#19191966;color:#fff;backdrop-filter:blur(8px);font-size:22px}
+dialog#luoCall.luo-live-call.luo-immersive-call #callDuration{grid-row:2;grid-column:2;font:500 12px system-ui;color:#f1d798}
+dialog#luoCall.luo-live-call.luo-immersive-call #callConnection{grid-row:3;grid-column:2;font:500 11px system-ui;color:#ead3a0;min-height:14px}
+dialog#luoCall.luo-live-call.luo-immersive-call #callStatus{position:absolute!important;top:calc(80px + env(safe-area-inset-top));left:16px;right:16px;margin:0!important;max-width:calc(100% - 32px)!important;text-align:center!important;font-size:12px;text-shadow:0 2px 5px #000;z-index:4}
+dialog#luoCall.luo-live-call.luo-immersive-call #callShareStatus{position:absolute;top:calc(112px + env(safe-area-inset-top));left:12px;right:12px;margin:0;max-width:calc(100% - 24px);font-size:11px}
+dialog#luoCall.luo-live-call.luo-immersive-call #luoCallIdentity,dialog#luoCall.luo-live-call.luo-immersive-call p.tiny.muted{display:none!important}
+dialog#luoCall.luo-live-call.luo-immersive-call #callRemote{transition:opacity .18s ease;object-fit:contain!important}
+dialog#luoCall.luo-live-call.luo-immersive-call.luo-call-cover #callRemote{object-fit:cover!important}
+dialog#luoCall.luo-live-call.luo-immersive-call #callRemote.luo-remote-hidden{opacity:0!important;visibility:hidden!important}
+#callRemotePlaceholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(ellipse at 50% 40%,#241e12,#080809 65%);color:white}
+#callRemotePlaceholder[hidden]{display:none!important}
+#callRemotePlaceholder .luo-call-person-avatar{display:grid;place-items:center;width:132px;height:132px;border-radius:50%;background:#2d2518;border:1px solid #af8a47;color:#eaca8c;font-size:48px;overflow:hidden;box-shadow:0 0 32px #bb8c2414}
+#callRemotePlaceholder img{width:100%;height:100%;object-fit:cover}
+#callRemotePlaceholder .luo-call-person-name{font-size:22px}
+#callRemotePlaceholder .luo-call-person-status{font-size:12px;color:#c8c0b1}
+dialog#luoCall.luo-live-call.luo-immersive-call.luo-call-ringing .luo-call-person-avatar{animation:luo-call-ring 2s ease-in-out infinite}
+@keyframes luo-call-ring{50%{box-shadow:0 0 0 8px #e6bb5e0c,0 0 32px #bb8c2420}}
+dialog#luoCall.luo-live-call.luo-immersive-call .device-actions{position:absolute!important;inset:auto 10px calc(84px + env(safe-area-inset-bottom))!important;margin:0 auto!important;width:max-content;max-width:calc(100% - 20px);display:flex!important;gap:6px!important;padding:8px 10px!important;border:1px solid #ffffff24!important;border-radius:32px!important;box-shadow:0 6px 28px #0005!important;background:#17171766!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important;overflow:visible!important;z-index:7!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .device-actions .luo-call-button{min-width:44px!important;width:48px!important;flex:0 0 48px!important;min-height:62px!important;padding:0!important;gap:3px!important;border-radius:24px!important;background:none!important;font-size:0!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-call-glyph{width:42px!important;height:42px!important;background:#ffffff14!important;border:1px solid #ffffff30!important;border-radius:50%!important;color:white!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-call-caption{font:500 10px system-ui!important;line-height:1.2!important;color:#fff!important}
+dialog#luoCall.luo-live-call.luo-immersive-call [aria-pressed="true"] .luo-call-glyph{background:#b995493d!important;border-color:#e8c574!important;color:#f1cd77!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-call-end-row{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;display:flex;justify-content:center;z-index:8}
+dialog#luoCall.luo-live-call.luo-immersive-call #endCall{font-size:0!important;border:0!important;background:transparent!important;min-width:60px;min-height:60px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;padding:0}
+dialog#luoCall.luo-live-call.luo-immersive-call #endCall .luo-call-glyph{background:#c83e51!important;border-color:#e56f7c!important;width:54px!important;height:48px!important}
+dialog#luoCall.luo-live-call.luo-immersive-call button[hidden]{display:none!important}
+dialog#luoCall.luo-live-call.luo-immersive-call[data-stage="ready"] .device-actions,dialog#luoCall.luo-live-call.luo-immersive-call[data-stage="incoming"] .device-actions{display:none!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-call-setup{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));left:12px;right:12px;display:flex;justify-content:center;gap:12px;z-index:7}
+dialog#luoCall.luo-live-call.luo-immersive-call #closeCall{position:static!important;min-height:48px;padding:8px 16px!important}
+dialog#luoCall.luo-live-call.luo-immersive-call:has(#endCall:not([hidden])) #closeCall{display:none!important}
+dialog#luoCall.luo-live-call.luo-immersive-call #acceptCall{background:#22895d!important;color:white!important;border-radius:28px;min-height:56px}
+dialog#luoCall.luo-live-call.luo-immersive-call #declineCall{background:#c83e51!important;color:white!important;border-radius:28px;min-height:56px}
+dialog#luoCall.luo-live-call.luo-immersive-call .call-video-grid #callLocal{top:calc(120px + env(safe-area-inset-top))!important;right:12px!important;width:112px!important;max-width:30vw!important;aspect-ratio:3/4!important;border-radius:16px!important;z-index:3!important;box-shadow:0 4px 18px #0006!important;transition:width .18s ease}
+dialog#luoCall.luo-live-call.luo-immersive-call .call-video-grid #callLocal.luo-pip-expanded{width:180px!important;max-width:45vw!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .call-video-grid #callLocal{max-height:calc(100dvh - 240px)!important}
+dialog#luoCall.luo-live-call.luo-immersive-call.luo-screen-sharing .call-video-grid #callLocal{aspect-ratio:16/9!important;object-fit:contain!important}
+dialog#luoCall.luo-live-call.luo-immersive-call.luo-audio-layout .call-video-grid #callLocal{display:none!important}
+dialog#luoCall.luo-live-call.luo-immersive-call:not(.luo-live-video) .call-video-grid #callLocal{display:none!important}
+dialog#luoCall.luo-live-call.luo-immersive-call #callMoreSheet{position:absolute;left:0;right:0;bottom:calc(154px + env(safe-area-inset-bottom));z-index:9;max-height:58dvh;overflow:auto;padding:12px;background:#171411f5;border:1px solid #8d713d;border-radius:24px 24px 12px 12px;animation:luo-call-sheet-in .28s ease}
+dialog#luoCall.luo-live-call.luo-immersive-call #callMoreSheet[hidden]{display:none!important}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-call-sheet-heading{display:flex;align-items:center;justify-content:space-between;touch-action:none}
+dialog#luoCall.luo-live-call.luo-immersive-call #callMoreSheet .luo-call-tools{position:static!important;margin:8px 0!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));background:none!important;padding:0!important}
+dialog#luoCall.luo-live-call.luo-immersive-call #callMoreSheet .luo-call-tools[hidden]{display:none!important}
+dialog#luoCall.luo-live-call.luo-immersive-call #callEffectsSheet{bottom:calc(82px + env(safe-area-inset-bottom));max-height:34dvh;z-index:9;padding-top:12px}
+#luoMiniCall{position:fixed;z-index:1001;right:12px;bottom:calc(82px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;max-width:calc(100vw - 24px);padding:8px;border-radius:28px;background:#171411f2;border:1px solid #c5a55f;color:#fff;box-shadow:0 4px 20px #0007}
+#luoMiniCall[hidden]{display:none!important}
+#luoMiniCall button{min-height:44px;border:0;background:transparent;color:inherit;border-radius:24px}
+#luoMiniCall #callMiniEnd{background:#b63245;color:#fff;min-width:48px}
+@media(max-height:480px){dialog#luoCall.luo-live-call.luo-immersive-call .device-actions{inset:auto 80px 10px auto!important}dialog#luoCall.luo-live-call.luo-immersive-call .luo-call-end-row{left:auto;right:12px;bottom:12px}dialog#luoCall.luo-live-call.luo-immersive-call #callMoreSheet{bottom:90px;max-height:60dvh}dialog#luoCall.luo-live-call.luo-immersive-call #callEffectsSheet{bottom:90px;max-height:54dvh}}
+@media(prefers-reduced-motion:reduce){dialog#luoCall.luo-live-call.luo-immersive-call *,#luoMiniCall{animation:none!important;transition:none!important}}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-effects-carousel button{flex:0 0 72px!important;width:72px;min-height:72px;border:0;background:none!important;border-radius:0;display:flex;flex-direction:column;align-items:center;gap:5px;padding:3px;position:relative}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-effects-carousel canvas{width:64px;height:64px;border-radius:50%;border:2px solid #ffffff50;box-sizing:border-box;background:#2d261b}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-effects-carousel [aria-pressed="true"] canvas{border:3px solid #f0c96e;transform:scale(1.04)}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-effects-carousel [data-favorite="true"]::after{content:'★';position:absolute;top:4px;right:5px;color:#ffd67e;text-shadow:0 1px 3px #000}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-effects-carousel button span{font-size:10px;color:white}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-lens-discovery{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-lens-discovery button{padding:6px 10px;background:#ffffff12;border:1px solid #9c8148;border-radius:20px;color:#fff;font-size:11px}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-lens-discovery input,dialog#luoCall.luo-live-call.luo-immersive-call .luo-lens-discovery select{width:100%;min-height:44px;background:#211c15;color:white;border:1px solid #74603c;border-radius:12px;padding:8px}
+dialog#luoCall.luo-live-call.luo-immersive-call #callEffectsSheet.luo-lenses-expanded{max-height:66dvh}
+dialog#luoCall.luo-live-call.luo-immersive-call .luo-lenses-expanded .luo-effects-carousel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;justify-items:center;gap:14px}
+dialog#luoCall.luo-live-call.luo-immersive-call #callEffectsSheet .luo-lens-empty[hidden]{display:none!important}

@@ -7,6 +7,8 @@ for(const icon of manifest.icons)await access('dist'+icon.src);
 const shell=JSON.parse(sw.match(/SHELL=(\[[^;]+\]);/)[1]);for(const path of shell)await access('dist'+path);
 assert.ok(shell.every(path=>path.startsWith('/')&&!path.includes('supabase')&&!path.includes('/api')));
 assert.match(html,/app-[A-Z0-9]+\.js/);assert.match(html,/style-[a-f0-9]+\.css/);assert.match(html,/icon-[a-f0-9]{12}\.svg/);assert.match(html,/href="\/manifest\.json"/);
+const callStyle=html.match(/href="(\/luo-call-quality-[a-f0-9]{12}\.css)"/)?.[1];assert.ok(callStyle,'Call styles must have a content-addressed URL');assert.ok(shell.includes(callStyle));
+assert.equal(callStyle,'/luo-call-quality-'+createHash('sha256').update(await readFile('dist'+callStyle)).digest('hex').slice(0,12)+'.css');
 assert.equal(manifest.id,'/');assert.ok(manifest.icons.some(icon=>icon.purpose==='maskable'));
 assert.notEqual(manifest.icons.find(icon=>icon.purpose==='maskable').src,manifest.icons.find(icon=>icon.sizes==='512x512'&&icon.purpose==='any').src);
 assert.match(html,/icon-32-[a-f0-9]{12}\.png/);assert.match(html,/apple-touch-icon/);assert.match(sw,/ACTIVATE_UPDATE/);

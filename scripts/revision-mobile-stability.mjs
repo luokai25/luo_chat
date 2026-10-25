@@ -1,5 +1,6 @@
 import {readFile,writeFile} from 'node:fs/promises';import {createHash} from 'node:crypto';
-const content=await Promise.all(['public/luo-mobile-stability.css','public/luo-mobile-stability.js','public/luo-session-boot.js'].map(f=>readFile(f)));const version=createHash('sha256').update(Buffer.concat(content)).digest('hex').slice(0,12);
+// Include emitted asset references, so a new app or call stylesheet gets a new cache.
+const content=await Promise.all(['public/luo-mobile-stability.css','public/luo-mobile-stability.js','public/luo-session-boot.js','dist/index.html'].map(f=>readFile(f)));const version=createHash('sha256').update(Buffer.concat(content)).digest('hex').slice(0,12);
 let sw=await readFile('dist/sw.js','utf8');if(!/const CACHE='luo-chat-[^']+'/.test(sw))throw Error('Cache not recognized');sw=sw.replace(/const CACHE='luo-chat-[^']+'/, "const CACHE='luo-chat-"+version+"'");
 // Keep background messages generic to protect the sender's privacy. Add the Luo icon
 // and an in-app notification when a controlled page is in the foreground.

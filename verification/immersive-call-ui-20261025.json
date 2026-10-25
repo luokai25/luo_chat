@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "4997a101916608cd39bb74b44b2a94c55950e797",
+  "scope": "Development only; production, hosted backend, icon and APK unchanged",
+  "automated_tests": {"passed": 451, "failed": 0, "added": 11},
+  "clean_builds": {"independent_lockfile_installs": 2, "byte_identical_output_files": 100},
+  "native_chromium": {
+    "passed": true,
+    "transport": "Fixture, not successful remote RTP",
+    "display_chooser": "Synthetic returning native canvas video",
+    "peer_media_state_channel": "Fixture injection, not network delivery",
+    "checks": ["Minimize/restore preserves media", "Camera-off placeholder", "More Escape preserves active call", "Real camera-derived effect thumbnails", "Search and session favorites", "Five-control dock within viewport and under 110px", "Default cover scaling", "Existing native effects, screen sharing and restoration"],
+    "viewports": ["320x640", "390x844", "844x390", "1440x900"],
+    "page_exceptions": 0
+  },
+  "reels_regression": "passed including real trim/export and IndexedDB drafts",
+  "pwa": "Call CSS content-addressed and included in shell; final cache revision includes emitted asset references",
+  "production_dependency_audit": {"known_vulnerabilities": 0},
+  "credential_pattern_scan": {"passed": true, "text_files": 354},
+  "legacy_test_diagnostics": "Broad JSDOM suite emits pre-existing mobile-helper teardown and unsupported-media warnings; no claim of zero full-suite console errors",
+  "remaining": ["Advanced AR/models/assets", "Complete gesture camera and multi-track editor", "Persistent effect favorites", "Quick replies and consented video upgrade", "In-call chat and group transport", "Consented recording and captions", "Native background calling and device acceptance", "TURN/ICE-restart and two-device remote RTP", "APK", "Remaining Reels backlog and staging activation"],
+  "report": "docs/IMMERSIVE_CALL_UI_READINESS.md"
+}
