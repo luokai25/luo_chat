@@ -34,6 +34,8 @@ export default async function handler(req,res){
  const param=req.query?.path;
  const path=(Array.isArray(param)?param.join('/'):typeof param==='string'?param:'').replace(/^\/+|\/+$/g,'');
  if(!Object.hasOwn(routes,path))return sendJson(res,404,{error:{code:'NOT_FOUND'}});
+ // GET does not have an HTTP request body; do not try reading a nonexistent stream.
+ if(req.method!=='POST')return routes[path](req,res);
  const raw=await loadRawBody(req);
  if(raw===false)return sendJson(res,413,{error:{code:'REQUEST_TOO_LARGE'}});
  if(raw&&path!=='billing/stripe-webhook'&&path!=='billing/paypal-webhook'&&req.method==='POST'){
