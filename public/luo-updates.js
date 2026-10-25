@@ -36,18 +36,7 @@
     const chats = nav.querySelector('[data-tab="chats"]');
     if (chats) chats.after(updatesNav); else nav.prepend(updatesNav);
   }
-  const inbox = $('chats');
-  if (inbox && !$('luoUpdatesStrip')) {
-    const strip = make('section', 'luo-updates-strip'); strip.id = 'luoUpdatesStrip';
-    strip.setAttribute('aria-label', 'Stories and recent updates');
-    strip.append(make('div','luo-updates-strip-heading','UPDATES · LAST 24 HOURS'));
-    const actions = make('div','luo-updates-strip-actions');
-    actions.append(button('luo-story-new', '＋ Add story', openNewStory), button('luo-story-explore', '◉ View updates', openUpdates));
-    strip.append(actions);
-    strip.append(make('p','luo-updates-small','Photos, videos and private moments, shared with the people you choose.'));
-    const heading = inbox.querySelector('.inbox-heading');
-    if (heading) heading.after(strip); else inbox.prepend(strip);
-  }
+  // Stories are opened only from the dedicated Updates tab, not duplicated in Chats.
 
   // Improve native stories modal without replacing the existing server-bound feed.
   stories.classList.add('luo-updates-dialog');
