@@ -166,6 +166,16 @@ const settingsUi=installSettings({win:window,db,$,note,getUser:()=>user,getProfi
 let workspace;
 const privacyLock=installPrivacyLock({win:window,db,$,getUser:()=>user,note});
 const stories=installStories({win:window,db,$,getUser:()=>user,note});
+// Delegated, capture-phase mobile Stories shortcut. UI layers may stop bubbling
+// and the old hidden #openStories is not itself a navigational control.
+document.addEventListener('click',event=>{
+ const button=event.target.closest?.('#luoApprovedNav button[data-target="updates"]');
+ if(!button||!user)return;
+ window.setTimeout(()=>{
+  if(!user||!document.querySelector('.app[data-screen="home"]')||$('storiesDialog')?.open)return;
+  if(typeof $('openStories')?.onclick==='function')void $('openStories').onclick();
+ },120);
+},true);
 const deviceNotifications=installDeviceNotifications({win:window});
 const deviceAccess=installDeviceAccess({win:window,$,getUser:()=>user,getCurrent:()=>current,setFile:file=>{selectedFile=file;showFile()},note});
 const fileEditor=installImageEditor({win:window,$,getUser:()=>user,getFile:()=>selectedFile,setFile:file=>{selectedFile=file;showFile()},note});
