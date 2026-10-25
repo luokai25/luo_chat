@@ -1,23 +1,21 @@
 # Release gates: implementation and verification progress
 
-25 October 2026. Development only; production, hosted SQL, auth settings,
-subscriptions and accounts were not modified. Base: `d4b3bbc80df61b5a416ad1d0adf3c687fd805145`.
+25 October 2026, updated after the age-12 and staging-isolation work. Development branch only; no production SQL, production deployment, production auth-settings, or real account changes. Earlier baseline: `d4b3bbc80df61b5a416ad1d0adf3c687fd805145`.
 
 ## Status of the four requested items
 
 | Gate | Work completed | What is still required |
 | --- | --- | --- |
 | Real two-device / cross-network / TURN | Existing temporary-credential implementation and call tests retained; physical acceptance procedure below | Two supported physical devices, two networks, an approved configured relay and operator participation. No hardware or remote RTP pass is claimed. |
-| Backend staging / migration validation | Actual Reels and inspection proposals applied together to isolated PGlite Postgres fixtures; permission, immutability, retry, feed and publication contracts tested. Live schema column types checked read-only. | A separate hosted staging project and a full baseline restore. Only production/default main exists. No billable branch created. Owner must choose organization before a new project can be created, even if the quote is $0. |
+| Backend staging / migration validation | Actual Reels and inspection proposals applied together to isolated PGlite Postgres fixtures; permission, immutability, retry, feed and publication contracts tested. Live schema column types checked read-only. | The separate project `luo-chat-staging` now exists, but its public schema and recorded migration history are both empty. Restore a reviewed complete schema and auth/storage permissions, then apply/test the proposals. Do not use live production credentials on previews. |
 | Trusted server-side upload inspection | Implemented bounded byte download, actual SHA-256, container/codec/dimension limits, native full decode, worker adapter/entry point, server-only receipts and a publication/immutable-storage SQL proposal | A working isolated worker host, reviewed generated migration, real Storage API acceptance, scheduling/retry/cleanup integration and activation. No live upload pipeline was silently switched. Coverage is Reel MP4/WebM, not every attachment format. |
 | Password security / final legal policies | Confirmed Free subscription and disabled leaked-password advisory; expanded original EULA with account/permission boundaries, content ownership, compatibility, deletion and mandatory-rights sections | Built-in leaked-password blocking requires Pro; no upgrade approved. Auth configuration mutation is not exposed by the connected tools. Legal identity/contact address, markets, retention/transfer decisions and qualified review remain necessary. |
 
 ## Confirmed infrastructure facts (read-only)
 
 - Organization `luo` (`echykfdiaqkxrslonpmh`) reports plan `free`.
-- The only project is `luo-chat`, `byjixqwpjvsgmqilmzbm`.
-- The branch list contains only default `main`, pointing at that same live project;
-  this is **not** a safe staging target.
+- Production is `luo-chat` (`byjixqwpjvsgmqilmzbm`). The separate hosted project `luo-chat-staging` (`itecovbwilcrvjqkdoyd`) is active with zero public tables and zero recorded migrations.
+- A separate GitHub feature branch `feature/reels-immersive-20261025` is used for development. Vercel branch-scoped preview variables `LUO_SUPABASE_URL` and `LUO_SUPABASE_KEY` point to staging, not production. Preview builds fail closed when the staging URL/key is absent. No production deployment was initiated.
 - Current public/internal inventories are 86 / 12 tables. The repository's old
   `supabase/schema-reference.json`, captured 20 October, lists 58 tables and two
   buckets. It is not a complete current restore baseline. Do not replay the
@@ -29,6 +27,14 @@ subscriptions and accounts were not modified. Base: `d4b3bbc80df61b5a416ad1d0adf
   password-strength check is not an equivalent server-enforced substitute.
 - No management token, service-role key or private media was fetched from the
   user's connected accounts for this work.
+
+## Age-12 and preview-isolation addendum
+
+- Minimum product age is **12**, with guardian verification required for **12–17**. Minors' actual enrollment remains suspended until legal/compliance review, genuine verification and child-safety features are operational. See `docs/MINIMUM_AGE_12.md`.
+- Implemented a local birthday age-band classifier, signup UI restrictions, server-side edge-function gate (not yet hosted), and unit/integration tests. Stored signup age metadata is **not** a trusted authorization claim.
+- Public Supabase Auth self-signup can bypass the edge function if enabled. Before enrolling minors, close that path in the isolated staging project and deploy a verified server-only registration workflow with durable guardian-consent records.
+- An isolated Vercel preview for this branch is configured using staging-only public credentials. The app will not be fully usable for new staging accounts before its schema/Storage baseline and Edge Functions have been reviewed and installed.
+- Native WebRTC simulated-call checks include real audio RTP and decoded video; these are not two physical devices on different networks or proof of TURN relay operation.
 
 ## New trusted-inspection implementation
 
