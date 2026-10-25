@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {transform} from 'esbuild';
 const content=file=>readFile(new URL('../workspace/'+file,import.meta.url),'utf8');
 test('Luo Workspace v2 only adds pages and preserves six original dashboard views',async()=>{
  const html=await content('index.html');
@@ -38,4 +39,16 @@ test('Independent Cloudflare deployment serves addon and keeps private data in t
  assert.match(source,/X-Robots-Tag/);
  assert.ok(!source.includes('service_role'));
  assert.ok(!source.includes('LUO_PAYPAL_LIVE_CLIENT_SECRET'));
+});
+
+test('Expanded dashboard JavaScript and Cloudflare worker source compile without external assets or credentials',async()=>{
+ const code=await content('insights.js');
+ const first=await transform(code,{loader:'js',format:'esm',target:'es2022'});
+ assert.ok(first.code.includes('luo-workspace:stats'));
+ const template=await content('cloudflare-worker-template.js');
+ let worker=template;
+ for(const key of ['html','css','app','insights'])
+  worker=worker.replace('const '+key+'=__'+key.toUpperCase()+'__;','const '+key+'="test";');
+ const second=await transform(worker,{loader:'js',format:'iife',target:'es2022'});
+ assert.ok(second.code.includes('insights.js'));
 });
