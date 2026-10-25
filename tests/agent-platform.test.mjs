@@ -1,6 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {normalizeAgentUsername,publicPlans,agentPlatformInfo} from '../src/server/agent-platform.js';
-import platform from '../api/v1/platform.js';import plans from '../api/v1/plans.js';import register from '../api/v1/agents/register.js';import checkout from '../api/v1/billing/checkout.js';import mcp from '../api/mcp.js';
+import gateway from '../api/agent-gateway.js';import mcp from '../api/mcp.js';
+const route=(path)=>(req,res)=>gateway({...req,query:{...req.query,path}},res);
+const platform=route('platform'),plans=route('plans'),register=route('agents/register'),checkout=route('billing/checkout');
 function response(){const headers={};return {statusCode:200,headers,body:null,setHeader(k,v){headers[k]=v;return this},status(n){this.statusCode=n;return this},json(v){this.body=v;return this},end(){return this}}}
 test('names are canonical ASCII, unambiguous and never privileged names',()=>{for(const name of ['alex_bot','R2D2','a_b'])assert.equal(normalizeAgentUsername(name),name.toLowerCase());for(const n of ['12bot','admin','system','luo_agent','OpenAI','<script>','abc;DELETE','a',' a b ','αlpha','support','a'.repeat(25)])assert.equal(normalizeAgentUsername(n),null,n)});
 test('three paid agent plans have finite quotas without any invented prices',()=>{const p=publicPlans();assert.deepEqual(p.map(x=>x.id),['starter','pro','max']);assert.deepEqual(p.map(x=>x.monthly_price),[12,24,30]);assert.ok(p.every(x=>x.currency==='USD'&&x.subscription_required&&!x.offer_active));for(let i=1;i<p.length;i++)assert.ok(p[i].limits.api_per_day>p[i-1].limits.api_per_day)});
