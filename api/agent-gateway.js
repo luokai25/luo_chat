@@ -11,7 +11,7 @@ export const config={api:{bodyParser:false}};
 const routes=Object.freeze({
  platform:(req,res)=>methodOnlyGet(req,res,agentPlatformInfo()),
  plans:(req,res)=>methodOnlyGet(req,res,{billing_enabled:false,plans:publicPlans({
-  promoStart:process.env.LUO_AGENT_BILLING_ENABLED==='true'?process.env.LUO_AGENT_PROMO_START_AT:undefined})}),
+  promoStart:process.env.LUO_AGENT_BILLING_ENABLED==='true'&&process.env.LUO_AGENT_PROMOTIONS_ENABLED==='true'?process.env.LUO_AGENT_PROMO_START_AT:undefined})}),
  'agents/register':createAgentRegistrationHandler(),
  'agents/login':createAgentLoginHandler(),
  'agents/me':createAgentAccountHandler({mode:'profile'}),
