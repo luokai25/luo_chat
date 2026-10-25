@@ -1,6 +1,24 @@
 import {timedFetch,readRequestJSON} from '../_shared/http.ts';
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.118.0';
 const origins=new Set(['https://luo-chat-luokai25.vercel.app']);
+// Signed grants can only be issued by an operator AFTER independent guardian
+// verification. Tokens bind to the requested email; do not store birth dates.
+async function verifyGuardianGrant(email:string,token:unknown){
+ if(Deno.env.get('LUO_MINOR_SIGNUP_ENABLED')!=='true')return false;
+ const secret=Deno.env.get('LUO_GUARDIAN_APPROVAL_SECRET')||'';
+ if(secret.length<32||secret.length>512||typeof token!=='string'||token.length>128)return false;
+ const match=/^v1\.([0-9]{10})\.([A-Za-z0-9_-]{43})$/.exec(token);
+ if(!match)return false;
+ const expiry=Number(match[1]),now=Math.floor(Date.now()/1000);
+ if(!Number.isSafeInteger(expiry)||expiry<=now||expiry>now+1800)return false;
+ try{
+  const raw=atob(match[2].replace(/-/g,'+').replace(/_/g,'/')+'=');
+  const signature=Uint8Array.from(raw,c=>c.charCodeAt(0));
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
+  return await crypto.subtle.verify('HMAC',key,signature,new TextEncoder().encode(email+'|12-17|'+match[1]));
+ }catch{return false}
+}
+
 function allowed(origin:string){return origins.has(origin)||/^https:\/\/luo-chat-luokai25-[a-z0-9]+-luokai25s-projects\.vercel\.app$/.test(origin)}
 Deno.serve(async req=>{
  const origin=req.headers.get('origin')||'';const headers={'Cache-Control':'no-store','Content-Type':'application/json','Vary':'Origin','Access-Control-Allow-Origin':allowed(origin)?origin:'https://luo-chat-luokai25.vercel.app','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Allow-Methods':'POST,OPTIONS'};
@@ -12,6 +30,13 @@ Deno.serve(async req=>{
  const body=await readRequestJSON(req),email=String(body.email||'').trim().toLowerCase(),action=String(body.action||'');
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)return reply(400,{error:'Enter a valid email.'});
  if(!['signup','reset','resend'].includes(action))return reply(400,{error:'Unknown action.'});
+  const ageBand=action==='signup'?String(body.age_band||''):null;
+  if(action==='signup'&&ageBand==='under12')return reply(403,{error:'Luo Chat has a minimum age of 12.'});
+  if(action==='signup'&&!['18+','12-17'].includes(ageBand||''))return reply(400,{error:'A valid age check is required for account creation.'});
+  if(action==='signup'&&ageBand==='12-17'){
+   if(Deno.env.get('LUO_MINOR_SIGNUP_ENABLED')!=='true')return reply(503,{error:'Guardian registration is not available until the safety review is complete.'});
+   if(!await verifyGuardianGrant(email,body.guardian_approval))return reply(403,{error:'Verified guardian approval is required for ages 12–17.'});
+  }
  const url=Deno.env.get('SUPABASE_URL')!,key=Deno.env.get('SUPABASE_ANON_KEY')!,serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
  const admin=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}}),client=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:timedFetch}});
  const ip=req.headers.get('cf-connecting-ip')||req.headers.get('x-real-ip')||(req.headers.get('x-forwarded-for')||'').split(',')[0].trim();
@@ -35,7 +60,7 @@ Deno.serve(async req=>{
   const username=String(body.username||'').trim().toLowerCase(),password=String(body.password||'');
   if(!/^[a-z0-9_]{3,24}$/.test(username)||password.length<8||password.length>128)return reply(400,{error:'Use a valid username and a password of 8–128 characters.'});
   const existing=await admin.from('profiles').select('id').eq('username',username).maybeSingle();if(existing.error)return reply(503,{error:'Profile lookup failed.'});if(existing.data)return reply(409,{error:'That username is already taken.'});
-  const {error}=await sendEmail(()=>client.auth.signUp({email,password,options:{emailRedirectTo:redirect,data:{username,display_name:username}}}));
+  const {error}=await sendEmail(()=>client.auth.signUp({email,password,options:{emailRedirectTo:redirect,data:{username,display_name:username,registration_age_band:ageBand}}}));
   const failure=emailFailure(error);if(failure)return failure;
   if(error)return reply(400,{error:'Account creation could not finish. Check your details or try again later.'});
  }else if(action==='reset'){
