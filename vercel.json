@@ -105,5 +105,11 @@
     }
   ],
   "name": "luo-chat-luokai25",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/agent-gateway?path=:path*"
+    }
+  ]
 }
