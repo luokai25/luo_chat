@@ -23,8 +23,8 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  const more=button('Load more',load,'luo-feed-more');root.append(list,feedback,more);output.append(root);
  if(clipsOnly){
   const top=el('nav','luo-reels-top');top.setAttribute('aria-label','Clip navigation');
-  top.append(button('Back to Social',()=>onNavigate?.('feed'),'luo-reels-back','arrow'),el('strong','','Reels'));
-  for(const [value,title]of [['public','Explore'],['friends','Friends']]){const b=button(title,()=>onMode?.(value),'luo-reels-tab');b.setAttribute('aria-pressed',String(mode===value));top.append(b)}
+  top.append(el('strong','','LUO · Clips'));
+  for(const [value,title] of [['public','Explore'],['public','Public'],['friends','Friends']]){const b=button(title,()=>onMode?.(value),'luo-reels-tab');b.setAttribute('aria-pressed',String(mode===value&&(title!=='Public')));b.title=title==='Explore'?'Browse public clips':title==='Public'?'All public clips':'Clips from friends';top.append(b)}
   const create=button('Create clip',()=>onNavigate?.('publish-clip'),'luo-reels-create');create.prepend(el('b','','+'));top.append(create);root.prepend(top);
  }
  const kinds=clipsOnly?['clip']:['post','clip'];
