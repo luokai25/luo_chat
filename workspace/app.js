@@ -12,6 +12,7 @@ const INTEGRATIONS=[
  {symbol:'◈',name:'Supabase',desc:'Live owner-only account, messaging, login and community metrics. Full user management opens securely in Supabase.',status:'Live metrics',url:'https://supabase.com/dashboard/project/byjixqwpjvsgmqilmzbm'},
  {symbol:'⌘',name:'GitHub',desc:'Recent workflows and build health from the Luo Chat repository, with release checks and source management.',status:'Live checks',url:'https://github.com/luokai25/luo_chat'},
  {symbol:'▲',name:'Vercel',desc:'Production web health and status. Release and deployment management stays inside the Vercel dashboard.',status:'Health only',url:'https://vercel.com/luokai25s-projects/luo-chat-luokai25'},
+ {symbol:'☁',name:'Cloudflare',desc:'Hosts this separate live Workspace dashboard through Workers. Manage deployments, routes and operational configuration.',status:'Live hosting',url:'https://dash.cloudflare.com/'},
  {symbol:'P',name:'PayPal Business',desc:'Three recurring plans: Standard, Pro and Maximum. Transaction totals and checkout are not connected here yet.',status:'Setup pending',url:'https://developer.paypal.com/dashboard/applications/'},
  {symbol:'✉',name:'Resend',desc:'Email delivery and inbox integration. Connect delivery monitoring and message metrics when configured.',status:'External console',url:'https://resend.com/overview'},
  {symbol:'◎',name:'Luo Chat',desc:'Open the live social and chat application, inspect real user-facing behavior, and test account flows.',status:'Public live site',url:'https://luo-chat-luokai25.vercel.app'},
