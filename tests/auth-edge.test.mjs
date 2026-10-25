@@ -1,7 +1,19 @@
 import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';import {transform} from 'esbuild';import {webcrypto} from 'node:crypto';
 const shared=(await transform((await readFile('supabase/functions/_shared/http.ts','utf8')).replaceAll('export ',''),{loader:'ts',target:'es2022'})).code;
 const auth=(await transform((await readFile('supabase/functions/luo-auth/index.ts','utf8')).replace(/^import .*;\n/gm,''),{loader:'ts',target:'es2022'})).code;
-function setup(allowed=true,authError=null){let handler;const calls=[];const send=async(name,email,args)=>{calls.push([name,email,args]);if(authError==='throw')throw Error('synthetic private provider detail');return{error:authError}};const db={rpc:async(name,args)=>{calls.push([name,args]);return{data:allowed}},from:()=>({select(){return this},eq(){return this},maybeSingle:async()=>({data:null})}),auth:{resetPasswordForEmail:(email,args)=>send('reset',email,args),resend:args=>send('resend',args.email,args),signUp:args=>send('signup',args.email,args)}};vm.runInNewContext(shared+'\n'+auth,{createClient:()=>db,Deno:{env:{get:()=> 'fixture'},serve:f=>handler=f},Response,Request,URL,TextEncoder,TextDecoder,Uint8Array,AbortSignal,crypto:webcrypto,setTimeout,clearTimeout,fetch});return{handler,calls}};
+function setup(allowed=true,authError=null){let handler;const calls=[];const send=async(name,email,args)=>{calls.push([name,email,args]);if(authError==='throw')throw Error('synthetic private provider detail');return{error:authError}};const db={rpc:async(name,args)=>{calls.push([name,args]);return{data:allowed}},from:()=>({select(){return this},eq(){return this},maybeSingle:async()=>({data:null})}),auth:{resetPasswordForEmail:(email,args)=>send('reset',email,args),resend:args=>send('resend',args.email,args),signUp:args=>send('signup',args.email,args)}};vm.runInNewContext(shared+'\n'+auth,{createClient:()=>db,Deno:{env:{get:()=> 'fixture'},serve:f=>handler=f},Response,Request,URL,TextEncoder,TextDecoder,Uint8Array,AbortSignal,crypto:webcrypto,atob,setTimeout,clearTimeout,fetch});return{handler,calls}};
+
+test('age restrictions fail closed before rate limits or Auth provider signup',async()=>{
+ for(const [age_band,status] of [['under12',403],['12-17',503],['bogus',400],['',400]]){
+  const s=setup(),r=await s.handler(req({email:'minor@example.invalid',action:'signup',username:'minor',password:'test-password',age_band}));
+  assert.equal(r.status,status,'age group '+age_band);
+  assert.equal(s.calls.length,0,'unexpected backend mutation or rate-limit call');
+ }
+});
+test('adult registration includes age band and still passes server validation',async()=>{
+ const s=setup(),r=await s.handler(req({email:'adult@example.invalid',action:'signup',username:'adult',password:'test-password',age_band:'18+'}));
+ assert.equal(r.status,200);assert.equal(s.calls.find(c=>c[0]==='signup')[2].options.data.registration_age_band,'18+');
+});
 const req=(body,extra={})=>new Request('https://fixture.invalid',{method:'POST',headers:{'content-type':'application/json',origin:'https://luo-chat-luokai25.vercel.app','x-real-ip':'192.0.2.1',...extra},body:JSON.stringify(body)});
 test('auth rejects untrusted origins and oversized bodies before rate-limit RPCs',async()=>{for(const request of [req({email:'test@example.invalid',action:'reset'},{origin:'https://evil.invalid'}),req({data:'x'.repeat(17000)})]){const s=setup();assert.ok([400,403].includes((await s.handler(request)).status));assert.equal(s.calls.length,0)}});
 test('auth rate-limit failure returns 429 with retry advice and sends no email',async()=>{const s=setup(false),r=await s.handler(req({email:'test@example.invalid',action:'reset'}));assert.equal(r.status,429);assert.equal(r.headers.get('Retry-After'),'3600');assert.equal(s.calls.length,1);assert.equal(r.headers.get('Cache-Control'),'no-store')});
@@ -12,12 +24,12 @@ test('deletion rejects malformed and oversized JSON without password checks or m
 
 for(const action of ['signup','reset','resend']){
  test(action+' propagates provider throttling without leaking details',async()=>{
-  const s=setup(true,{status:429,message:'private provider details'}),r=await s.handler(req({email:'test@example.invalid',action,username:'testuser',password:'fixture-password'}));
+  const s=setup(true,{status:429,message:'private provider details'}),r=await s.handler(req({email:'test@example.invalid',action,username:'testuser',password:'fixture-password',age_band:'18+'}));
   assert.equal(r.status,429);assert.equal(r.headers.get('Retry-After'),'60');assert.equal(s.calls.filter(x=>x[0]===action).length,1);assert.doesNotMatch(await r.text(),/private provider details/);
  });
  test(action+' reports transport and SMTP setup failures instead of success',async()=>{
   for(const error of [{status:0},{status:503},{status:403,code:'email_address_not_authorized'},'throw']){
-   const s=setup(true,error),r=await s.handler(req({email:'test@example.invalid',action,username:'testuser',password:'fixture-password'}));
+   const s=setup(true,error),r=await s.handler(req({email:'test@example.invalid',action,username:'testuser',password:'fixture-password',age_band:'18+'}));
    assert.equal(r.status,503);assert.equal(s.calls.filter(x=>x[0]===action).length,1);assert.doesNotMatch(await r.text(),/synthetic private provider detail/);
   }
  });
