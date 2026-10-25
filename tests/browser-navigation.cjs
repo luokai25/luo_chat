@@ -41,6 +41,10 @@ async function setup(signedIn,width=390){
  });
  if(signedIn)await context.addInitScript(({me,token})=>localStorage.setItem('sb-byjixqwpjvsgmqilmzbm-auth-token',JSON.stringify({access_token:token,refresh_token:'fixture-refresh',expires_at:Math.floor(Date.now()/1000)+7200,expires_in:7200,token_type:'bearer',user:me})),{me,token});
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto(entry,{waitUntil:'networkidle',timeout:30000});
+ // Exercise the real privacy choice before navigating behind the consent sheet.
+ // Reject diagnostics by default; do not disable the banner or force-click through it.
+ const reject=page.getByRole('button',{name:'Reject optional'});
+ if(await reject.isVisible()){await reject.click();assert.equal(await page.locator('.luo-consent').isVisible(),false);}
 
  return {context,page,errors,requests,setRelationship:value=>relationship=value};
 }
