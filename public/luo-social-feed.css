@@ -131,3 +131,10 @@
 .luo-timeline-fields select{grid-column:1/-1}
 .luo-clip-timeline input[type=range]{width:100%;min-width:0}
 .luo-timeline-cancel[hidden]{display:none!important}
+
+/* Published Clip three-dot author controls stay in the bottom action sheet. */
+.luo-feed-comments .luo-clip-owner-edit{display:grid;gap:10px;padding:8px 14px 12px}
+.luo-feed-comments .luo-clip-owner-edit label{display:grid;gap:6px;font-size:13px;color:#ead5ae}
+.luo-feed-comments .luo-clip-owner-edit input,.luo-feed-comments .luo-clip-owner-edit textarea{width:100%;max-width:100%;min-height:44px;background:#191715;color:#f8f0e0;border:1px solid #80633b;border-radius:10px;padding:10px 12px;font:14px system-ui}
+.luo-feed-comments .luo-clip-owner-edit textarea{min-height:95px;resize:vertical}
+.luo-feed-comments .luo-clip-owner-delete{margin:8px 14px 18px;color:#f7bdbd;border:1px solid #814748}
