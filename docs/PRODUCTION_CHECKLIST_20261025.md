@@ -6,6 +6,10 @@ Later security continuation: [Expiring TURN credentials](TURN_SECURITY_READINESS
 Static password disclosure is fixed in development; real relay integration and
 expiry/renewal acceptance remain open.
 
+Subsequent progress on all four release gates, including the unactivated upload
+inspection implementation and confirmed Free-plan/legal/hardware blockers, is
+recorded in [Release gate progress](RELEASE_GATE_PROGRESS.md).
+
 ## Decision
 
 **Not yet approved for a general production release.** This continuation closes

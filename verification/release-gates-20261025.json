@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "d4b3bbc80df61b5a416ad1d0adf3c687fd805145",
+  "scope": "Development branch only; no production deployment, hosted SQL, private media download, auth/account changes, secret extraction or billing changes",
+  "automated_tests": {"passed": 507, "failed": 0, "new_default_tests": 19},
+  "native_inspection_fixture_test": {"passed": 1, "failed": 0, "formats": ["MP4/h264", "WebM/vp8"], "source": "Generated color video, not user uploads", "probe_and_full_decode": true, "operational_sandbox_certified": false},
+  "clean_builds": {"independent_lockfile_installs": 2, "matching_static_output_files": 119, "fresh_hosted_database_restore_verified": false},
+  "public_browser_checks": {"responsive_checks": 44, "page_exceptions": 0},
+  "sql_checks": {"actual_proposals_executed_locally": ["reels-social-v2.sql", "clip-inspection.sql"], "managed_services": "Minimal PGlite Auth/Storage fixtures, not a full Supabase clone", "inspection_contracts": ["Deny uninspected publication", "Worker-only receipt and metadata RPCs", "Bind storage object ID/version/owner", "Reject conflicting retries", "Server duration replaces browser claim", "Deny replacement/deletion/path reuse", "Volatile storage guard backstop"], "live_sql_applied": false},
+  "inspection_pipeline": {"max_bytes": 52428800, "max_duration_seconds": 90, "native_input_protocols": ["pipe"], "requires_os_sandbox_by_default": true, "unsafe_production_fallback": false, "worker_entry_point": "scripts/inspect-stored-clip.mjs", "activated_on_hosted_uploads": false, "antivirus_certification": false, "all_attachment_formats_covered": false},
+  "sandbox_smoke_test": {"passed": false, "reason": "bwrap cannot access required namespace entry /proc/5/ns/ns in this environment", "permission_bypass_attempted": false, "untrusted_media_processed_unsandboxed": false},
+  "live_read_only_findings": {"organization": "luo", "plan": "free", "projects": 1, "nonproduction_branches": 0, "public_tables": 86, "internal_tables": 12, "old_repository_schema_snapshot_tables": 58, "leaked_password_protection": "disabled; documented as Pro-plan feature"},
+  "legal": {"eula_expanded": true, "final_approved": false, "termly_or_termsfeed_generated": false, "cybersecurity_plugin": "Available skill describes a terminology/glossary assistant, not an EULA generator", "needs": ["Operator legal identity", "Public business/contact address", "Countries served and applicable legal decisions", "Retention/transfer details and qualified review"]},
+  "production_dependency_audit": {"known_vulnerabilities": 0},
+  "credential_scans": {"current_tree_patterns": "passed", "locally_reachable_historical_text_blobs": 883, "historical_pattern_findings": 0},
+  "remaining": ["Owner organization choice and zero-cost staging availability confirmation", "Complete current schema baseline and hosted migration/Storage integration validation", "Approved isolated native worker and scheduling/cleanup lifecycle", "Two supported physical devices on separate networks and a configured relay", "Affordable server-enforced password-security choice and authorized config access", "Final operator/legal facts and review"],
+  "report": "docs/RELEASE_GATE_PROGRESS.md"
+}

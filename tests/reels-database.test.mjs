@@ -12,15 +12,16 @@ test('proposed Reels SQL: isolated Postgres authorization and persistence contra
  const db=new PGlite();
  try{
  await db.exec(`
- create role anon nologin;create role authenticated nologin;
- create schema auth;create schema luo_internal;
+ create role anon nologin;create role authenticated nologin;create role service_role nologin bypassrls;
+ create schema auth;create schema luo_internal;create schema storage;
+ create table storage.objects(id uuid primary key,bucket_id text,name text,owner_id text,version text,metadata jsonb);
  create table auth.users(id uuid primary key);
  create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
  create table public.profiles(id uuid primary key,username text,display_name text,avatar_url text);
  create table public.conversations(id uuid primary key,kind text);
  create table public.conversation_members(conversation_id uuid,user_id uuid,primary key(conversation_id,user_id));
  create table public.chat_messages(id uuid primary key default gen_random_uuid(),conversation_id uuid,sender_id uuid,body text,client_operation_id text,unique(sender_id,client_operation_id));
- create table luo_internal.space_entries(id uuid primary key,owner_id uuid,kind text,published boolean,audience text,body text default '',created_at timestamptz default now());
+ create table luo_internal.space_entries(id uuid primary key,owner_id uuid,kind text,published boolean,audience text,body text default '',media jsonb default '[]',created_at timestamptz default now());
  create table luo_internal.space_responses(id uuid primary key,entry_id uuid references luo_internal.space_entries on delete cascade,user_id uuid,kind text,body text,data jsonb default '{}',created_at timestamptz default now());
  create table luo_internal.space_limits(user_id uuid,slot timestamptz,uses int,primary key(user_id,slot));
  create function luo_internal.space_blocked(a uuid,b uuid) returns boolean language sql stable as $$select (a='${D}' or b='${D}') and a<>b$$;
@@ -41,6 +42,9 @@ test('proposed Reels SQL: isolated Postgres authorization and persistence contra
  insert into public.conversation_members values('${AB}','${A}'),('${AB}','${B}'),('${BC}','${B}'),('${BC}','${C}');
  `);
  await db.exec(await readFile('supabase/proposals/reels-social-v2.sql','utf8'));
+ // Validate that both actual proposals coexist. Managed Auth/Storage services
+ // remain minimal fixtures, not a hosted schema restore certification.
+ await db.exec(await readFile('supabase/proposals/clip-inspection.sql','utf8'));
  const as=async actor=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify(actor?{sub:actor,role:'authenticated'}:{})]);await db.exec('set role authenticated')};
  const call=async(action,input={})=>(await db.query('select public.luo_reels($1,$2::jsonb) result',[action,JSON.stringify(input)])).rows[0].result;
  await t.test('anonymous and missing-identity calls denied; direct private table access denied',async()=>{
@@ -94,7 +98,12 @@ test('proposed Reels SQL: isolated Postgres authorization and persistence contra
  });
  await t.test('equal-timestamp feed and comment cursors traverse all rows without duplicates',async()=>{
   await db.exec('reset role');
-  for(let n=1;n<=25;n++)await db.query("insert into luo_internal.space_entries(id,owner_id,kind,published,audience,created_at) values($1,$2,'clip',true,'public','2026-10-25 00:00:00.123456+00')",['50000000-0000-4000-8000-'+String(n).padStart(12,'0'),A]);
+  for(let n=1;n<=25;n++){
+   const entry='50000000-0000-4000-8000-'+String(n).padStart(12,'0'),path=A+'/'+entry+'/'+entry+'.mp4';
+   await db.query("insert into storage.objects values($1,'luo-social',$2,$3,'fixture-v1','{\"size\":1234,\"mimetype\":\"video/mp4\"}')",[entry,path,A]);
+   await db.query('select public.record_luo_clip_inspection($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[path,entry,'fixture-v1','a'.repeat(64),1234,.4,64,96,'video/mp4','luo-reel-v1']);
+   await db.query("insert into luo_internal.space_entries(id,owner_id,kind,published,audience,media,created_at) values($1,$2,'clip',true,'public',$3,'2026-10-25 00:00:00.123456+00')",[entry,A,JSON.stringify([{path,duration:.4}])]);
+  }
   for(let n=20;n<75;n++)await db.query("insert into luo_internal.space_responses(id,entry_id,user_id,kind,body) values($1,$2,$3,'comment','Pagination fixture')",[id(n),PUBLIC,B]);
   await as(B);const first=await call('feed',{mode:'explore'});assert.equal(first.length,20);const last=first.at(-1),second=await call('feed',{mode:'explore',before:last.created_at,before_id:last.id});assert.equal(new Set([...first,...second].map(r=>r.id)).size,26);
   const comments=await call('comments',{id:PUBLIC});assert.equal(comments.length,50);const rest=await call('comments',{id:PUBLIC,after:comments.at(-1).id});assert.equal(new Set([...comments,...rest].map(r=>r.id)).size,56);
