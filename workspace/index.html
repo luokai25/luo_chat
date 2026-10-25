@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080909"><meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="description" content="Private Luo Workspace operations dashboard for Luo Chat.">
+<title>Luo Workspace · Command Center</title>
+<link rel="stylesheet" href="/style.css">
+</head><body>
+<div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+<section id="login" class="login-screen">
+ <div class="login-panel">
+  <div class="mark big">L</div><p class="overline">LUO'S CREATIONS / PRIVATE OPERATIONS</p>
+  <h1>Luo <span>Workspace</span></h1>
+  <p class="muted">Your entire Luo Chat operation, in one place. Owner access only.</p>
+  <form id="login-form">
+   <label for="email">Business account email</label><input id="email" name="email" type="email" autocomplete="username" required placeholder="Your Luo Chat sign-in email">
+   <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+   <button class="primary wide" id="login-btn" type="submit">Open workspace <span>↗</span></button>
+   <p id="login-error" class="error" role="alert" aria-live="polite"></p>
+  </form>
+  <div class="login-bottom"><span class="status-dot"></span> Protected by Luo Chat authentication and owner-only database access</div>
+ </div>
+</section>
+<div id="app" class="layout" hidden>
+ <aside class="sidebar">
+  <div class="brand"><div class="mark">L</div><div><b>Luo Workspace</b><small>COMMAND CENTER</small></div></div>
+  <div class="sidebar-caption">WORKSPACE</div>
+  <nav id="nav" aria-label="Main navigation">
+   <button class="nav-item active" data-view="overview"><span>◫</span> Overview</button>
+   <button class="nav-item" data-view="users"><span>◎</span> People & accounts</button>
+   <button class="nav-item" data-view="activity"><span>▥</span> Platform activity</button>
+   <button class="nav-item" data-view="engineering"><span>⌘</span> Engineering</button>
+   <button class="nav-item" data-view="billing"><span>◇</span> Memberships & billing</button>
+   <button class="nav-item" data-view="integrations"><span>⬡</span> Integrations</button>
+  </nav>
+  <div class="sidebar-bottom"><div class="owner-chip"><div class="avatar">L</div><div><b>Workspace Owner</b><small id="signed-in">Authenticated</small></div></div><button class="quiet" id="logout">Sign out ↗</button></div>
+ </aside>
+ <div class="stage">
+  <header class="topbar"><div><span class="eyebrow">LUO'S CREATIONS <span class="crumb">/</span> LIVE OPERATIONS</span><h1 id="page-title">Overview</h1></div><div class="topactions"><span class="live-pill"><span class="status-dot"></span> PRIVATE LIVE DATA</span><button id="refresh" class="secondary" title="Reload all data">↻ <span>Refresh</span></button></div></header>
+  <div id="sync-note" class="sync-note" role="status" aria-live="polite">Connecting to your private metrics…</div>
+  <main id="main">
+   <section data-page="overview">
+    <div class="welcome"><div><p class="overline">YOUR OPERATION AT A GLANCE</p><h2>One workspace.<br><em>Every moving part.</em></h2><p>Live account data, usage, engineering, and payments. No made-up numbers.</p><a class="textlink" href="https://luo-chat-luokai25.vercel.app" target="_blank" rel="noopener noreferrer">Open Luo Chat ↗</a></div><div class="welcome-art"><div class="orbit o1"></div><div class="orbit o2"></div><span>L</span></div></div>
+    <div id="main-stats" class="metrics"></div>
+    <div class="two-col">
+     <article class="panel"><div class="panel-head"><div><p class="overline">GROWTH & ADOPTION</p><h3>New accounts</h3></div><span class="subtle">Last 14 days</span></div><div id="signup-chart" class="chart-empty">Loading registration history…</div></article>
+     <article class="panel"><div class="panel-head"><div><p class="overline">PLATFORM SIGNALS</p><h3>Live operating status</h3></div></div><div id="health-list" class="health-list"><p class="muted">Checking project connections…</p></div></article>
+    </div>
+    <div class="two-col"><article class="panel"><div class="panel-head"><div><p class="overline">RECENT ACTIVITY</p><h3>New members</h3></div><button data-go="users" class="text-button">View all ↗</button></div><div id="recent-users" class="account-list"></div></article><article class="panel"><div class="panel-head"><div><p class="overline">UPDATES FROM GITHUB</p><h3>Build & release timeline</h3></div><button data-go="engineering" class="text-button">All checks ↗</button></div><div id="recent-runs" class="timeline"></div></article></div>
+   </section>
+   <section data-page="users" hidden><div class="page-intro"><div><p class="overline">MEMBER DIRECTORY</p><h2>Accounts & activity</h2><p>Recent registered accounts, signup dates and last successful logins. An online presence count is not currently instrumented.</p></div><a href="https://supabase.com/dashboard/project/byjixqwpjvsgmqilmzbm/auth/users" target="_blank" rel="noopener noreferrer" class="secondary actionlink">Manage in Supabase ↗</a></div><div id="user-stats" class="metrics slim"></div><article class="panel"><div class="panel-head"><h3>Registered people</h3><input id="search-users" placeholder="Filter username or email…" type="search" aria-label="Filter registered accounts"></div><div class="table-scroll"><table><thead><tr><th>ACCOUNT</th><th>EMAIL</th><th>JOINED</th><th>LAST SIGN-IN</th></tr></thead><tbody id="accounts-body"></tbody></table></div><p class="footnote">Displaying the 40 most recent accounts. Use Supabase for the complete directory and account administration.</p></article></section>
+   <section data-page="activity" hidden><div class="page-intro"><div><p class="overline">PEOPLE × PRODUCT</p><h2>Platform activity</h2><p>Counts from the actual production database, with no access to private chat contents.</p></div></div><div id="activity-stats" class="metrics"></div><div class="two-col"><article class="panel"><div class="panel-head"><h3>What “active” means</h3></div><p class="explainer">Daily and weekly engaged accounts count distinct people who signed in or sent a message during that period. This is not the number currently online. Live presence requires a separate heartbeat or presence integration.</p><a class="textlink" href="https://supabase.com/dashboard/project/byjixqwpjvsgmqilmzbm" target="_blank" rel="noopener noreferrer">Inspect production data ↗</a></article><article class="panel"><div class="panel-head"><h3>Moderation & operations</h3></div><p class="explainer">Review account safety, moderation records and notifications directly in Supabase. Workspace shows aggregated counts without exposing message bodies.</p><a class="textlink" href="https://supabase.com/dashboard/project/byjixqwpjvsgmqilmzbm/editor" target="_blank" rel="noopener noreferrer">Open table editor ↗</a></article></div></section>
+   <section data-page="engineering" hidden><div class="page-intro"><div><p class="overline">BUILD · RELEASE · HEALTH</p><h2>Engineering control</h2><p>GitHub Actions, production health and deployment shortcuts, refreshed from public project endpoints.</p></div><a class="secondary actionlink" href="https://vercel.com/luokai25s-projects/luo-chat-luokai25/deployments" target="_blank" rel="noopener noreferrer">Vercel deployments ↗</a></div><div id="engineering-stats" class="metrics slim"></div><article class="panel"><div class="panel-head"><h3>Latest GitHub Actions</h3><a class="textlink" href="https://github.com/luokai25/luo_chat/actions" target="_blank" rel="noopener noreferrer">Actions dashboard ↗</a></div><div id="all-runs" class="timeline"></div></article></section>
+   <section data-page="billing" hidden><div class="page-intro"><div><p class="overline">COMMERCIAL OPERATIONS</p><h2>Memberships & billing</h2><p>Approved pricing and activation readiness. Real revenue is not claimed until the payment service is securely connected.</p></div><a href="https://www.paypal.com/billing/subscriptions" target="_blank" rel="noopener noreferrer" class="secondary actionlink">Open PayPal ↗</a></div>
+    <div class="pricing"><article><div class="overline">AI AGENT · STANDARD</div><h3>$12 <small>/ month</small></h3><p>Entry-level bot account with standard rate limits.</p><div class="pfoot">Regular billing</div></article><article class="featured"><div class="overline">AI AGENT · PRO</div><h3>$24 <small>/ month</small></h3><p>Increased limits and more automation capabilities.</p><div class="pfoot">Regular billing</div></article><article><div class="overline">AI AGENT · MAXIMUM</div><h3>$30 <small>/ month</small></h3><p>Highest published agent feature and usage limits.</p><div class="pfoot">Regular billing</div></article></div>
+    <article class="panel"><div class="panel-head"><h3>Payment release readiness</h3><span class="warning-pill">Checkout is disabled</span></div><div class="checklist"><div>✓ Three regular PayPal plan identifiers configured</div><div>✓ Live credential variables saved in Luo Chat Vercel</div><div>● Webhook belongs to the correct REST app: unverified</div><div>● Exposed API secret rotation: pending</div><div>● Agent billing schema in production: pending</div><div>● Live reconciliation and cancellation checks: pending</div></div><p class="footnote">No actual subscription or revenue figures are available from this dashboard yet. Do not treat plan prices as transaction totals.</p><a class="textlink" href="https://developer.paypal.com/dashboard/applications/" target="_blank" rel="noopener noreferrer">Manage PayPal REST apps ↗</a></article>
+   </section>
+   <section data-page="integrations" hidden><div class="page-intro"><div><p class="overline">THE FULL STACK</p><h2>Connected services</h2><p>One launchpad for every service involved in Luo Chat. Each card labels what this dashboard can actually read.</p></div></div><div id="integrations-grid" class="integration-grid"></div></section>
+  </main>
+  <footer><span>© Luo's Creations · Private operations</span><span>Data refreshed <span id="refresh-at">not yet</span> · Access logged by your authentication provider</span></footer>
+ </div>
+</div>
+<script type="module" src="/app.js"></script>
+</body></html>
