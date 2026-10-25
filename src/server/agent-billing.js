@@ -3,20 +3,23 @@
 import {createClient} from '@supabase/supabase-js';
 import {normalizeAgentUsername,sendJson} from './agent-platform.js';
 import {quoteAgentPlan,approvedStripePriceId,approvedStripeCouponId} from './agent-pricing.js';
-const STAGING='https://itecovbwilcrvjqkdoyd.supabase.co';
-const BRANCH='feature/reels-immersive-20261025';
-const PREVIEW_HOST=/^luo-chat-luokai25-[a-z0-9]+-luokai25s-projects\.vercel\.app$/;
-const safeOrigin=(origin)=>{try{const u=new URL(origin);return u.protocol==='https:'&&PREVIEW_HOST.test(u.hostname)&&u.pathname==='/'&&u.search===''&&u.hash===''}catch{return false}};
+import {agentRuntime,agentCheckoutOrigin,paypalMerchantSettings} from './agent-environment.js';
+import {verifyLivePayPalPlans,verifyLivePayPalWebhook} from './paypal-live-preflight.js';
 export function checkoutReady(env,provider){
- if(env.VERCEL_ENV!=='preview'||env.VERCEL_GIT_COMMIT_REF!==BRANCH||env.LUO_AGENT_BILLING_ENABLED!=='true'
-    ||env.LUO_AGENT_STAGING_URL!==STAGING||typeof env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY!=='string'||env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY.length<32
-    ||typeof env.LUO_AGENT_STAGING_PUBLISHABLE_KEY!=='string'||env.LUO_AGENT_STAGING_PUBLISHABLE_KEY.length<30)return false;
- if(provider==='stripe')return typeof env.LUO_STRIPE_SECRET_KEY==='string'&&env.LUO_STRIPE_SECRET_KEY.startsWith('sk_test_')
-    &&['starter','pro','max'].every(plan=>!!approvedStripePriceId(env,plan));
- if(provider==='paypal')return env.LUO_PAYPAL_ENV==='sandbox'&&typeof env.LUO_PAYPAL_CLIENT_ID==='string'
-   &&env.LUO_PAYPAL_CLIENT_ID.length>12&&typeof env.LUO_PAYPAL_CLIENT_SECRET==='string'
-   &&env.LUO_PAYPAL_CLIENT_SECRET.length>20;
- return false;
+ const runtime=agentRuntime(env);
+ if(!runtime||env.LUO_AGENT_BILLING_ENABLED!=='true')return false;
+ if(provider==='stripe')return runtime.mode==='sandbox'
+  &&typeof env.LUO_STRIPE_SECRET_KEY==='string'&&env.LUO_STRIPE_SECRET_KEY.startsWith('sk_test_')
+  &&['starter','pro','max'].every(plan=>!!approvedStripePriceId(env,plan));
+ if(provider!=='paypal'||!paypalMerchantSettings(env))return false;
+ const base=['starter','pro','max'].every(plan=>!!paypalPlanId(env,plan,false));
+ if(!base)return false;
+ if(runtime.mode==='sandbox')return true;
+ return env.LUO_AGENT_LIVE_CHECKOUT_ENABLED==='true'
+  &&env.LUO_AGENT_LIVE_WEBHOOK_ENABLED==='true'
+  &&env.LUO_AGENT_PROMOTIONS_ENABLED!=='true'
+  &&typeof env.LUO_PAYPAL_LIVE_WEBHOOK_ID==='string'
+  &&/^[A-Za-z0-9]{12,48}$/.test(env.LUO_PAYPAL_LIVE_WEBHOOK_ID);
 }
 export function paypalPlanId(env,plan,promo){
  const tier={starter:'STANDARD',pro:'PRO',max:'MAXIMUM'}[plan];
@@ -50,8 +53,10 @@ async function fetchJson(fetcher,url,init){
  return body;
 }
 export async function paypalAccessToken(env,fetcher){
- const auth=Buffer.from(env.LUO_PAYPAL_CLIENT_ID+':'+env.LUO_PAYPAL_CLIENT_SECRET).toString('base64');
- const result=await fetchJson(fetcher,'https://api-m.sandbox.paypal.com/v1/oauth2/token',{
+ const merchant=paypalMerchantSettings(env);
+ if(!merchant)throw Error('PAYPAL_MERCHANT_NOT_CONFIGURED');
+ const auth=Buffer.from(merchant.clientId+':'+merchant.clientSecret).toString('base64');
+ const result=await fetchJson(fetcher,merchant.api+'/v1/oauth2/token',{
   method:'POST',headers:{Authorization:'Basic '+auth,'Content-Type':'application/x-www-form-urlencoded'},
   body:'grant_type=client_credentials'});
  if(typeof result.access_token!=='string'||result.access_token.length<20)throw Error('PAYPAL_AUTH_UNAVAILABLE');
@@ -71,12 +76,20 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
   const username=normalizeAgentUsername(input.username);
   if(!username||typeof input.password!=='string'||input.password.length<15||input.password.length>128
    ||!['starter','pro','max'].includes(input.plan))return jsonError(res,400,'INVALID_CHECKOUT');
-  const expectedOrigin='https://'+req.headers?.host+'/';
-  if(!safeOrigin(expectedOrigin)||req.headers?.origin&&req.headers.origin!==expectedOrigin.slice(0,-1)
+  const expectedOrigin=agentCheckoutOrigin(req,env);
+  if(!expectedOrigin||req.headers?.origin&&req.headers.origin!==expectedOrigin.slice(0,-1)
     ||req.headers?.['sec-fetch-site']==='cross-site')return jsonError(res,403,'UNTRUSTED_ORIGIN');
-  const db=clientFactory(STAGING,env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+  const runtime=agentRuntime(env);
+  const db=clientFactory(runtime.url,runtime.serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
   try{
-   const auth=clientFactory(STAGING,env.LUO_AGENT_STAGING_PUBLISHABLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+   // Check the merchant's actual Live plan prices and same-app webhook
+   // before reserving a checkout or contacting the processor to charge.
+   if(runtime.mode==='live'){
+    const prices=await verifyLivePayPalPlans({env,fetcher});
+    const webhook=await verifyLivePayPalWebhook({env,fetcher});
+    if(!prices.ok||!webhook.ok)return jsonError(res,503,'LIVE_PAYPAL_PREFLIGHT_FAILED');
+   }
+   const auth=clientFactory(runtime.url,runtime.publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
    const signed=await auth.auth.signInWithPassword({email:'agent+'+username+'@agents.luo.invalid',password:input.password});
    if(signed.error||!signed.data?.user?.id)return jsonError(res,401,'INVALID_CREDENTIALS');
    const quote=quoteAgentPlan(input.plan,{now:now(),promoStart:env.LUO_AGENT_PROMOTIONS_ENABLED==='true'?env.LUO_AGENT_PROMO_START_AT:undefined});
@@ -109,18 +122,18 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
    }else{
     const accessToken=await paypalAccessToken(env,fetcher);
     if(i.existing_reference){
-     const sub=await fetchJson(fetcher,'https://api-m.sandbox.paypal.com/v1/billing/subscriptions/'+encodeURIComponent(i.existing_reference),{headers:{Authorization:'Bearer '+accessToken}});
+     const sub=await fetchJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions/'+encodeURIComponent(i.existing_reference),{headers:{Authorization:'Bearer '+accessToken}});
      if(sub.custom_id!==i.intent_id)throw Error('CHECKOUT_NOT_REUSABLE');
      approval=sub.links?.find(v=>v.rel==='approve')?.href;external=i.existing_reference;
     }else{
-     const sub=await fetchJson(fetcher,'https://api-m.sandbox.paypal.com/v1/billing/subscriptions',{
+     const sub=await fetchJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions',{
       method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json','PayPal-Request-Id':i.intent_id},
       body:JSON.stringify({plan_id:paypalPlanId(env,input.plan,i.promo),custom_id:i.intent_id,
        application_context:{brand_name:'Luo Chat',user_action:'SUBSCRIBE_NOW',
        return_url:expectedOrigin+'agents?checkout=processing',cancel_url:expectedOrigin+'agents?checkout=canceled'}})});
      approval=sub.links?.find(v=>v.rel==='approve')?.href;external=sub.id;
     }
-    if(typeof external!=='string'||!/^I-[A-Za-z0-9]{8,}$/.test(external)||typeof approval!=='string'||!approval.startsWith('https://www.sandbox.paypal.com/'))throw Error('PAYPAL_RESPONSE_INVALID');
+    if(typeof external!=='string'||!/^I-[A-Za-z0-9]{8,}$/.test(external)||typeof approval!=='string'||!approval.startsWith(paypalMerchantSettings(env).approval))throw Error('PAYPAL_RESPONSE_INVALID');
    }
    const bound=await db.rpc('luo_agent_attach_checkout',{p_intent:i.intent_id,p_reference:external});
    if(bound.error||bound.data!==true)throw Error('CHECKOUT_BIND_FAILED');
