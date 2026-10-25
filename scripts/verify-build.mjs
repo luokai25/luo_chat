@@ -26,6 +26,7 @@ assert.equal(names.length,50);assert.ok(names.every(n=>/^luo50-(?:0[1-9]|[1-4][0
 for(let i=1;i<=50;i++)await access('dist/stickers/luo-family/luo50-'+String(i).padStart(2,'0')+'.png');
 const appPath=html.match(/src="(\/app-[A-Z0-9]+\.js)"/)?.[1];assert.ok(appPath);
 const app=await readFile('dist'+appPath,'utf8');
+for(const name of ['LUO_TURN_SHARED_SECRET','LUO_TURN_PASSWORD','LUO_RELAY_QUOTA_SALT','UPSTASH_REDIS_REST_TOKEN'])assert.ok(!app.includes(name),'Server credential code must not be bundled into the browser: '+name);
 assert.equal(appPath,'/app-'+createHash('sha256').update(app).digest('hex').slice(0,16).toUpperCase()+'.js','App filename must address emitted bytes, not a source-path-dependent graph hash');
 assert.deepEqual((await readdir('dist')).filter(name=>/^app-[A-Z0-9]+\.js$/.test(name)),[appPath.slice(1)],'Only the referenced app bundle may be packaged');
 assert.ok(app.includes('luo50-01')&&app.includes('luo50-50'));

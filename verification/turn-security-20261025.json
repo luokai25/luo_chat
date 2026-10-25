@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "105e6dcb2678ca7917a7c2f8994a3f55b2e1adee",
+  "scope": "Development branch only; no production, cloud, account, environment, hosted SQL or APK changes",
+  "plugin": {"requested": "cybersecurity", "executable_tools_or_skills_exposed": false, "directory_search_result": "No result for requested name", "plugin_scan_ran": false},
+  "confirmed_defect_fixed": "Static configured TURN passwords could be reused outside the app; source now only issues expiring TURN REST credentials after remote auth and shared quota checks",
+  "temporary_credentials": {"ttl_seconds": 3600, "random_tag_bits": 96, "mac": "HMAC-SHA1/base64 per TURN REST protocol", "shared_secret_in_response": false, "raw_user_id_in_response": false, "single_use": false, "legacy_static_config_accepted": false},
+  "automated_tests": {"passed": 488, "failed": 0, "new": 7},
+  "clean_builds": {"independent_lockfile_installs": 2, "matching_static_dist_files": 119, "hosted_vercel_api_bundle_certified": false, "fresh_database_restore_verified": false},
+  "native_browser_regressions": {"call_ui_and_media_effects": "Passed; real native media rendering with fixture transport, not remote RTP", "call_page_exceptions": 0, "public_page_responsive_checks": 44, "public_page_exceptions": 0},
+  "dependency_audit": {"known_production_vulnerabilities": 0},
+  "secret_scans": {"current_tree_patterns": "Passed", "historical_text_blobs": 874, "historical_findings": 0, "scope": "Heuristic patterns and locally reachable history, not provider secret scanning"},
+  "remaining_gates": ["Approved free TURN REST relay configuration and shared secrets", "Provider authentication, expiry, bandwidth and allocation quota acceptance", "Active-call credential renewal and ICE restart", "Physical-device and cross-network RTP", "Trusted upload inspection and backend staging", "Hosted leaked-password protection", "Provider billing caps, legal review and other previously documented gates"],
+  "report": "docs/TURN_SECURITY_READINESS.md"
+}

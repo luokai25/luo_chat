@@ -2,6 +2,10 @@
 
 Checked 25 October 2026. Development branch only. Production is unchanged.
 
+Later security continuation: [Expiring TURN credentials](TURN_SECURITY_READINESS.md).
+Static password disclosure is fixed in development; real relay integration and
+expiry/renewal acceptance remain open.
+
 ## Decision
 
 **Not yet approved for a general production release.** This continuation closes
@@ -19,7 +23,7 @@ opinion, Search Console verification or a claim that every requested feature shi
 | P1 legal gate | Operator address/jurisdiction, retention schedule, legal bases and transfer details have not been supplied/verified | Finalize `scripts/site-content.mjs` through owner-controlled Termly/TermsFeed questionnaire or qualified review. Complete consent/version acceptance and store-distribution requirements before installed-app release. Do not publish draft text as certified compliance. |
 | P2 audit gate | 70 authenticated table grants and 75 authenticated SECURITY DEFINER warnings | Review table RLS and every RPC body/role with adversarial account fixtures; do not blindly revoke intentional application APIs. See database snapshot below. |
 | P2 configuration gate | Relay quota salt/configuration absent; live spend caps not verified | Configure `LUO_RELAY_QUOTA_SALT` server-only alongside existing Redis credentials before enabling TURN. Confirm free-plan limits, billing alerts and any hard cap with the owner; app quotas are not provider billing caps. |
-| P1 relay credential gate | Existing relay config design returns static TURN credentials to authenticated clients when configured | Before enabling a relay, replace static `LUO_TURN_USER/PASSWORD` disclosure in `api/call-config.js` with provider-supported expiring credentials; validate expiry/renewal and relay bandwidth quotas. Config-request rate limits alone cannot prevent an authorized user reusing long-lived credentials. No live TURN credentials were configured or fetched. |
+| Fixed in development; relay acceptance gate remains | Static TURN password disclosure replaced by expiring credentials | `src/server/turn-credentials.js` and `api/call-config.js` now require TURN REST shared-secret configuration, auth and quota before issuance. Validate real-provider authentication, expiry/renewal and bandwidth quotas before enabling. No live TURN configuration was changed. See `TURN_SECURITY_READINESS.md`. |
 | P2 UX/device gate | Desktop responsive simulation is not Android/iOS certification | Complete mobile permissions, Bluetooth, actual audio/video exports, background/lock and accessibility acceptance. Hide unfinished AR/native calling tools instead of advertising them. |
 | P2 SEO gate | Existing Google verification tag is preserved, but owner status is not accessible through the connected tools | Owner must confirm exact-host URL-prefix ownership in Search Console and submit the reviewed deployed sitemap. A tag in source does not prove successful verification. |
 
