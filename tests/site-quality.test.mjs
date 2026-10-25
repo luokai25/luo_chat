@@ -14,7 +14,7 @@ test('all generated public pages have unique metadata, canonical clean slugs, on
     for(const e of d.querySelectorAll('[href],[src]')){const raw=e.getAttribute('href')||e.getAttribute('src');if(!raw.startsWith('/'))continue;const p=new URL(raw,SITE).pathname;if(p==='/')continue;if(p==='/app.js')continue;try{await access(dir+p)}catch{await access(dir+p+'.html')}}
    }finally{dom.window.close()}
   }
-  const sitemap=new JSDOM(await readFile(dir+'/sitemap.xml','utf8'),{contentType:'application/xml'});assert.equal(sitemap.window.document.querySelectorAll('loc').length,11);for(const loc of sitemap.window.document.querySelectorAll('loc'))assert.ok(!loc.textContent.endsWith('.html'));sitemap.window.close();
+  const sitemap=new JSDOM(await readFile(dir+'/sitemap.xml','utf8'),{contentType:'application/xml'});assert.equal(sitemap.window.document.querySelectorAll('loc').length,12);for(const loc of sitemap.window.document.querySelectorAll('loc'))assert.ok(!loc.textContent.endsWith('.html'));sitemap.window.close();
   const png=await readFile(dir+'/og-image.png');assert.equal(png.readUInt32BE(16),1200);assert.equal(png.readUInt32BE(20),630);assert.ok(compressPNG(png).length<=png.length);
  }finally{await rm(dir,{recursive:true,force:true})}
 });
