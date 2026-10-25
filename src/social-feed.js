@@ -52,7 +52,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
   const article=el('article','luo-feed-card luo-feed-'+item.kind);article.dataset.entryId=item.id;article.tabIndex=0;
   const author=item.author||{},head=el('header','luo-feed-author'),identity=button(author.display_name||'@'+(author.username||'Luo friend'),()=>visit(author.id||item.owner_id),'luo-feed-name');
   identity.append(el('small','','@'+(author.username||'luo')+' · '+date(item.created_at)));head.append(avatar(item),identity);
-  if(item.owner_id===owner)head.append(button('Delete post',async()=>{if(!win.confirm('Permanently delete this '+item.kind+'?'))return;await rpc('entry.delete',{id:item.id});if(!valid())return;media.get(article)?.video?.pause();observer?.unobserve(article);media.delete(article);article.remove()},'luo-feed-icon luo-feed-delete','close'));
+  if(item.owner_id===owner&&item.kind!=='clip')head.append(button('Delete post',async()=>{if(!win.confirm('Permanently delete this '+item.kind+'?'))return;await rpc('entry.delete',{id:item.id});if(!valid())return;media.get(article)?.video?.pause();observer?.unobserve(article);media.delete(article);article.remove()},'luo-feed-icon luo-feed-delete','close'));
   const stage=el('div','luo-feed-stage');stage.append(el('span','luo-feed-watermark','LUO'));
   const content=el('div','luo-feed-caption');if(item.title)content.append(el('h3','',item.title));if(item.body&&(item.kind==='clip'||item.media?.length)){const text=el('p','luo-feed-body',item.body);content.append(text);if(item.body.length>240){text.classList.add('luo-feed-clamped');content.append(button('Read more',b=>{text.classList.toggle('luo-feed-clamped');b.querySelector('span').textContent=text.classList.contains('luo-feed-clamped')?'Read more':'Show less'},'luo-feed-read'))}}
   if(item.kind==='post'&&!item.media?.length){stage.classList.add('luo-feed-text-stage');stage.append(el('span','luo-feed-quote','“'),el('p','luo-feed-text',item.body||item.title||'A moment from '+(author.username||'a friend')))}
@@ -138,11 +138,49 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
   sheet.showModal();
  }
  function openOptions(item){
-  openSheet('Clip options');const text=el('p','luo-feed-feedback','Only the author can remove a clip. Reports are sent to the existing moderation queue.');
-  const reason=el('textarea');reason.maxLength=500;reason.placeholder='Describe the problem';reason.setAttribute('aria-label','Report reason');reason.className='luo-report-reason';
-  sheet.append(text,reason,button('Submit report',async()=>{const body=reason.value.trim();if(body.length<3)throw Error('Describe the problem in at least three characters.');const ticket=commentRun;await rpc('response',{id:item.id,kind:'report',body,operation:win.crypto.randomUUID()});if(valid()&&sheet.open&&ticket===commentRun){text.textContent='Report submitted.';reason.value=''}},'luo-sheet-action'));
+  openSheet('Clip options');
+  if(item.owner_id===owner){
+   const description=el('p','luo-feed-feedback','Manage your published clip. Video and audience remain unchanged.');
+   const form=el('form','luo-clip-owner-edit'),titleLabel=el('label','','Video title'),captionLabel=el('label','','Caption');
+   const title=el('input'),caption=el('textarea'),feedback=el('p','luo-feed-feedback');
+   title.type='text';title.maxLength=160;title.value=item.title||'';title.setAttribute('aria-label','Edit clip title');
+   caption.maxLength=4000;caption.value=item.body||'';caption.setAttribute('aria-label','Edit clip caption');
+   titleLabel.append(title);captionLabel.append(caption);feedback.setAttribute('role','status');
+   const save=el('button','luo-sheet-action','Save changes');save.type='submit';form.append(titleLabel,captionLabel,save);
+   form.onsubmit=async ev=>{
+    ev.preventDefault();if(save.disabled||!valid())return;
+    const a=title.value.trim(),b=caption.value.trim();if((!a&&!b)||a.length>160||b.length>4000){feedback.textContent='Add a valid title or caption.';return}
+    save.disabled=true;
+    try{
+     const result=await deadline(db.rpc('luo_clip_edit',{target_clip:item.id,new_title:a,new_caption:b}));
+     if(result.error)throw Error(result.error.message);
+     if(!valid())return;
+     item.title=a;item.body=b;
+     const card=list.querySelector('[data-entry-id="'+item.id+'"]'),content=card?.querySelector('.luo-feed-caption');
+     if(content){let h=content.querySelector('h3'),p=content.querySelector('.luo-feed-body');if(h)h.textContent=a;else if(a)content.prepend(el('h3','',a));if(p)p.textContent=b;else if(b)content.append(el('p','luo-feed-body',b));if(!a)h?.remove();if(!b)p?.remove();}
+     closeComments();note('Clip updated.');
+    }catch(error){if(valid())feedback.textContent=error.message||'Could not save changes.'}
+    finally{save.disabled=false}
+   };
+   const remove=button('Delete video',async()=>{
+    if(!win.confirm('Permanently delete this video?'))return;
+    remove.disabled=true;
+    try{await rpc('entry.delete',{id:item.id});if(!valid())return;
+     const card=list.querySelector('[data-entry-id="'+item.id+'"]');
+     if(card){media.get(card)?.video?.pause();observer?.unobserve(card);media.delete(card);card.remove()}
+     closeComments();note('Video deleted.');
+    }catch(error){if(valid())note(error.message||'Could not delete video.')}
+    finally{remove.disabled=false}
+   },'luo-sheet-action luo-clip-owner-delete');
+   sheet.append(description,form,feedback,remove);
+  }else{
+   const text=el('p','luo-feed-feedback','Report a clip to the moderation team.');
+   const reason=el('textarea');reason.maxLength=500;reason.placeholder='Describe the problem';reason.setAttribute('aria-label','Report reason');reason.className='luo-report-reason';
+   sheet.append(text,reason,button('Submit report',async()=>{const body=reason.value.trim();if(body.length<3)throw Error('Describe the problem in at least three characters.');const ticket=commentRun;await rpc('response',{id:item.id,kind:'report',body,operation:win.crypto.randomUUID()});if(valid()&&sheet.open&&ticket===commentRun){text.textContent='Report submitted.';reason.value=''}},'luo-sheet-action'));
+  }
   sheet.showModal();
-  const ticket=commentRun;extras?.ready().then(ready=>{if(ready&&valid()&&sheet.open&&ticket===commentRun)for(const [kind,title]of [['interested','Interested'],['hidden','Not interested']])sheet.append(button(title,()=>extras.preference(item,kind),'luo-sheet-action'))});
+  const ticket=commentRun;
+  if(item.owner_id!==owner)extras?.ready().then(ready=>{if(ready&&valid()&&sheet.open&&ticket===commentRun)for(const [kind,title]of [['interested','Interested'],['hidden','Not interested']])sheet.append(button(title,()=>extras.preference(item,kind),'luo-sheet-action'))});
  }
  async function openComments(item,onSent){
   if(extras&&await extras.ready())return extras.comments(item,onSent);
