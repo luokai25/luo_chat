@@ -1,5 +1,7 @@
 # Reel camera / saved-effects continuation
 
+The subsequent single-source split/reorder/export timeline increment is documented in `docs/CLIP_TIMELINE_READINESS.md`; this document records the preceding camera work.
+
 Date: 2026-10-25. Base commit: `3220b69de4fa7d86d80e21adcfaf7090794f19be`. Same development branch as Reels and calling. No production deployment, hosted SQL/configuration, accounts, icon change, new dependency, paid SDK or APK release.
 
 ## Built

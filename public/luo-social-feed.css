@@ -117,3 +117,17 @@
 .luo-camera-effects.luo-lenses-expanded .luo-effects-carousel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));justify-items:center;gap:12px}
 .luo-camera-effects p{font-size:11px;color:#e0d3b8}
 @media(prefers-reduced-motion:reduce){.luo-camera-hud *{animation:none!important;transition:none!important}}
+.luo-clip-timeline{width:100%;min-width:0;padding:12px;border:1px solid #8a6c37;border-radius:14px;background:#17130f}
+.luo-clip-timeline[hidden]{display:none!important}
+.luo-clip-timeline summary{min-height:44px;cursor:pointer;color:#f0cc83;font-weight:650}
+.luo-clip-timeline p{font-size:12px;line-height:1.5;color:#d2c2a5}
+.luo-timeline-strip{display:flex;overflow-x:auto;gap:8px;padding:10px 0;max-width:100%}
+.luo-timeline-strip button{flex:0 0 140px;min-height:68px;border:1px solid #73603e;background:linear-gradient(135deg,#44341c,#1d1913);border-radius:12px;color:#fff;white-space:normal;padding:10px;font-size:12px}
+.luo-timeline-strip [aria-pressed=true]{border:2px solid #f1c96e;background:#5c4424}
+.luo-timeline-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.luo-timeline-controls button,.luo-timeline-cancel{min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid #8a703e;background:#282015;color:#ffe2a2}
+.luo-timeline-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}
+.luo-timeline-fields label{min-width:0!important}
+.luo-timeline-fields select{grid-column:1/-1}
+.luo-clip-timeline input[type=range]{width:100%;min-width:0}
+.luo-timeline-cancel[hidden]{display:none!important}

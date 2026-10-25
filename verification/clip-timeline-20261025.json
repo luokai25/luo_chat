@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "beac82e00680ed7d2f76c88216ff23eab75a7e21",
+  "scope": "Development only; production, hosted backend, accounts, icon and APK unchanged",
+  "automated_tests": {"passed": 472, "failed": 0, "added": 12},
+  "timeline": {"sources": 1, "max_segments": 12, "undo_snapshots": 30, "editable_project_persisted": false, "drafts": "Apply timeline first, then save rendered video"},
+  "native_browser": {
+    "passed": true,
+    "source": "Generated red/blue/green video with source audio tone",
+    "encoder": "Real native MediaRecorder and canvas/captureStream, not a mock",
+    "checks": ["Split", "Reorder", "Delete", "Undo/redo", "Per-segment speed", "Actual green-first red-last saved video", "Non-silent saved source audio", "Publish and draft gate for unapplied edits", "Cancel retains project", "No remote writes"],
+    "viewports": [320, 390, 768, 1440],
+    "page_exceptions": 0,
+    "frame_accuracy_certified": false
+  },
+  "regressions": {"camera": "passed with real recording/export", "calls": "passed; fixture transport only", "reels": "passed including trim/export and native IndexedDB draft restore/cleanup"},
+  "clean_builds": {"frozen_allowlisted_input_snapshot": true, "independent_lockfile_installs": 2, "matching_output_files": 100, "earlier_observation": "One live-input comparison differed in index.html/sw.js; root cause not proved; diagnostic retention added"},
+  "production_dependency_audit": {"known_vulnerabilities": 0},
+  "credential_pattern_scan": {"passed": true, "text_files": 368},
+  "remaining": ["Multiple source files and true multi-track timeline", "Frame-accurate editing and transitions", "Timed overlays/music/captions", "Persisted editable projects", "Full-screen editor redesign", "Unified Photo/Story capture", "Advanced AR", "Actual-device codec/audio-sync/performance tests", "Backend staging and trusted media inspection", "Native background calling and remote RTP", "APK release"],
+  "report": "docs/CLIP_TIMELINE_READINESS.md"
+}
