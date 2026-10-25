@@ -1,4 +1,5 @@
 import {CALL_EFFECTS,createCallEffects} from './call-effects.js';
+import {createCallScreenShare} from './call-screen-share.js';
 
 // No media permissions on installation. All actions remain inside the live call dialog.
 export function installCallExperience({win,dialog,$,note}){
@@ -8,8 +9,10 @@ export function installCallExperience({win,dialog,$,note}){
  controls.innerHTML='<button type="button" id="callEffectsToggle" aria-controls="callEffectsSheet" aria-expanded="false">✧ Effects</button><button type="button" id="callAudioOutput">Audio output</button><button type="button" id="callHold" aria-pressed="false">Hold</button><button type="button" id="callFit" aria-pressed="false">Fill screen</button>';
  actions.before(controls);
  const playback=doc.createElement('button');playback.id='callPlayback';playback.type='button';playback.textContent='Play call audio';playback.hidden=true;controls.append(playback);$('callRemote').controls=false;
- playback.onclick=async()=>{if(!alive())return;try{await $('callRemote').play();playback.hidden=true}catch{if(alive())note('Tap Play call audio again, or check your browser sound permissions.')}};
+ playback.onclick=async()=>{if(!alive())return;const seq=revision;try{await $('callRemote').play();if(seq===revision&&alive())playback.hidden=true}catch{if(seq===revision&&alive())note('Tap Play call audio again, or check your browser sound permissions.')}};
  const network=doc.createElement('p');network.id='callNetwork';network.hidden=true;controls.before(network);
+ const shareButton=doc.createElement('button');shareButton.type='button';shareButton.id='callShareScreen';shareButton.textContent='Share screen';shareButton.title='The selected screen is visible to the other participant. Stop sharing returns to your camera, preserving camera-off and mute choices.';controls.append(shareButton);
+ const shareStatus=doc.createElement('p');shareStatus.id='callShareStatus';shareStatus.setAttribute('role','status');shareStatus.hidden=true;network.before(shareStatus);
  const sheet=doc.createElement('section');sheet.id='callEffectsSheet';sheet.hidden=true;sheet.setAttribute('aria-label','Live video effects');
  const heading=doc.createElement('div');heading.className='luo-effects-heading';
  const title=doc.createElement('strong');title.textContent='Live effects';
@@ -18,13 +21,13 @@ export function installCallExperience({win,dialog,$,note}){
  for(const effect of CALL_EFFECTS){const button=doc.createElement('button');button.type='button';button.dataset.effect=effect.id;button.textContent=effect.label;button.setAttribute('aria-pressed',String(effect.id==='original'));rail.append(button)}
  const hint=doc.createElement('p');hint.textContent='These colors are sent to the other person. Original restores full camera quality. Face masks and background replacement are not installed.';
  sheet.append(heading,rail,hint);dialog.append(sheet);
- let current=null,engine=null,held=false,outputBusy=false,revision=0;
+ let current=null,engine=null,sharing=null,held=false,cameraSwitch=false,outputBusy=false,revision=0;
  const alive=()=>current?.isCurrent()===true;
  function hide(){sheet.hidden=true;sheet.style.transform='';sheetDrag=null;$('callEffectsToggle').setAttribute('aria-expanded','false');}
  function selectState(){for(const button of rail.children)button.setAttribute('aria-pressed',String(button.dataset.effect===(engine?.effect||'original')));}
- function busy(value){for(const button of rail.children)button.disabled=value;$('switchCallCamera').disabled=value;}
- function syncEnabled(){if(!alive())return;const stream=current.getStream();stream.getAudioTracks().forEach(t=>t.enabled=!held&&$('muteCall').getAttribute('aria-pressed')!=='true');const enabled=!held&&$('cameraCall').getAttribute('aria-pressed')!=='true';stream.getVideoTracks().forEach(t=>t.enabled=enabled);engine?.setEnabled(enabled);}
- $('callEffectsToggle').onclick=()=>{if(!alive()||!engine)return;sheet.hidden=!sheet.hidden;$('callEffectsToggle').setAttribute('aria-expanded',String(!sheet.hidden));if(!sheet.hidden)rail.querySelector('[aria-pressed="true"]')?.focus()};
+ function busy(value){const shareBusy=sharing?.busy||sharing?.active,locked=value||cameraSwitch;for(const button of rail.children)button.disabled=locked||shareBusy;$('switchCallCamera').disabled=locked||shareBusy;$('callEffectsToggle').disabled=locked||shareBusy;shareButton.disabled=locked||!!sharing?.busy||(!sharing?.active&&current?.peer?.connectionState!=='connected');}
+ function syncEnabled(){if(!alive())return;const stream=current.getStream(),muted=$('muteCall').getAttribute('aria-pressed')==='true',cameraOff=$('cameraCall').getAttribute('aria-pressed')==='true';stream.getAudioTracks().forEach(t=>t.enabled=!held&&!muted);const enabled=!held&&!cameraOff;stream.getVideoTracks().forEach(t=>t.enabled=enabled&&!sharing?.active);engine?.setEnabled(enabled&&!sharing?.active);sharing?.setEnabled(enabled);$('muteCall').setAttribute('aria-label',muted?'Unmute microphone':'Mute microphone');const label=sharing?.active?(cameraOff?'Resume shared video':'Pause shared video'):(cameraOff?'Turn camera on':'Turn camera off');if($('cameraCall').getAttribute('aria-label')!==label){$('cameraCall').textContent=label;$('cameraCall').setAttribute('aria-label',label)}if(sharing?.active&&!sharing.busy&&!sharing.failed)shareStatus.textContent=enabled?'Sharing screen · your selected screen is visible to the other person.':'Screen sharing paused · resume video or leave Hold to continue.';}
+ $('callEffectsToggle').onclick=()=>{if(!alive()||!engine||sharing?.active||sharing?.busy)return;sheet.hidden=!sheet.hidden;$('callEffectsToggle').setAttribute('aria-expanded',String(!sheet.hidden));if(!sheet.hidden)rail.querySelector('[aria-pressed="true"]')?.focus()};
  close.onclick=()=>{hide();$('callEffectsToggle').focus()};
  sheet.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close.click()}if(['ArrowLeft','ArrowRight'].includes(event.key)){const buttons=[...rail.children],index=buttons.indexOf(doc.activeElement);if(index>=0){event.preventDefault();buttons[(index+(event.key==='ArrowRight'?1:buttons.length-1))%buttons.length].focus()}}});
  let sheetDrag=null;
@@ -33,10 +36,18 @@ export function installCallExperience({win,dialog,$,note}){
  heading.addEventListener('pointerup',event=>{if(sheetDrag?.id===event.pointerId){const dismiss=event.clientY-sheetDrag.y>60;sheetDrag=null;sheet.style.transform='';if(dismiss)close.click()}});
  heading.addEventListener('pointercancel',()=>{sheetDrag=null;sheet.style.transform=''});
  rail.onclick=async event=>{
-  const button=event.target.closest('[data-effect]');if(!button||!alive()||!engine||engine.busy||$('switchCallCamera').disabled)return;
+  const button=event.target.closest('[data-effect]');if(!button||!alive()||!engine||engine.busy||sharing?.active||sharing?.busy||$('switchCallCamera').disabled)return;
   const seq=revision,activeEngine=engine;busy(true);
   try{if(await activeEngine.select(button.dataset.effect)&&seq===revision){syncEnabled();selectState()}}
   catch(error){if(seq===revision)note(error.message)}finally{if(seq===revision)busy(false)}
+ };
+ shareButton.onclick=async()=>{
+  if(!alive()||!sharing||sharing.busy||engine?.busy)return;
+  if(!sharing.active&&(current.peer.connectionState!=='connected'||$('switchCallCamera').disabled))return;
+  const seq=revision,session=sharing;hide();
+  try{if(session.active)await session.finish();else await session.start()}
+  catch(error){if(seq===revision){const message=error.name==='NotAllowedError'?'Screen sharing was cancelled or permission was denied. Your camera call is unchanged.':error.message;$('callStatus').textContent=message;note(message)}}
+  finally{if(seq===revision){syncEnabled();busy(false)}}
  };
  $('callAudioOutput').onclick=async()=>{
   if(!alive()||outputBusy)return;
@@ -56,13 +67,23 @@ export function installCallExperience({win,dialog,$,note}){
  for(const type of ['pointerup','pointercancel','lostpointercapture'])local.addEventListener(type,()=>drag=null);
  local.addEventListener('keydown',event=>{const deltas={ArrowLeft:[-16,0],ArrowRight:[16,0],ArrowUp:[0,-16],ArrowDown:[0,16]};if(deltas[event.key]){event.preventDefault();move(...deltas[event.key])}});
  win.addEventListener('resize',()=>move(0,0));
- function stop(){revision++;current=null;engine?.stop();engine=null;held=false;outputBusy=false;drag=null;x=y=0;local.style.removeProperty('--call-pip-x');local.style.removeProperty('--call-pip-y');hide();controls.hidden=true;network.hidden=true;network.textContent='';busy(false);$('callHold').textContent='Hold';$('callHold').setAttribute('aria-pressed','false');$('callAudioOutput').disabled=false;selectState();}
+ function stop(){revision++;current=null;sharing?.stop();sharing=null;engine?.stop();engine=null;held=false;cameraSwitch=false;outputBusy=false;drag=null;x=y=0;local.style.removeProperty('--call-pip-x');local.style.removeProperty('--call-pip-y');dialog.classList.remove('luo-screen-sharing');hide();controls.hidden=true;network.hidden=true;network.textContent='';shareStatus.hidden=true;shareStatus.textContent='';shareButton.textContent='Share screen';shareButton.setAttribute('aria-pressed','false');shareButton.setAttribute('aria-busy','false');busy(false);$('callHold').textContent='Hold';$('callHold').setAttribute('aria-pressed','false');$('callAudioOutput').disabled=false;local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');selectState();}
  stop();
  return{
   start(options){stop();current=options;controls.hidden=false;playback.hidden=true;const video=options.getStream().getVideoTracks().length>0;dialog.classList.toggle('luo-live-video',video);dialog.classList.toggle('luo-video-layout',video);dialog.classList.toggle('luo-audio-layout',!video);$('callEffectsToggle').hidden=$('callFit').hidden=!video;
    if(video)engine=createCallEffects({win,peer:options.peer,getStream:options.getStream,isCurrent:options.isCurrent,onPreview:stream=>{$('callLocal').srcObject=stream;$('callLocal').play().catch(()=>{})},onFailure:message=>{if(alive()){$('callStatus').textContent=message;note(message)}}});
+   shareButton.hidden=!video||!win.navigator.mediaDevices?.getDisplayMedia;
+   if(video)sharing=createCallScreenShare({win,peer:options.peer,isCurrent:options.isCurrent,
+    onState:state=>{dialog.classList.toggle('luo-screen-sharing',state.active);shareStatus.hidden=!state.active&&!state.busy;shareStatus.textContent=state.failed?'Screen stopped · camera restoration needs attention.':state.busy?(state.active?'Stopping or switching shared video…':'Choose a screen in your browser. Only share content you intend the other person to see.'):'Sharing screen · your selected screen is visible to the other person.';shareButton.textContent=state.failed?'Retry camera':state.active?'Stop sharing':'Share screen';shareButton.setAttribute('aria-pressed',String(state.active));shareButton.setAttribute('aria-busy',String(state.busy));busy(false);syncEnabled()},
+    onPreview:track=>{local.srcObject=new win.MediaStream([...options.getStream().getAudioTracks(),track]);local.setAttribute('aria-label','Your shared screen preview. Drag to move, or use arrow keys.');local.play().catch(()=>{})},
+    onRestore:()=>{engine?.refreshPreview();local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');syncEnabled()},
+    onFailure:message=>{if(alive()){$('callStatus').textContent=message;note(message)}}});
+   busy(false);
   },
-  async replaceCamera(track){if(engine)return engine.replaceCamera(track);throw Error('No video call.')},
+  async replaceCamera(track){if(sharing?.active||sharing?.busy)throw Error('Stop screen sharing before switching cameras.');if(engine)return engine.replaceCamera(track);throw Error('No video call.')},
+  beginCameraSwitch(){if(!alive()||cameraSwitch||engine?.busy||sharing?.active||sharing?.busy)return false;cameraSwitch=true;busy(false);return true},
+  finishCameraSwitch(){cameraSwitch=false;busy(!!engine?.busy)},
+  connectionState(){if(alive())busy(!!engine?.busy)},
   playbackBlocked(){if(alive())playback.hidden=false},
   metrics(value){if(!alive())return;const video=current.getStream().getVideoTracks().length>0,ms=n=>n===null?'unknown':Math.round(n*1000)+' ms';network.hidden=false;network.textContent=(video?value.profile+' budget':'Audio')+' · RTT '+ms(value.rtt)+' · jitter '+ms(value.jitter)+(video?' · video loss '+(value.loss===null?'unknown':Math.round(value.loss*100)+'%'):'')+' · '+value.route;},
   cameraReplaced(){engine?.refreshPreview();syncEnabled()},syncEnabled,stop

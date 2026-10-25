@@ -4,7 +4,7 @@ import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const allowed=new Map([
- ...['calls.js','call-effects.js','call-experience.js','call-recovery.js','call-quality.js'].map(p=>['/'+p,'src/'+p]),
+ ...['calls.js','call-effects.js','call-experience.js','call-screen-share.js','call-recovery.js','call-quality.js'].map(p=>['/'+p,'src/'+p]),
  ...['style.css','luo-modern.css','luo-call-quality.css'].map(p=>['/'+p,'public/'+p])
 ]);
 const server=createServer(async(req,res)=>{
@@ -21,6 +21,9 @@ const server=createServer(async(req,res)=>{
   async setLocalDescription(value){this.localDescription=value}
  }
  window.RTCPeerConnection=FixturePeer;
+ window.qaDisplays=[];window.qaDisplayRequests=[];window.qaRejectDisplay=false;
+ // A synthetic display chooser returning native canvas video, never a real screen grant.
+ navigator.mediaDevices.getDisplayMedia=async options=>{qaDisplayRequests.push(options);if(qaRejectDisplay){qaRejectDisplay=false;throw new DOMException('Cancelled','NotAllowedError')}const canvas=document.createElement('canvas');canvas.width=640;canvas.height=360;const c=canvas.getContext('2d');c.fillStyle='#1673cc';c.fillRect(0,0,640,360);const stream=canvas.captureStream(15);qaDisplays.push(stream);return stream};
  window.fetch=async()=>({ok:true,json:async()=>({iceServers:[],relayConfigured:false})});
  const row={id:'fixture-call',caller_id:'a',status:'active',created_at:new Date().toISOString(),callee_ice:[]};
  window.rpcCalls=[];
@@ -49,7 +52,22 @@ try{
   const result={processedSender:sender.track!==rawVideo,previewMatchesSender:document.getElementById('callLocal').srcObject.getVideoTracks()[0]===sender.track,audioUnchanged:qaPeers[0].getSenders().find(s=>s.track.kind==='audio').track===rawAudio,chroma:chroma/(data.length/4),luminance:light/(data.length/4),settings:sender.track.getSettings()};sink.pause();sink.srcObject=null;return result;
  });
  assert.equal(media.processedSender,true);assert.equal(media.previewMatchesSender,true);assert.equal(media.audioUnchanged,true);assert.ok(media.chroma<1);assert.ok(media.luminance>5);assert.ok(media.settings.width<=1280&&media.settings.height<=720);
- await page.locator('#callEffectsSheet button').first().click();await page.locator('#cameraCall').click();assert.equal(await page.evaluate(()=>qaPeers[0].getSenders().find(s=>s.track.kind==='video').track.enabled),false);await page.locator('#cameraCall').click();
+ await page.locator('#callEffectsSheet button').first().click();
+ assert.equal(await page.evaluate(()=>qaDisplayRequests.length),0);
+ await page.evaluate(()=>window.qaCameraBeforeShare=qaPeers[0].getSenders().find(s=>s.track.kind==='video').track);
+ await page.locator('#callShareScreen').click();await page.waitForFunction(()=>document.getElementById('callShareScreen').textContent==='Stop sharing');
+ assert.equal(await page.evaluate(()=>qaPeers[0].getSenders().find(s=>s.track.kind==='video').track===qaDisplays[0].getVideoTracks()[0]),true);
+ assert.equal(await page.locator('#callEffectsToggle').isDisabled(),true);assert.equal(await page.locator('#switchCallCamera').isDisabled(),true);
+ assert.equal(await page.evaluate(()=>rawVideo.enabled),false);assert.equal(await page.evaluate(()=>rawAudio.enabled),true);
+ const screenPixels=await page.evaluate(async()=>{const video=document.createElement('video');video.muted=true;video.playsInline=true;video.srcObject=new MediaStream([qaPeers[0].getSenders().find(s=>s.track.kind==='video').track]);await video.play();await new Promise(r=>setTimeout(r,100));const canvas=document.createElement('canvas');canvas.width=canvas.height=1;const c=canvas.getContext('2d');c.drawImage(video,0,0,1,1);const pixel=[...c.getImageData(0,0,1,1).data];video.pause();video.srcObject=null;return pixel});assert.ok(screenPixels[2]>150&&screenPixels[0]<50);
+ await mkdir('test-results/call-effects',{recursive:true});await page.screenshot({path:'test-results/call-effects/screen-sharing-390.png'});
+ await page.locator('#callHold').click();assert.equal(await page.evaluate(()=>qaDisplays[0].getVideoTracks()[0].enabled),false);await page.locator('#callHold').click();
+ await page.locator('#cameraCall').click();assert.equal(await page.evaluate(()=>qaDisplays[0].getVideoTracks()[0].enabled),false);await page.locator('#cameraCall').click();
+ await page.locator('#callShareScreen').click();await page.waitForFunction(()=>document.getElementById('callShareScreen').textContent==='Share screen');
+ assert.equal(await page.evaluate(()=>qaPeers[0].getSenders().find(s=>s.track.kind==='video').track===qaCameraBeforeShare),true);assert.equal(await page.evaluate(()=>qaDisplays[0].getVideoTracks()[0].readyState),'ended');assert.equal(await page.evaluate(()=>rawVideo.enabled),true);
+ await page.evaluate(()=>window.qaRejectDisplay=true);await page.locator('#callShareScreen').click();await page.waitForFunction(()=>document.getElementById('callStatus').textContent.includes('cancelled'));assert.equal(await page.evaluate(()=>qaPeers[0].getSenders().find(s=>s.track.kind==='video').track===qaCameraBeforeShare),true);
+ await page.locator('#callShareScreen').click();await page.waitForFunction(()=>document.getElementById('callShareScreen').textContent==='Stop sharing');await page.evaluate(()=>{const track=qaDisplays.at(-1).getVideoTracks()[0];track.stop();track.dispatchEvent(new Event('ended'))});await page.waitForFunction(()=>document.getElementById('callShareScreen').textContent==='Share screen');assert.equal(await page.evaluate(()=>qaPeers[0].getSenders().find(s=>s.track.kind==='video').track===qaCameraBeforeShare),true);
+ await page.locator('#cameraCall').click();assert.equal(await page.evaluate(()=>qaPeers[0].getSenders().find(s=>s.track.kind==='video').track.enabled),false);await page.locator('#cameraCall').click();
  await page.locator('#callHold').click();assert.ok(await page.evaluate(()=>qaPeers[0].getSenders().every(s=>!s.track.enabled)));await page.locator('#callHold').click();
  await page.locator('#switchCallCamera').click();await page.waitForFunction(()=>!document.getElementById('switchCallCamera').disabled);assert.equal(await page.locator('[data-effect="mono"]').getAttribute('aria-pressed'),'true');assert.equal(await page.evaluate(()=>qaPeers[0].getSenders().find(s=>s.track.kind==='video').track===document.getElementById('callLocal').srcObject.getVideoTracks()[0]),true);
  const layouts=[];
@@ -61,5 +79,5 @@ try{
  }
  await page.locator('#callEffectsToggle').click();await page.locator('[data-effect="original"]').click();await page.waitForFunction(()=>document.querySelector('[data-effect="original"]').getAttribute('aria-pressed')==='true');assert.equal(await page.evaluate(()=>qaPeers[0].getSenders().find(s=>s.track.kind==='video').track.label.includes('Canvas')),false);
  await page.locator('#callEffectsSheet button').first().click();await page.locator('#endCall').click();await page.waitForFunction(()=>qaPeers[0].connectionState==='closed');assert.equal(await page.evaluate(()=>rawAudio.readyState),'ended');assert.deepEqual(errors,[]);
- console.log(JSON.stringify({passed:true,transport:'Fixture only; no RTP connection claimed',media,layouts,pageExceptions:errors.length},null,2));await context.close();
+ console.log(JSON.stringify({passed:true,transport:'Fixture only; no RTP connection claimed',media,screenSharing:{passed:true,displayChooser:'Synthetic, returning native canvas video; no real screen permission granted',nativeOutputPixel:screenPixels,checks:['explicit click only','screen sender selected','camera paused','microphone unchanged','hold and video pause','same effect restored','cancelled chooser','OS ended restoration']},layouts,pageExceptions:errors.length},null,2));await context.close();
 }finally{await browser.close();await new Promise(r=>server.close(r))}

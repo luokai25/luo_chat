@@ -15,6 +15,9 @@
 #luoCall.luo-live-call.luo-live-video .device-actions{margin-top:0!important}
 #luoCall.luo-live-call .luo-call-tools button[hidden]{display:none!important}
 #luoCall.luo-live-call #callNetwork{position:relative;z-index:7;font-size:11px;color:#e7cf9d;margin:0 12px 8px}
+#luoCall.luo-live-call #callShareStatus{position:relative;z-index:7;font-size:12px;font-weight:600;color:#ffdc8b;background:#16120ee8;border:1px solid #a88647;border-radius:12px;padding:8px 12px;margin:4px 12px;max-width:calc(100% - 24px)}
+#luoCall.luo-live-call #callShareStatus[hidden]{display:none!important}
+#luoCall.luo-live-call.luo-screen-sharing .call-video-grid #callLocal{aspect-ratio:16/9!important;object-fit:contain!important;background:#000!important}
 #luoCall.luo-live-call.luo-live-video .call-video-grid #callRemote{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;border:0!important;border-radius:0!important;background:#000!important}
 #luoCall.luo-live-call.luo-live-video.luo-call-cover .call-video-grid #callRemote{object-fit:cover!important}
 #luoCall.luo-live-call.luo-live-video .call-video-grid #callLocal{position:absolute!important;inset:calc(12px + env(safe-area-inset-top)) 12px auto auto!important;top:calc(12px + env(safe-area-inset-top))!important;right:12px!important;width:clamp(88px,25%,160px)!important;height:auto!important;aspect-ratio:3/4;object-fit:cover!important;border-radius:18px!important;border:1px solid #d5ac5d!important;z-index:3;transform:translate(var(--call-pip-x,0px),var(--call-pip-y,0px))!important;touch-action:none;cursor:move}

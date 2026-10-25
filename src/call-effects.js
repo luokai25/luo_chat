@@ -74,7 +74,7 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
    }finally{busy=false}
   },
   refreshPreview(){if(alive())preview(pipeline?.track||getStream().getVideoTracks()[0]);},
-  setEnabled(value){enabled=value;if(pipeline?.track)pipeline.track.enabled=value;},
+  setEnabled(value){enabled=value;if(pipeline?.track)pipeline.track.enabled=value&&!pipeline.failed;},
   stop(){stopped=true;for(const p of [...allocated])dispose(p);pipeline=null;}
  };
 }

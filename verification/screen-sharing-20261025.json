@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "ae21f2983e65edf67d8ebb14a6414d84e6f72475",
+  "scope": "Same development branch as Reels and live effects; production, hosted backend and APK unchanged",
+  "automated_tests": {"passed": 440, "failed": 0, "added": 12},
+  "reproducibility": {"independent_clean_lockfile_installs": 2, "matching_production_files": 100},
+  "native_chromium": {
+    "passed": true,
+    "display_chooser": "Synthetic chooser returning native canvas video; no real desktop screen grant",
+    "sender_and_signaling": "Fixture; no successful remote RTP claim",
+    "actual_native_display_track_pixels": "Blue output verified in consuming video",
+    "checks": ["Explicit action only", "No display audio or new microphone capture", "Actual selected display video track is used", "Prior filtered camera restored by identity", "Microphone unchanged", "Source camera paused while sharing", "Hold and shared-video pause", "Cancelled chooser leaves sender unchanged", "OS ended restores camera", "Call-end cleanup", "Existing color effects and four viewport layouts"],
+    "page_exceptions": 0
+  },
+  "reels_browser_regression": "passed, including trim/export and native IndexedDB draft reload/publication cleanup",
+  "credential_pattern_scan": {"passed": true, "text_files": 347},
+  "production_dependency_audit": {"vulnerabilities": 0},
+  "new_dependencies": [],
+  "unverified": ["Actual screen chooser", "Remote RTP and cross-network TURN", "Real Android/iOS/WebView support", "Bluetooth/headsets", "Native background/locked calling"],
+  "remaining": ["Face/hand tracking", "Background segmentation/replacement", "3D effects and avatars", "In-call chat/group calls", "ICE-restart signaling", "Consented recording", "APK release", "Remaining Reels backlog and staging activation"],
+  "report": "docs/SCREEN_SHARING_READINESS.md"
+}

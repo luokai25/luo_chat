@@ -28,7 +28,7 @@ test('camera switching retains the processed sender and camera-off disables its 
  const s=setup();try{await s.engine.select('golden');const processed=s.sender.track;const newRaw={id:'rear',kind:'video'};await s.engine.replaceCamera(newRaw);assert.equal(s.sender.track,processed);assert.equal(s.videos[0].srcObject.getVideoTracks()[0],newRaw);s.engine.setEnabled(false);assert.equal(processed.enabled,false);s.engine.setEnabled(true);assert.equal(processed.enabled,true)}finally{s.engine.stop()}
 });
 test('renderer failure pauses output, never silently replacing it with the unfiltered camera',async()=>{
- const s=setup();try{await s.engine.select('mono');const output=s.sender.track;s.breakDraw();for(const fn of s.timers.values())fn();assert.equal(s.sender.track,output);assert.equal(output.enabled,false);assert.equal(s.failures.length,1)}finally{s.engine.stop()}
+ const s=setup();try{await s.engine.select('mono');const output=s.sender.track;s.breakDraw();for(const fn of s.timers.values())fn();assert.equal(s.sender.track,output);assert.equal(output.enabled,false);s.engine.setEnabled(true);assert.equal(output.enabled,false);assert.equal(s.failures.length,1)}finally{s.engine.stop()}
 });
 test('rejected sender replacement keeps the previous effect and releases failed output',async()=>{
  const s=setup();try{await s.engine.select('golden');const previous=s.sender.track;s.rejectReplace();await assert.rejects(s.engine.select('mono'),/replace rejected/);assert.equal(s.engine.effect,'golden');assert.equal(s.sender.track,previous);assert.equal(s.timers.size,1);assert.equal(s.videos[1].srcObject,null)}finally{s.engine.stop()}

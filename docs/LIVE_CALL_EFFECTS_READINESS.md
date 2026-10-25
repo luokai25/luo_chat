@@ -2,6 +2,8 @@
 
 Check date: 2026-10-25. Base: `82b83d1c18d322b598d17194465f3ad677b28d44`.
 
+Continuation: screen sharing and additional media-transition fixes are now implemented on the same development branch. See `docs/SCREEN_SHARING_READINESS.md` for the newer scope and verification; the results below describe the initial effects increment.
+
 Scope: the existing Reels development branch, not production web, hosted SQL, account configuration or a published APK. This deliberately groups the Reels work and the first calling/effects increment in one development update. **This is not the full requested AR engine, nor a production-ready calling certification.** No new package, vendor credential, paid plan or cloud resource was added.
 
 ## Built in this increment
@@ -29,7 +31,7 @@ Scope: the existing Reels development branch, not production web, hosted SQL, ac
 | Heart-hand or waving effects | Not implemented. Need hand tracking, confidence/debounce rules, opt-in animation and reduced-motion handling. |
 | Snap Camera Kit / DeepAR | Not installed or configured. No account signup, key extraction, lens licensing or terms acceptance performed. Camera Kit needs developer setup; its capture canvas, not preview-only output, must feed the sender if integrated. |
 | Native background/ringing/locked-phone calls | Not built by this browser change. Needs Android foreground call service, notifications/audio focus and lifecycle integration; web background timers/camera may suspend. |
-| Screen sharing | Pending explicit permission flow, source switching/restoration, ended-track handling and mobile compatibility testing. |
+| Screen sharing | Implemented in the subsequent development increment; explicit permission, restoration and ended-track coverage are detailed in `docs/SCREEN_SHARING_READINESS.md`. Real-picker/device and remote-network acceptance remain pending. |
 | In-call chat and add participant | Pending UI/state flow. Current transport is one-to-one. Group calls require a separate architecture and capacity/cost decision. No decorative Add button was added. |
 | Recording | Not implemented. No hidden recording. A future implementation needs consent from all participants, visible indicators and retention/export controls. |
 | Full Reels wish list | Still tracked in `docs/REELS_V2_READINESS.md` and `docs/CLIP_DRAFTS.md`; this increment does not finish the editor/music/camera/discovery backlog. |
