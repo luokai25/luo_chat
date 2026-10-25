@@ -1,4 +1,5 @@
 import {mountSocialFeed} from './social-feed.js';
+import {SUPABASE_URL} from './config.js';
 import {installReelMessagePreviews} from './reel-message-preview.js';
 import {mountClipComposer} from './clip-composer.js';
 import {createClipDrafts} from './clip-drafts.js';
@@ -61,7 +62,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
     if(!actual(owner)||!modal.open||!letter.isConnected)return;
     if(result.error||!result.data?.signedUrl){attached.append(mk('p','muted','This attachment is currently unavailable.'));return}
     const url=new URL(result.data.signedUrl,win.location.href);
-    if(url.origin!==new URL('https://byjixqwpjvsgmqilmzbm.supabase.co').origin)return;
+    if(url.origin!==new URL(SUPABASE_URL).origin)return;
     const media=mk(/\.(ogg|mp3|m4a|webm)$/i.test(path)?'audio':'img');
     media.src=url.href;
     if(media.tagName==='AUDIO'){media.controls=true;media.preload='none'}else{media.alt='Photo enclosed with this letter';media.loading='lazy';media.className='luo-capsule-photo'}
