@@ -89,6 +89,19 @@
           "value": "no-cache"
         }
       ]
+    },
+    {
+      "source": "/api/mcp",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     }
   ],
   "name": "luo-chat-luokai25",
