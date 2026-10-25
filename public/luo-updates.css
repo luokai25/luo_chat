@@ -80,3 +80,10 @@
 .luo-viewer-controls button:disabled{opacity:.35;cursor:default}
 @media(max-width:620px){.luo-updates-dialog{width:calc(100vw - 12px);max-height:94dvh;padding:15px;border-radius:18px}.luo-updates-dialog .dialog-heading{top:-15px}.luo-status-viewer{width:100vw;height:100dvh;border-radius:0;border:0}.luo-viewer-media img,.luo-viewer-media video{max-height:64dvh}.luo-updates-strip{border-radius:16px}.workspace-nav .luo-updates-nav{gap:4px}.luo-story-bubble{flex-basis:75px;max-width:75px}.luo-bubble-avatar,.luo-create-bubble::before{width:58px;height:58px}}
 @media(prefers-reduced-motion:reduce){.workspace-nav .tab,.luo-viewer-bar i,.luo-story-bubble .luo-bubble-avatar{transition:none!important}}
+
+/* Single immersive Updates tab on phones, with built-in private story composer. */
+@media(max-width:620px){
+ dialog#storiesDialog.luo-updates-dialog{width:100vw!important;max-width:100vw!important;height:100dvh!important;max-height:100dvh!important;min-height:100dvh!important;inset:0!important;margin:0!important;padding:calc(12px + env(safe-area-inset-top)) 15px calc(22px + env(safe-area-inset-bottom))!important;border:0!important;border-radius:0!important;overflow-y:auto!important}
+ dialog#storiesDialog.luo-updates-dialog .dialog-heading{position:sticky;top:calc(-12px - env(safe-area-inset-top));z-index:6;background:#17131a;padding:16px 0}
+ dialog#storyComposer{width:100vw!important;max-width:100vw!important;height:100dvh!important;max-height:100dvh!important;inset:0!important;margin:0!important;border:0!important;border-radius:0!important;padding:calc(12px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))!important;overflow-y:auto!important}
+}
