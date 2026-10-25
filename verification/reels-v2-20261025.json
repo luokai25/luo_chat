@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "2090f0827032b4b41f579d770b557eafdf71e282",
+  "scope": "Development branch only; no production deployment, hosted database writes or APK build",
+  "build_and_tests": {"passed": 406, "failed": 0},
+  "isolated_postgres": {
+    "engine": "PGlite 0.5.11",
+    "actual_proposal_sql_executed": true,
+    "upstream_auth_social_chat_contracts": "Synthetic fixtures, not a full hosted-schema restore",
+    "checks": ["anonymous denial", "private table denial", "private clip isolation", "idempotent follows and reposts", "reply isolation", "comment likes", "author moderation", "recipient visibility", "idempotent share", "throttling", "equal-timestamp feed pagination", "pinned-first comment pagination"]
+  },
+  "browser": {
+    "engine": "Chromium 141",
+    "viewport_widths": [320, 390, 768, 1440],
+    "backend": "Synthetic responses only",
+    "actual_video_trim_export_and_publish_integration": "passed; output duration verified shorter than source",
+    "page_exceptions": 0,
+    "real_hardware_camera_audio_and_apk_acceptance": "not verified"
+  },
+  "production_dependency_audit": {"reported_vulnerabilities": 0},
+  "clean_install_reproduction": {"matching_production_files": 100},
+  "credential_pattern_scan": "passed",
+  "backend_proposal": {"path": "supabase/proposals/reels-social-v2.sql", "applied_to_hosted_database": false},
+  "rollout_gate": "Approved staging backend and migration rehearsal, then explicit production rollout decision",
+  "remaining_features": "docs/REELS_V2_READINESS.md"
+}

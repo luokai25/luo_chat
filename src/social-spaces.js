@@ -1,4 +1,6 @@
 import {mountSocialFeed} from './social-feed.js';
+import {installReelMessagePreviews} from './reel-message-preview.js';
+import {mountClipComposer} from './clip-composer.js';
 import {installSocialSessions} from './social-sessions.js';
 import {mountCompanion3D} from './companion-3d.js';
 import {mountCommunityModeration} from './community-moderation.js';
@@ -24,7 +26,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  const hero=mk('div','luo-social-hero');hero.append(mk('p','luo-social-eyebrow','LUO SOCIAL'),mk('h2','','Together feels closer'),mk('p','muted','Friends, memories, stories and special moments in one place.'));
  const options=[['feed','Friends'],['public','Public'],['compose','Create post'],['publish-clip','Publish clip'],['search','Search'],['clips','Clips'],['sessions','Together'],['memories','Memories'],['capsule','Time Capsules'],['pair','Shared bonds'],['questions','Questions'],['events','Events'],['communities','Communities'],['profile','My interests'],['alerts','Alerts'],['activity','Activity']];
  const tabs=mk('div','luo-social-tabs');tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Social features');
- let section='feed',epoch=0,request=0,releaseMemory=()=>{},releaseFeed=()=>{},feedMode='friends';
+ let section='feed',epoch=0,request=0,releaseMemory=()=>{},releaseFeed=()=>{},feedMode='friends',sharedClip=null;
  const output=mk('div','luo-social-content');output.setAttribute('aria-live','polite');
  const sessions=installSocialSessions({win,db,note,getUser,getChats});
  const status=mk('p','luo-social-status');status.setAttribute('role','status');
@@ -72,7 +74,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  card.append(actions);return card}
  async function feed(kind='post'){const actor=getUser()?.id,ticket=++request;output.replaceChildren(mk('p','luo-social-empty','Loading…'));try{const items=await call('feed',{kind});if(!alive(actor,ticket))return;output.replaceChildren();if(!items?.length)output.append(mk('p','luo-social-empty',kind==='capsule'?'No letters yet. Create one for an approved friend.':'Nothing here yet.'));for(const item of items||[])output.append(itemCard(item,kind));}catch(err){if(alive(actor,ticket))output.replaceChildren(mk('p','luo-social-empty',err.message||'Could not load.'))}}
  async function show(key){releaseFeed();releaseFeed=()=>{};releaseMemory();releaseMemory=()=>{};if(key!=='sessions')sessions.leave();section=key;page.dataset.socialView=key;for(const b of page.querySelectorAll('[data-section]'))b.setAttribute('aria-pressed',String(b.dataset.section===key));if(!getUser())return;status.textContent='';++request;output.replaceChildren();
- if(['feed','public','clips'].includes(key)){if(key!=='clips')feedMode=key==='public'?'public':'friends';releaseFeed=mountSocialFeed({win,db,getUser,output,note,openPerson,mode:feedMode,clipsOnly:key==='clips',onNavigate:show,onMode:value=>{feedMode=value;return show('clips')},initialClip:key==='clips'?new URLSearchParams(win.location.hash.slice(1)).get('luo-clip'):null});return}
+ if(['feed','public','clips'].includes(key)){if(key!=='clips')feedMode=key==='public'?'public':'friends';releaseFeed=mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,mode:feedMode,clipsOnly:key==='clips',onNavigate:show,onMode:value=>{feedMode=value;return show('clips')},initialClip:key==='clips'?(sharedClip||new URLSearchParams(win.location.hash.slice(1)).get('luo-clip')):null});sharedClip=null;return}
  if(key==='compose'){
   const owner=getUser()?.id,title=input('text','Give your post a title (optional)',160),body=input('textarea','Share a moment…',12000),photos=input('file'),audience=select([['friends','Friends only'],['private','Only me'],['public','Public']]),collab=select([['','Post alone']]);photos.accept='image/jpeg,image/png,image/webp';photos.multiple=true;
   friends().then(people=>{if(actual(owner)&&section==='compose'&&collab.isConnected)for(const p of people){const option=mk('option','',p.display_name||p.username);option.value=p.id;collab.append(option)}}).catch(()=>{});
@@ -110,21 +112,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  if(key==='memories'){releaseMemory=renderMemoryConstellations({win,db,note,getUser,getChats,output});return}
  if(key==='sessions'){await sessions.render(output);return}
  if(key==='publish-clip'){
-  const caption=input('textarea','Write a caption for your clip',12000),file=input('file'),audience=select([['friends','Friends'],['public','Public'],['private','Only me']]);file.accept='video/mp4,video/webm';
-  output.append(form('Publish a Luo Clip','Short vertical videos, with reactions and comments. Choose a clip up to 90 seconds and 50 MB.',[['caption','Caption',caption],['file','Video',file],['audience','Visibility',audience]],async(f,actor)=>{
-   const selected=f.file.files?.[0];if(!selected||!['video/mp4','video/webm'].includes(selected.type)||selected.size<1||selected.size>50*1024*1024)throw Error('Select an MP4 or WebM clip up to 50 MB.');
-   const object=win.URL.createObjectURL(selected),video=mk('video');video.preload='metadata';let duration;
-   try{duration=await new Promise((resolve,reject)=>{const timer=win.setTimeout(()=>reject(Error('Could not read video duration on this device.')),10000);video.onloadedmetadata=()=>{win.clearTimeout(timer);resolve(video.duration)};video.onerror=()=>{win.clearTimeout(timer);reject(Error('This video format cannot be read here.'))};video.src=object})}
-   finally{video.removeAttribute('src');video.load?.();win.URL.revokeObjectURL(object)}
-   if(!Number.isFinite(duration)||duration<=0||duration>90)throw Error('Clips must be at most 90 seconds long.');
-   if(!actual(actor))return;
-   const id=win.crypto.randomUUID();await call('entry.create',{id,kind:'clip',body:f.caption.value.trim(),audience:f.audience.value});
-   if(!actual(actor))return;
-   const path=actor+'/'+id+'/'+win.crypto.randomUUID()+'.'+(selected.type==='video/mp4'?'mp4':'webm');
-   const stored=await db.storage.from('luo-social').upload(path,selected,{upsert:false,contentType:selected.type});
-   if(stored.error)throw Error('Clip upload failed: '+stored.error.message);
-   if(actual(actor))await call('entry.publish',{id,media:[{path,duration}]})
-  },'Publish clip'));
+  releaseFeed=mountClipComposer({win,output,getUser,db,note,onPublished:()=>show('clips')});
   return
  }
  if(key==='events'){
@@ -153,5 +141,6 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  if(key==='activity'){const actor=getUser()?.id,ticket=++request;output.append(mk('p','luo-social-empty','Loading activity…'));try{const items=await call('activity',{});if(!alive(actor,ticket))return;output.replaceChildren(header('Activity Center','Your invitations, reactions and updates.'));for(const item of items||[]){const card=mk('article','luo-social-card');card.append(mk('p','',item.label||item.category),mk('p','luo-social-meta',(item.username?'@'+item.username+' · ':'')+dateText(item.created_at)+(item.seen?'':' · New')));output.append(card)}if(!items?.length)output.append(mk('p','luo-social-empty','Your activity center is clear.'));else output.prepend(btn('Mark all read',async()=>{await call('activity.read',{through:items[0].id});await show('activity')},'ghost'))}catch(err){if(alive(actor,ticket))output.replaceChildren(mk('p','luo-social-empty',err.message))}}
  }
  let sharedOpened=false;
+ installReelMessagePreviews({win,container:$('messages'),getUser,openClip:id=>{sharedClip=id;section='clips';tab('social')}});
  return {openSection(key){if(!options.some(([name])=>name===key))return;section=key;tab('social')},onTab(key){const shared=new URLSearchParams(win.location.hash.slice(1)).get('luo-clip');if(!sharedOpened&&getUser()&&/^[0-9a-f-]{36}$/i.test(shared||'')){sharedOpened=true;section='clips';if(key!=='social'){tab('social');return}}if(key==='social')Promise.resolve(show(section)).catch(err=>{if(getUser())status.textContent=err.message||'Social features unavailable'});else{request++;sessions.leave();releaseMemory();releaseFeed()}},signedOut(){releaseFeed();releaseMemory();sessions.signedOut();request++;epoch++;output.replaceChildren();status.textContent='';closeCapsule()}};
 }

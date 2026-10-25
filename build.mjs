@@ -1,5 +1,5 @@
 import {build} from 'esbuild';
-import {cp,mkdir,readFile,writeFile,rm,rename} from 'node:fs/promises';
+import {cp,mkdir,readFile,writeFile,rm,rename,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {SUPABASE_URL,SUPABASE_KEY} from './src/config.js';
 import {validatePublicConfig} from './scripts/public-config.mjs';
@@ -9,8 +9,12 @@ validatePublicConfig({url:SUPABASE_URL,key:SUPABASE_KEY,csp});
 const release=JSON.parse(await readFile('package.json','utf8')).version;
 if(!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(release))throw Error('A valid release version is required.');
 await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});await cp('public','dist',{recursive:true});
-const result=await build({entryPoints:{app:'src/entry.js'},entryNames:'[name]-[hash]',outdir:'dist',metafile:true,define:{'process.env.LUO_SUPABASE_URL':JSON.stringify(process.env.LUO_SUPABASE_URL||''),'process.env.LUO_SUPABASE_KEY':JSON.stringify(process.env.LUO_SUPABASE_KEY||'')},bundle:true,format:'esm',target:['es2022'],minify:true,legalComments:'eof'});
-const js=Object.keys(result.metafile.outputs).find(path=>path.endsWith('.js')).replace('dist/','');
+await build({entryPoints:{app:'src/entry.js'},entryNames:'[name]',outdir:'dist',define:{'process.env.LUO_SUPABASE_URL':JSON.stringify(process.env.LUO_SUPABASE_URL||''),'process.env.LUO_SUPABASE_KEY':JSON.stringify(process.env.LUO_SUPABASE_KEY||'')},bundle:true,format:'esm',target:['es2022'],minify:true,legalComments:'eof'});
+// esbuild's graph hash can differ across source paths even for identical bytes.
+// Address the emitted file by its bytes, just like CSS/icons below.
+const appBytes=await readFile('dist/app.js'),js='app-'+createHash('sha256').update(appBytes).digest('hex').slice(0,16).toUpperCase()+'.js';await rename('dist/app.js','dist/'+js);
+// Do not package obsolete app bundles from a reused build output directory.
+for(const name of await readdir('dist'))if(/^app-[A-Z0-9]+\.js$/.test(name)&&name!==js)await rm('dist/'+name);
 const cssContents=await readFile('dist/style.css'),css='style-'+createHash('sha256').update(cssContents).digest('hex').slice(0,12)+'.css';await rename('dist/style.css','dist/'+css);
 const socialBytes=await readFile('dist/luo-social-feed.css'),socialCSS='luo-social-feed-'+createHash('sha256').update(socialBytes).digest('hex').slice(0,12)+'.css';await rename('dist/luo-social-feed.css','dist/'+socialCSS);
 const iconMap={};for(const old of ['icon.svg','icon-32.png','icon-180.png','icon-192.png','icon-512.png','icon-1024.png','icon-maskable-512.png']){const bytes=await readFile('dist/'+old),ext=old.slice(old.lastIndexOf('.')),stem=old.slice(0,old.lastIndexOf('.')),fresh=stem+'-'+createHash('sha256').update(bytes).digest('hex').slice(0,12)+ext;await rename('dist/'+old,'dist/'+fresh);iconMap['/'+old]='/'+fresh;}

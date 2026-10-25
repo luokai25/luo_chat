@@ -1,5 +1,6 @@
 import {readFile,access,readdir} from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 const html=await readFile('dist/index.html','utf8'),manifest=JSON.parse(await readFile('dist/manifest.json','utf8')),sw=await readFile('dist/sw.js','utf8');
 for(const path of [...html.matchAll(/(?:src|href)="(\/[^"?]+)(?:\?[^\"]*)?"/g)].map(m=>m[1]))await access('dist'+path);
 for(const icon of manifest.icons)await access('dist'+icon.src);
@@ -21,6 +22,8 @@ assert.equal(names.length,50);assert.ok(names.every(n=>/^luo50-(?:0[1-9]|[1-4][0
 for(let i=1;i<=50;i++)await access('dist/stickers/luo-family/luo50-'+String(i).padStart(2,'0')+'.png');
 const appPath=html.match(/src="(\/app-[A-Z0-9]+\.js)"/)?.[1];assert.ok(appPath);
 const app=await readFile('dist'+appPath,'utf8');
+assert.equal(appPath,'/app-'+createHash('sha256').update(app).digest('hex').slice(0,16).toUpperCase()+'.js','App filename must address emitted bytes, not a source-path-dependent graph hash');
+assert.deepEqual((await readdir('dist')).filter(name=>/^app-[A-Z0-9]+\.js$/.test(name)),[appPath.slice(1)],'Only the referenced app bundle may be packaged');
 assert.ok(app.includes('luo50-01')&&app.includes('luo50-50'));
 assert.ok(!app.includes('200 original stickers'));
 assert.ok(app.includes('50 premium stickers'));

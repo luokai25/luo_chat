@@ -17,11 +17,13 @@ test('Social-only web release preserves live authentication, calls, stories and 
   "src/config.js": "fa7a01c29835bd63f883ed6d092febcffa3389b586aa5135c99aa633327f55f2",
   "public/luo-session-boot.js": "2068acd5af69f38ccf4f25ab3647a39a2087dc4fe97307c3e4b400705c440b64",
   "public/luo-auth-premium.css": "e418ef836af858e4d53debe5726473753e708d091350eb7801793a3795c6deea",
-  "package.json": "45f67e96db4b7c482ecfd9de6f8b22c6cd6769cac1d433e579b69cff5d7674cf",
-  "package-lock.json": "048df9e9f4f1cb2c895899b07b4c47eeadfbe7405cd3a6facc36fd21399591ca",
   "vercel.json": "6009db6f855892388a6656a797dfdcc140ac5ea7505d3aca06a347bb408bfe65"
 };
  for(const [path,hash] of Object.entries(expected))assert.equal(digest(await readFile(path)),hash,path+' must match the live backup');
+ const pkg=JSON.parse(await readFile('package.json','utf8')),lock=JSON.parse(await readFile('package-lock.json','utf8'));
+ assert.deepEqual(pkg.dependencies,{'@supabase/supabase-js':'2.118.0',gifenc:'1.0.3',qrcode:'1.5.4'});
+ assert.equal(pkg.devDependencies['@electric-sql/pglite'],'0.5.11');
+ assert.deepEqual(lock.packages[''].dependencies,pkg.dependencies);
  const dom=new JSDOM(await readFile('public/index.html','utf8'));
  try{assert.equal(digest(dom.window.document.getElementById('auth').outerHTML),'c1b8286a9c27671aee575d024e2f1a382876fe1d241eea2a4a8a3acdef3702c9')}finally{dom.window.close()}
 });

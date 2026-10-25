@@ -17,11 +17,22 @@ try{
   const {db,data}=window.__luoBrowserFixture,old=db.rpc.bind(db),friend=data.profiles[1],owner=data.profiles[0];
   const row=(id,kind,audience,body)=>({id,kind,owner_id:friend.id,published:true,audience,body,created_at:'2026-10-24T08:00:00Z',author:{...friend,display_name:'Luo Kai',username:'luo_kai'},mine:{},reactions:12,comments:2,media:kind==='clip'?[{path:friend.id+'/'+id+'/clip.webm'}]:[]});
   window.__socialCalls=[];
-  db.rpc=async(name,args)=>{if(name!=='luo_space')return old(name,args);window.__socialCalls.push(args);
+  const extended={following:false,reposted:false,reposts:0,comments:[]};window.__reelAdvanced=false;
+  db.rpc=async(name,args)=>{if(name==='luo_reels'&&window.__reelAdvanced){window.__socialCalls.push(args);const {action,input}=args;
+   if(action==='capabilities')return{data:{version:1,following:true,threads:true}};
+   if(action==='follow')extended.following=input.enabled;if(action==='repost'){extended.reposted=input.enabled;extended.reposts=input.enabled?1:0}
+   if(['state','follow','repost'].includes(action))return{data:{...extended}};
+   if(action==='comments')return{data:extended.comments.filter(r=>(r.parent_id||null)===(input.parent_id||null))};
+   if(action==='comment'){const r={id:input.operation,user_id:owner.id,username:owner.username,body:input.body,parent_id:input.parent_id||null,likes:0,replies:0};extended.comments.push(r);return{data:r}}
+   if(action==='recipients')return{data:[{id:data.conversations[0].id,username:friend.username,display_name:'Luo Kai'}]};
+   if(action==='share')return{data:{message_id:'shared'}};
+   if(action==='feed')return{data:[row('followed-clip','clip','public','A followed moment')]};
+   return{data:{}};
+  }if(name!=='luo_space')return old(name,args);window.__socialCalls.push(args);
    if(args.action==='feed'){if(args.input.before)return{data:[]};if(args.input.kind==='post')return{data:[row('post-one','post','friends','The best moments are the ones we share. ✦'),row('post-two','post','public','A little light in an ordinary day.')]};if(args.input.kind==='clip')return{data:[row('clip-one','clip','public','Golden hour, wherever we are. ✨'),row('clip-two','clip','friends','A small moment, just for friends.')]};return{data:[]}}
    if(args.action==='responses')return{data:[{username:owner.username,body:'Love this moment ✨'}]};return{data:{}};
   };
-  db.storage={from:()=>({createSignedUrl:async path=>({data:{signedUrl:'https://byjixqwpjvsgmqilmzbm.supabase.co/storage/v1/object/sign/luo-social/'+path}})})};
+  db.storage={from:()=>({createSignedUrl:async path=>({data:{signedUrl:'https://byjixqwpjvsgmqilmzbm.supabase.co/storage/v1/object/sign/luo-social/'+path}}),upload:async(path,file)=>{window.__clipUpload={path,type:file.type,size:file.size};return{data:{path}}}})};
  });
  // Short test video created locally in the browser, with no external assets.
  await page.goto('http://127.0.0.1:'+server.address().port);await page.locator('.chatrow').first().waitFor();
@@ -55,5 +66,17 @@ try{
   await page.locator('.workspace-nav [data-tab="chats"]').evaluate(e=>e.click());assert.equal(await page.locator('#social video').count(),0);
   checks.push({width,viewport:Math.round(viewport.height),clipHeight:Math.round(card.height),passed:true});
  }
- assert.deepEqual(errors,[]);await writeFile(folder+'/results.json',JSON.stringify({checks,errors,scope:'Actual app/CSS; synthetic backend and locally generated video; no hosted writes.'},null,2));console.log(JSON.stringify({checks,errors}));
+ await page.setViewportSize({width:390,height:900});await page.evaluate(()=>{window.__reelAdvanced=true});await page.locator('.workspace-nav [data-tab="social"]').evaluate(e=>e.click());
+ await page.getByRole('button',{name:'Follow',exact:true}).first().click();await page.waitForFunction(()=>document.querySelector('.luo-reel-follow')?.textContent==='Following');
+ await page.getByRole('button',{name:'Repost · 0',exact:true}).first().click();await page.getByRole('button',{name:'Repost · 1',exact:true}).first().waitFor();
+ await page.getByRole('button',{name:'Share clip',exact:true}).first().click();await page.getByRole('dialog',{name:'Send clip',exact:true}).waitFor();await page.getByRole('button',{name:'Send',exact:true}).click();await page.getByRole('button',{name:'Sent',exact:true}).waitFor();await page.getByRole('button',{name:'Close send clip',exact:true}).click();
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Extended action rail does not overflow');await page.screenshot({path:folder+'/extended-390.png'});
+ await page.getByRole('button',{name:'Create clip',exact:true}).click();await page.getByLabel('Import video',{exact:true}).setInputFiles({name:'source.webm',mimeType:'video/webm',buffer:Buffer.from(bytes)});
+ await page.waitForFunction(()=>document.querySelector('.luo-clip-edit')&&!document.querySelector('.luo-clip-edit').disabled);
+ await page.getByLabel('Trim start in seconds').fill('0.1');await page.getByLabel('Trim end in seconds').fill('0.6');await page.getByRole('button',{name:'Apply trim and speed',exact:true}).click();await page.getByText('Edited clip ready. Review it before publishing.',{exact:true}).waitFor({timeout:20000});
+ const trimmedDuration=await page.locator('.luo-clip-preview').evaluate(v=>v.duration);assert.ok(trimmedDuration>.1&&trimmedDuration<.8,'Export really shortened the input video');
+ await page.screenshot({path:folder+'/composer-390.png'});
+ await page.getByLabel('Clip caption',{exact:true}).fill('A genuinely trimmed clip');await page.getByRole('button',{name:'Publish Reel',exact:true}).click();await page.locator('.luo-feed-reels').waitFor();
+ assert.ok(await page.evaluate(()=>window.__clipUpload?.size>0&&window.__clipUpload.type==='video/webm'));checks.push({extendedActions:true,realVideoTrimAndPublish:true,passed:true});
+ assert.deepEqual(errors,[]);await writeFile(folder+'/results.json',JSON.stringify({checks,errors,scope:'Actual app/CSS; synthetic backend and locally generated video; real browser video export; no hosted writes.'},null,2));console.log(JSON.stringify({checks,errors}));
 }finally{await browser.close();await new Promise(r=>server.close(r))}

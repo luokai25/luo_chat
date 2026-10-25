@@ -1,5 +1,8 @@
 # Immersive Luo Reels — development upgrade, 2026-10-25
 
+This documents the first pass. See [the continuation readiness report](REELS_V2_READINESS.md)
+for newly built features, the unapplied backend proposal and remaining work.
+
 Scope: development branch based on `release/social-web-20261024` at
 `72434734931b5b847cf09cac2767b6e58522a7a6`. No production deployment,
 authentication edits, account changes, or hosted database writes.
