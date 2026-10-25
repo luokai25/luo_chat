@@ -5,19 +5,18 @@ import {isIP} from 'node:net';
 import {createClient} from '@supabase/supabase-js';
 import {normalizeAgentUsername,sendJson} from './agent-platform.js';
 import {paidAgentApiEnabled,newAgentCredential} from './agent-account.js';
+import {agentRuntime,isValidAgentOrigin} from './agent-environment.js';
 
-const STAGING='https://itecovbwilcrvjqkdoyd.supabase.co';
 const hash=(secret,text)=>createHmac('sha256',secret).update(text).digest('hex');
 export function createAgentLoginHandler({env=process.env,clientFactory=createClient,logger=console}={}){
  return async (req,res)=>{
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
   if(req.method!=='POST'){res.setHeader('Allow','POST');return sendJson(res,405,{error:{code:'METHOD_NOT_ALLOWED'}})}
-  if(!paidAgentApiEnabled(env)||typeof env.LUO_AGENT_STAGING_PUBLISHABLE_KEY!=='string'||env.LUO_AGENT_STAGING_PUBLISHABLE_KEY.length<30
+  if(!paidAgentApiEnabled(env)||typeof agentRuntime(env)?.publishableKey!=='string'||agentRuntime(env).publishableKey.length<25
     ||typeof env.LUO_AGENT_SIGNUP_HASH_KEY!=='string'||env.LUO_AGENT_SIGNUP_HASH_KEY.length<32){
    res.setHeader('Retry-After','86400');return sendJson(res,503,{error:{code:'AGENT_MEMBERSHIPS_NOT_ACTIVE'}});
   }
-  const origin=req.headers?.origin;
-  if(origin&&(origin==='null'||!/^https:\/\/luo-chat-luokai25-[a-z0-9]+-luokai25s-projects\.vercel\.app$/.test(origin)))return sendJson(res,403,{error:{code:'ORIGIN_DENIED'}});
+  if(!isValidAgentOrigin(req,env))return sendJson(res,403,{error:{code:'ORIGIN_DENIED'}});
   if(req.headers?.['content-type']?.split(';')[0]?.trim()!=='application/json')return sendJson(res,415,{error:{code:'UNSUPPORTED_CONTENT_TYPE'}});
   const input=req.body;
   if(!input||typeof input!=='object'||Array.isArray(input)||JSON.stringify(input).length>2048
@@ -26,12 +25,12 @@ export function createAgentLoginHandler({env=process.env,clientFactory=createCli
   if(!username||typeof input.password!=='string'||input.password.length<15||input.password.length>128)return sendJson(res,400,{error:{code:'INVALID_CREDENTIALS'}});
   const ip=env.VERCEL==='1'?req.headers?.['x-vercel-forwarded-for']:req.socket?.remoteAddress;
   if(typeof ip!=='string'||ip.length>64||ip.includes(',')||!isIP(ip))return sendJson(res,503,{error:{code:'RATE_LIMIT_UNAVAILABLE'}});
-  const svc=clientFactory(STAGING,env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+  const svc=clientFactory(agentRuntime(env).url,agentRuntime(env).serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
   try{
    const r=await svc.rpc('luo_agent_reserve_login',{p_ip_digest:hash(env.LUO_AGENT_SIGNUP_HASH_KEY,'login-network:'+ip),p_username_digest:hash(env.LUO_AGENT_SIGNUP_HASH_KEY,'login-name:'+username)});
    if(r.error?.code==='P0001'){res.setHeader('Retry-After','86400');return sendJson(res,429,{error:{code:'LOGIN_RATE_LIMITED'}})}
    if(r.error||r.data!==true)throw Error('login_quota_unavailable');
-   const auth=clientFactory(STAGING,env.LUO_AGENT_STAGING_PUBLISHABLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+   const auth=clientFactory(agentRuntime(env).url,agentRuntime(env).publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
    const signed=await auth.auth.signInWithPassword({email:'agent+'+username+'@agents.luo.invalid',password:input.password});
    if(signed.error||!signed.data?.user?.id)return sendJson(res,401,{error:{code:'INVALID_CREDENTIALS'}});
    const agent=await svc.rpc('luo_agent_find_paid_identity',{p_auth_user:signed.data.user.id,p_username:username});
