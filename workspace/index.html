@@ -31,6 +31,9 @@
    <button class="nav-item" data-view="activity"><span>▥</span> Platform activity</button>
    <button class="nav-item" data-view="engineering"><span>⌘</span> Engineering</button>
    <button class="nav-item" data-view="billing"><span>◇</span> Memberships & billing</button>
+   <button class="nav-item" data-view="growth"><span>⌁</span> Growth insights</button>
+   <button class="nav-item" data-view="finance"><span>▣</span> Financial intelligence</button>
+   <button class="nav-item" data-view="connectors"><span>◈</span> Connector intelligence</button>
    <button class="nav-item" data-view="integrations"><span>⬡</span> Integrations</button>
   </nav>
   <div class="sidebar-bottom"><div class="owner-chip"><div class="avatar">L</div><div><b>Workspace Owner</b><small id="signed-in">Authenticated</small></div></div><button class="quiet" id="logout">Sign out ↗</button></div>
@@ -42,6 +45,8 @@
    <section data-page="overview">
     <div class="welcome"><div><p class="overline">YOUR OPERATION AT A GLANCE</p><h2>One workspace.<br><em>Every moving part.</em></h2><p>Live account data, usage, engineering, and payments. No made-up numbers.</p><a class="textlink" href="https://luo-chat-luokai25.vercel.app" target="_blank" rel="noopener noreferrer">Open Luo Chat ↗</a></div><div class="welcome-art"><div class="orbit o1"></div><div class="orbit o2"></div><span>L</span></div></div>
     <div id="main-stats" class="metrics"></div>
+    <article class="panel workspace-expansion"><div class="panel-head"><div><p class="overline">CROSS-SERVICE INTELLIGENCE</p><h3>More from your connected services</h3></div><button class="text-button" data-go="connectors">Explore services ↗</button></div><div class="overview-intelligence" id="overview-intelligence"><p class="muted">Loading operational intelligence…</p></div></article>
+
     <div class="two-col">
      <article class="panel"><div class="panel-head"><div><p class="overline">GROWTH & ADOPTION</p><h3>New accounts</h3></div><span class="subtle">Last 14 days</span></div><div id="signup-chart" class="chart-empty">Loading registration history…</div></article>
      <article class="panel"><div class="panel-head"><div><p class="overline">PLATFORM SIGNALS</p><h3>Live operating status</h3></div></div><div id="health-list" class="health-list"><p class="muted">Checking project connections…</p></div></article>
@@ -54,6 +59,23 @@
    <section data-page="billing" hidden><div class="page-intro"><div><p class="overline">COMMERCIAL OPERATIONS</p><h2>Memberships & billing</h2><p>Approved pricing and activation readiness. Real revenue is not claimed until the payment service is securely connected.</p></div><a href="https://www.paypal.com/billing/subscriptions" target="_blank" rel="noopener noreferrer" class="secondary actionlink">Open PayPal ↗</a></div>
     <div class="pricing"><article><div class="overline">AI AGENT · STANDARD</div><h3>$12 <small>/ month</small></h3><p>Entry-level bot account with standard rate limits.</p><div class="pfoot">Regular billing</div></article><article class="featured"><div class="overline">AI AGENT · PRO</div><h3>$24 <small>/ month</small></h3><p>Increased limits and more automation capabilities.</p><div class="pfoot">Regular billing</div></article><article><div class="overline">AI AGENT · MAXIMUM</div><h3>$30 <small>/ month</small></h3><p>Highest published agent feature and usage limits.</p><div class="pfoot">Regular billing</div></article></div>
     <article class="panel"><div class="panel-head"><h3>Payment release readiness</h3><span class="warning-pill">Checkout is disabled</span></div><div class="checklist"><div>✓ Three regular PayPal plan identifiers configured</div><div>✓ Live credential variables saved in Luo Chat Vercel</div><div>● Webhook belongs to the correct REST app: unverified</div><div>● Exposed API secret rotation: pending</div><div>● Agent billing schema in production: pending</div><div>● Live reconciliation and cancellation checks: pending</div></div><p class="footnote">No actual subscription or revenue figures are available from this dashboard yet. Do not treat plan prices as transaction totals.</p><a class="textlink" href="https://developer.paypal.com/dashboard/applications/" target="_blank" rel="noopener noreferrer">Manage PayPal REST apps ↗</a></article>
+   </section>
+   <section data-page="growth" hidden>
+    <div class="page-intro"><div><p class="overline">ACQUISITION & RETENTION SIGNALS</p><h2>Growth insights</h2><p>Thirty days of actual registrations, messaging and story activity. See who joined and who returned, without spying on conversations.</p></div><a class="secondary actionlink" href="https://supabase.com/dashboard/project/byjixqwpjvsgmqilmzbm/auth/users" target="_blank" rel="noopener noreferrer">Full user directory ↗</a></div>
+    <div id="growth-stats" class="metrics"></div>
+    <article class="panel"><div class="panel-head stacked"><div><p class="overline">LAST 30 DAYS · UTC</p><h3 id="growth-chart-title">New accounts</h3></div><div id="growth-switch" class="chart-switch" role="group" aria-label="Growth chart metric"><button class="active" data-series="signups">Signups</button><button data-series="messages">Messages</button><button data-series="stories">Stories</button><button data-series="last_signed_in">Last sign-in</button></div></div><div id="growth-chart" class="chart-empty">Loading 30-day chart…</div><p id="growth-chart-description" class="footnote"></p></article>
+    <div class="two-col"><article class="panel"><div class="panel-head"><h3>Account journey</h3></div><div id="growth-funnel" class="insight-stack"></div></article><article class="panel"><div class="panel-head"><h3>Reading the numbers</h3></div><p class="explainer">“Last sign-in” groups accounts by the date of their latest known sign-in; it does not count every login. “Engaged” includes distinct senders or successful sign-ins. True online-now, visits, and page views require separate event instrumentation.</p><a class="textlink" href="https://supabase.com/dashboard/project/byjixqwpjvsgmqilmzbm" target="_blank" rel="noopener noreferrer">Review underlying data ↗</a></article></div>
+   </section>
+   <section data-page="finance" hidden>
+    <div class="page-intro"><div><p class="overline">PAYPAL · INVOICES · SUBSCRIPTIONS</p><h2>Financial intelligence</h2><p>Connected merchant-account snapshots, not invented Luo Chat revenue. Existing membership controls remain under Memberships & billing.</p></div><a href="https://www.paypal.com/myaccount/transactions" class="secondary actionlink" target="_blank" rel="noopener noreferrer">Transactions in PayPal ↗</a></div>
+    <div id="finance-stats" class="metrics"></div>
+    <div class="two-col"><article class="panel"><div class="panel-head"><h3>Payment visibility</h3><span class="warning-pill">Read-only snapshot</span></div><div id="finance-detail" class="insight-stack"></div></article><article class="panel"><div class="panel-head"><h3>Subscription economics</h3></div><div id="finance-memberships" class="insight-stack"></div></article></div>
+    <p class="footnote" id="finance-asof">Payment records are refreshed through connected-service checks, not by clicking the website's Refresh button. Billing cannot be activated from this page.</p>
+   </section>
+   <section data-page="connectors" hidden>
+    <div class="page-intro"><div><p class="overline">LIVE SOURCES × VERIFIED SNAPSHOTS</p><h2>Connector intelligence</h2><p>See what each connected provider is reporting, with collection time and scope. Dashboard Refresh updates live database and public status; private provider snapshots require a separate connector sync.</p></div></div>
+    <div id="connector-kpis" class="metrics"></div>
+    <div id="connector-reports" class="connector-reports"><p class="muted">Loading connector reports…</p></div>
    </section>
    <section data-page="integrations" hidden><div class="page-intro"><div><p class="overline">THE FULL STACK</p><h2>Connected services</h2><p>One launchpad for every service involved in Luo Chat. Each card labels what this dashboard can actually read.</p></div></div><div id="integrations-grid" class="integration-grid"></div></section>
   </main>
