@@ -77,7 +77,7 @@ test('Call mirror only affects front-facing local preview, not remote or screen 
  assert.match(experience,/syncPreviewFacing/);
 });
 
-test('Staging-tested published clip edit migration enforces identity, ownership, safe fields and revision history',async()=>{
+test('Published clip edit SQL contract enforces identity, ownership, safe fields and revision history',async()=>{
  const sql=await readFile('supabase/migrations/20261025190200_owner_clip_caption_edit.sql','utf8');
  for(const expected of [/auth.uid\(\)/,/owner_id=actor/,/kind='clip'/,/published=true/,/char_length\(new_title\)>160/,/char_length\(new_caption\)>4000/,/clip_caption_revisions/,/grant execute on function public.luo_clip_edit\(uuid,text,text\) to authenticated/])assert.match(sql,expected);
  assert.doesNotMatch(sql,/update\s+luo_internal\.space_entries\s+set\s+media/i);
