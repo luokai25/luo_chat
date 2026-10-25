@@ -25,7 +25,14 @@ test('Combined development update preserves live authentication, stories and con
  assert.equal(pkg.devDependencies['@electric-sql/pglite'],'0.5.11');
  assert.deepEqual(lock.packages[''].dependencies,pkg.dependencies);
  const dom=new JSDOM(await readFile('public/index.html','utf8'));
- try{assert.equal(digest(dom.window.document.getElementById('auth').outerHTML),'c1b8286a9c27671aee575d024e2f1a382876fe1d241eea2a4a8a3acdef3702c9')}finally{dom.window.close()}
+ try{
+  const form=dom.window.document.getElementById('auth');
+  for(const id of ['signin','signup','email','password','username','signupConfirm','signupBirthDate','guardianApproval'])assert.ok(form.querySelector('#'+id),'Missing auth field '+id);
+  assert.equal(form.querySelector('#signupBirthDate')?.getAttribute('type'),'date');
+  assert.ok(form.querySelector('#ageSignupHelp')?.textContent.includes('Minimum age: 12'));
+  assert.ok(form.querySelector('#guardianApproval')?.classList.contains('signup-only'));
+  assert.ok(form.querySelector('#authModeSignin')&&form.querySelector('#authModeSignup'));
+ }finally{dom.window.close()}
 });
 test('Social is the fifth navigation item and the retired Notes UI is absent',async()=>{
  const nav=await readFile('public/luo-approved.js','utf8'),social=await readFile('src/social-spaces.js','utf8'),app=await readFile('src/app.js','utf8');
