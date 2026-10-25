@@ -57,3 +57,54 @@ export async function verifyLivePayPalPlans({env,fetcher=fetch}={}){
   return {ok:false,reason:'PAYPAL_UNREACHABLE_OR_UNAUTHORIZED'};
  }finally{token=undefined}
 }
+
+
+const REQUIRED_WEBHOOK_EVENTS=Object.freeze([
+ 'BILLING.SUBSCRIPTION.CREATED',
+ 'BILLING.SUBSCRIPTION.ACTIVATED',
+ 'BILLING.SUBSCRIPTION.CANCELLED',
+ 'BILLING.SUBSCRIPTION.SUSPENDED',
+ 'BILLING.SUBSCRIPTION.EXPIRED',
+ 'BILLING.SUBSCRIPTION.PAYMENT.FAILED',
+ 'PAYMENT.SALE.COMPLETED',
+ 'PAYMENT.SALE.REFUNDED',
+ 'PAYMENT.SALE.REVERSED'
+]);
+// Read-only check: the webhook MUST be visible through the same REST app
+// credentials used by the checkout service. Display names prove nothing.
+export function sameAppWebhook(webhook,{id,url}={}){
+ if(!webhook||typeof webhook!=='object'||Array.isArray(webhook)
+   ||webhook.id!==id||webhook.url!==url)return false;
+ const events=webhook.event_types;
+ if(!Array.isArray(events))return false;
+ const actual=new Set(events.map(e=>e?.name));
+ return REQUIRED_WEBHOOK_EVENTS.every(e=>actual.has(e)||actual.has('*'));
+}
+export async function verifyLivePayPalWebhook({env,fetcher=fetch,origin='https://luo-chat-luokai25.vercel.app'}={}){
+ const webhookId=env?.LUO_PAYPAL_LIVE_WEBHOOK_ID;
+ if(!paypalLiveConfigPresent(env)||typeof webhookId!=='string'
+   ||!/^[A-Za-z0-9]{12,48}$/.test(webhookId))
+  return {ok:false,reason:'LIVE_REST_APP_WEBHOOK_NOT_CONFIGURED'};
+ const expectedUrl=origin+LIVE_PAYPAL_WEBHOOK_PATH;
+ if(origin!=='https://luo-chat-luokai25.vercel.app')return {ok:false,reason:'UNTRUSTED_WEBHOOK_DESTINATION'};
+ // Never expose the merchant OAuth token, app ID or webhook body in output.
+ const auth=Buffer.from(env.LUO_PAYPAL_LIVE_CLIENT_ID+':'+env.LUO_PAYPAL_LIVE_CLIENT_SECRET).toString('base64');
+ try{
+  const oauth=await readJson(fetcher,LIVE+'/v1/oauth2/token',{
+   method:'POST',headers:{Authorization:'Basic '+auth,'Content-Type':'application/x-www-form-urlencoded'},
+   body:'grant_type=client_credentials'});
+  if(typeof oauth.access_token!=='string'||oauth.access_token.length<20)throw Error('PAYPAL_LIVE_AUTH_INVALID');
+  // GET by ID with THIS app's OAuth token is the critical identity check.
+  // A renamed NVP/SOAP app webhook cannot silently pass for a REST app webhook.
+  const resp=await fetcher(LIVE+'/v1/notifications/webhooks/'+encodeURIComponent(webhookId),{
+   headers:{Authorization:'Bearer '+oauth.access_token,'Accept':'application/json'},
+   signal:AbortSignal.timeout(12000)});
+  if(resp.status===404||resp.status===403)return {ok:false,reason:'WEBHOOK_NOT_IN_THIS_REST_APP'};
+  if(!resp.ok)throw Error('PAYPAL_LIVE_WEBHOOK_LOOKUP_FAILED');
+  const webhook=await resp.json();
+  const ok=sameAppWebhook(webhook,{id:webhookId,url:expectedUrl});
+  return {ok,reason:ok?'MATCH':'WEBHOOK_URL_OR_EVENTS_MISMATCH'};
+ }catch{
+  return {ok:false,reason:'PAYPAL_LIVE_WEBHOOK_CHECK_UNAVAILABLE'};
+ }
+}
