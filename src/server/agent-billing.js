@@ -79,7 +79,7 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
    const auth=clientFactory(STAGING,env.LUO_AGENT_STAGING_PUBLISHABLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
    const signed=await auth.auth.signInWithPassword({email:'agent+'+username+'@agents.luo.invalid',password:input.password});
    if(signed.error||!signed.data?.user?.id)return jsonError(res,401,'INVALID_CREDENTIALS');
-   const quote=quoteAgentPlan(input.plan,{now:now(),promoStart:env.LUO_AGENT_PROMO_START_AT});
+   const quote=quoteAgentPlan(input.plan,{now:now(),promoStart:env.LUO_AGENT_PROMOTIONS_ENABLED==='true'?env.LUO_AGENT_PROMO_START_AT:undefined});
    // A promo checkout is denied if its provider-specific first-invoice contract
    // has not been configured; never silently charge the normal price instead.
    if(input.provider==='paypal'&&!paypalPlanId(env,input.plan,quote.offer_active))return jsonError(res,503,'PAYPAL_PLAN_UNCONFIGURED');
