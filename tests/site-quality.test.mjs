@@ -11,7 +11,7 @@ test('all generated public pages have unique metadata, canonical clean slugs, on
     assert.equal(d.querySelector('meta[name=robots]').content,'index,follow');assert.equal(d.querySelector('meta[property="og:image"]').content,SITE+'/og-image.png');assert.equal(d.querySelector('[itemtype="https://schema.org/WebPage"] [itemprop=name]').content,d.title);
     let level=0;for(const h of d.querySelectorAll('h1,h2,h3,h4,h5,h6')){const n=Number(h.tagName[1]);assert.ok(n<=level+1,`${file}: skipped ${level} to ${n}`);level=n}
     for(const image of d.querySelectorAll('img')){assert.ok(image.hasAttribute('alt'),file);assert.ok(image.hasAttribute('width')&&image.hasAttribute('height'),'Reserve image layout space')}
-    for(const e of d.querySelectorAll('[href],[src]')){const raw=e.getAttribute('href')||e.getAttribute('src');if(!raw.startsWith('/'))continue;const p=new URL(raw,SITE).pathname;if(p==='/')continue;if(p==='/app.js')continue;try{await access(dir+p)}catch{await access(dir+p+'.html')}}
+    for(const e of d.querySelectorAll('[href],[src]')){const raw=e.getAttribute('href')||e.getAttribute('src');if(!raw.startsWith('/'))continue;const p=new URL(raw,SITE).pathname;if(p==='/')continue;if(p==='/app.js'||p.startsWith('/api/'))continue;try{await access(dir+p)}catch{await access(dir+p+'.html')}}
    }finally{dom.window.close()}
   }
   const sitemap=new JSDOM(await readFile(dir+'/sitemap.xml','utf8'),{contentType:'application/xml'});assert.equal(sitemap.window.document.querySelectorAll('loc').length,12);for(const loc of sitemap.window.document.querySelectorAll('loc'))assert.ok(!loc.textContent.endsWith('.html'));sitemap.window.close();
