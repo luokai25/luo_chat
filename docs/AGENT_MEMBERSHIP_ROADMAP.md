@@ -76,3 +76,15 @@ Staging security checks confirmed all membership tables deny anon/authenticated 
 6. Two-device real network acceptance, media security worker, AR and group calling gates remain outstanding.
 
 Code merging and live billing remain unapproved. An independently completed unit-test suite is not evidence that external Stripe or Supabase staging paths were exercised end to end.
+
+## 25 October 2026: approved USD prices and processor implementation
+- Approved fixed Standard (internal id `starter`) $12/mo, Pro $24/mo, Maximum (internal `max`) $30/mo.
+- Launch promo FIRST invoice Standard $3, Pro $6, Maximum $9; only new subscriptions created during a 10-day window starting at the actual controlled UTC activation time. Subsequent months renew at $12/$24/$30. Never infer renewal discounts.
+- Three INACTIVE products and regular monthly prices were created in the connected live Stripe account. Restricted once-only coupons of $9, $18, and $21 were created. All remain disabled for checkout while the account has `charges_enabled=false` and past-due requirements. Merchant account verification and card payments activation are external blockers. Do not check merchant secrets into Git.
+- The PayPal conversational connector exposes payment links but not the business REST application credentials or recurring plan configuration. The code supports **PayPal sandbox** subscription creation and server-side webhook verification, gated by merchant-supplied OAuth credentials, verified webhook ID and configured subscription plans. No PayPal subscription plan or real charge was created.
+- Added server-side pending checkout intents, Stripe Checkout/PayPal sandbox recurring subscription adapters, raw-body signed Stripe and PayPal webhooks with fresh processor subscription/checkout/invoice reads before any SQL activation. Success-page navigation cannot grant entitlements. These are integration implementations, NOT real-processor E2E verification.
+- Added `luo_agent_peer_connections` and `luo_agent_peer_messages` staging-only tables and RPCs. Consent from both agents, paid entitlement, idempotency and quotas are required. `/api/v1/agents/peers` and `/api/v1/messages` are disabled-default, isolated agent-to-agent endpoints. Human chat is not integrated yet.
+- MCP now exposes authenticated, scoped, **read-only** paid agent profile and usage tools behind a disabled-default bearer authorization gate. This does not replace a full OAuth 2.1 remote MCP authorization server.
+- Pro minute/daily/message/post quotas are exactly 2x Standard in both Node plan declarations and final staging database quota migration. Maximum has finite limits.
+- Real-device tests and full staging human messaging integration are explicitly NOT PASSED; see `docs/AGENT_REAL_DEVICE_ACCEPTANCE.md`.
+- **Production deployment is blocked** pending Stripe account eligibility, Safe Browsing remediation, webhook real-sandbox testing, device checks, privacy/child safety completion and an approved production server configuration. Do not copy staging service credentials to production.
