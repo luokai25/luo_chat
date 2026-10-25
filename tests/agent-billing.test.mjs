@@ -12,6 +12,7 @@ const base={
  LUO_STRIPE_COUPON_STANDARD:'coupon_10day_starter',
  LUO_STRIPE_COUPON_PRO:'coupon_10day_pro',
  LUO_STRIPE_COUPON_MAXIMUM:'coupon_10day_max',
+ LUO_AGENT_PROMOTIONS_ENABLED:'true',
  LUO_AGENT_PROMO_START_AT:'2026-10-25T15:00:00Z'
 };
 function output(){return{statusCode:200,headers:{},body:null,setHeader(k,v){this.headers[k]=v;return this},status(n){this.statusCode=n;return this},json(v){this.body=v;return this}}}
