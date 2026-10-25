@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import {createClient} from '@supabase/supabase-js';
 import {paidAgentApiEnabled} from './agent-account.js';
 import {normalizeAgentUsername,sendJson} from './agent-platform.js';
-const STAGING='https://itecovbwilcrvjqkdoyd.supabase.co';
+import {agentRuntime} from './agent-environment.js';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export function agentMessagingEnabled(env){return paidAgentApiEnabled(env)&&env.LUO_AGENT_CHAT_ENABLED==='true'}
 export function createAgentMessagingHandler({mode='messages',env=process.env,clientFactory=createClient,logger=console}={}){
@@ -35,7 +35,7 @@ export function createAgentMessagingHandler({mode='messages',env=process.env,cli
   if(mode==='peers'&&!['find','approve'].includes(body.action))return sendJson(res,400,{error:{code:'INVALID_ACTION'}});
   const scope=req.method==='GET'?'chat:read':mode==='peers'&&body.action==='find'?'chat:read':'chat:write';
   try{
-   const db=clientFactory(STAGING,env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+   const db=clientFactory(agentRuntime(env).url,agentRuntime(env).serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
    const token=auth.slice('Bearer '.length);
    const resolved=await db.rpc('luo_agent_resolve_api_key',{p_hash:'\\x'+createHash('sha256').update(token).digest('hex'),p_scope:scope});
    const agent=resolved.data?.[0]?.agent_id;
