@@ -2,7 +2,9 @@ import {readFile,access,readdir} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 const html=await readFile('dist/index.html','utf8'),manifest=JSON.parse(await readFile('dist/manifest.json','utf8')),sw=await readFile('dist/sw.js','utf8');
-for(const path of [...html.matchAll(/(?:src|href)="(\/[^"?]+)(?:\?[^\"]*)?"/g)].map(m=>m[1]))await access('dist'+path);
+for(const path of [...html.matchAll(/(?:src|href)="(\/[^"?]+)(?:\?[^\"]*)?"/g)].map(m=>m[1])){
+ try{await access('dist'+path)}catch{await access('dist'+path+'.html')}
+}
 for(const icon of manifest.icons)await access('dist'+icon.src);
 const shell=JSON.parse(sw.match(/SHELL=(\[[^;]+\]);/)[1]);for(const path of shell)await access('dist'+path);
 assert.ok(shell.every(path=>path.startsWith('/')&&!path.includes('supabase')&&!path.includes('/api')));
@@ -30,3 +32,7 @@ assert.ok(app.includes('luo50-01')&&app.includes('luo50-50'));
 assert.ok(!app.includes('200 original stickers'));
 assert.ok(app.includes('50 premium stickers'));
 console.log('PASS: exactly 50 new stickers packaged and picker updated; none of the original 200 packaged.');
+await import('./check-web-budgets.mjs');
+const connectionChecks=await readFile('dist/connection-checks.js','utf8');
+for(const m of connectionChecks.matchAll(/\/(?:app-[A-Z0-9]+\.js|style-[a-f0-9]+\.css|icon-192-[a-f0-9]+\.png)/g))await access('dist'+m[0]);
+console.log('PASS: connection diagnostic asset URLs point to this build');

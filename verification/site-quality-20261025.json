@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "4a713e2f6a80d22e7920f6d704a8c8461442a6f9",
+  "scope": "Development only. No production deployment, hosted SQL, account, billing, domain or auth configuration mutation.",
+  "automated_tests": {"passed": 481, "failed": 0, "added": 9},
+  "native_browser": {"public_pages": 11, "viewports": [320, 390, 768, 1440], "responsive_checks_passed": 44, "page_exceptions": 0, "consent_persistence_and_keyboard": true, "external_requests_blocked": true, "physical_device_certification": false},
+  "clean_builds": {"independent_lockfile_installs": 2, "frozen_input_snapshot": true, "matching_output_files": 119, "fresh_database_restore_verified": false},
+  "assets": {"png_files": 57, "png_bytes_before": 2898600, "png_bytes_after": 2835592, "lossless_bytes_saved": 63008, "app_gzip_bytes": 226324, "unique_page_linked_css_gzip_bytes": 51166, "og_image_bytes": 56391, "og_dimensions": [1200, 630], "field_core_web_vitals_verified": false},
+  "credential_checks": {"current_tree_pattern_scan": "passed", "historical_text_blobs_scanned": 852, "historical_pattern_findings": 0, "scope_limit": "Locally reachable small text blobs; not a remote provider secret-scan or revocation guarantee"},
+  "production_dependency_audit": {"known_vulnerabilities": 0},
+  "live_read_only_audit": {"public_tables": 86, "public_tables_without_rls": 0, "anonymous_public_table_select_grants": 0, "authenticated_public_table_select_grants": 70, "anonymous_executable_public_security_definers": 0, "public_security_definers_without_search_path_setting": 0, "policyless_public_tables_with_anon_or_authenticated_select": 0, "internal_tables_without_rls": ["friend_request_limits"], "leaked_password_protection": "disabled", "private_media_buckets": ["chat-media", "luo-stories", "luo-vault", "luo-social"], "public_avatar_bucket": true, "vercel_env_decryption_requested": false},
+  "new_fixes": ["Public SEO metadata, clean canonical slugs, sitemap and robots", "WebPage microdata and share image", "Generated linked legal review drafts", "Consent-gated optional browser diagnostics with withdrawal", "Lossless packaged PNG optimization and static image layout dimensions", "Offline public-page navigation cannot replace app shell", "Connection diagnostics reference current hashed assets", "Fail-closed shared relay-configuration quota and cross-site rejection", "Earned-link strategy and comprehensive release checklist"],
+  "not_completed": ["Real-device and cross-network RTP/TURN acceptance", "Expiring TURN credentials and bandwidth quotas before enabling relay", "Backend staging and Reels proposal activation", "Trusted server media validation/quarantine", "Hosted leaked-password protection", "Owner Search Console verification", "Provider spend caps and preview isolation verification", "Final legal identity, Termly/TermsFeed or qualified EULA review and formal copyright process", "Field Core Web Vitals", "Advanced AR, native background/group calls and remaining editor scope"],
+  "report": "docs/PRODUCTION_CHECKLIST_20261025.md"
+}

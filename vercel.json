@@ -1,1 +1,96 @@
-{"version":2,"buildCommand":"npm run release:check","outputDirectory":"dist","framework":null,"headers":[{"source":"/(.*)","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"no-referrer"},{"key":"X-Frame-Options","value":"DENY"},{"key":"Permissions-Policy","value":"camera=(self), microphone=(self), geolocation=()"},{"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://byjixqwpjvsgmqilmzbm.supabase.co https://static.klipy.com https://static1.klipy.com https://static2.klipy.com; connect-src 'self' https://commons.wikimedia.org https://api.klipy.com https://byjixqwpjvsgmqilmzbm.supabase.co wss://byjixqwpjvsgmqilmzbm.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; media-src 'self' blob: https://byjixqwpjvsgmqilmzbm.supabase.co; frame-src https://byjixqwpjvsgmqilmzbm.supabase.co"},{"key":"Cross-Origin-Opener-Policy","value":"same-origin"},{"key":"X-DNS-Prefetch-Control","value":"off"},{"key":"Strict-Transport-Security","value":"max-age=63072000; includeSubDomains; preload"}]},{"source":"/index.html","headers":[{"key":"Cache-Control","value":"no-cache"}]},{"source":"/manifest.json","headers":[{"key":"Cache-Control","value":"no-cache, max-age=0, must-revalidate"}]},{"source":"/sw.js","headers":[{"key":"Cache-Control","value":"no-cache, max-age=0, must-revalidate"}]}],"name":"luo-chat-luokai25"}
+{
+  "version": 2,
+  "buildCommand": "npm run release:check",
+  "outputDirectory": "dist",
+  "framework": null,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(self), microphone=(self), geolocation=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://byjixqwpjvsgmqilmzbm.supabase.co https://static.klipy.com https://static1.klipy.com https://static2.klipy.com; connect-src 'self' https://commons.wikimedia.org https://api.klipy.com https://byjixqwpjvsgmqilmzbm.supabase.co wss://byjixqwpjvsgmqilmzbm.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; media-src 'self' blob: https://byjixqwpjvsgmqilmzbm.supabase.co; frame-src https://byjixqwpjvsgmqilmzbm.supabase.co; upgrade-insecure-requests"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-DNS-Prefetch-Control",
+          "value": "off"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/(cookie-consent.js|cookie-consent.css)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ],
+  "name": "luo-chat-luokai25",
+  "cleanUrls": true
+}

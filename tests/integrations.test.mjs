@@ -24,7 +24,7 @@ test('synthetic integration checks never count as application errors',async()=>{
  const events=[];const q=request();q.body.code='INTEGRATION_SELF_TEST';const r=res();await createTelemetryHandler({env,fetcher:async(url,options)=>{if(url.includes('posthog'))events.push(JSON.parse(options.body));return{ok:true,json:async()=>({result:1})}}})(q,r);assert.equal(r.statusCode,204);assert.equal(events[0].event,'luo_integration_check');
 });
 test('browser diagnostics ignore private data, obey privacy signals and bound requests',async()=>{
- const listeners={},calls=[];const win={navigator:{},addEventListener:(n,f)=>listeners[n]=f,fetch:async(...args)=>calls.push(args)};installTelemetry(win);
+ const listeners={},calls=[];const win={navigator:{},luoDiagnosticsAllowed:()=>true,addEventListener:(n,f)=>listeners[n]=f,fetch:async(...args)=>calls.push(args)};installTelemetry(win);
  for(let i=0;i<10;i++){listeners.error({error:new Error('password secret chat text')});listeners.unhandledrejection({reason:'private'});}assert.equal(calls.length,2);assert.equal(calls.map(x=>x[1].body).join('').includes('private'),false);
  for(const navigator of [{globalPrivacyControl:true},{doNotTrack:'1'}]){installTelemetry({...win,navigator,addEventListener:()=>assert.fail('privacy signal ignored')});}
 });

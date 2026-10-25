@@ -15,9 +15,10 @@ test('Combined development update preserves live authentication, stories and con
   "src/connections.js": "8ac1249cfbb4ef6e530a62ce13d24bdf77f7c347a876182cf51cb38d71b39a29",
   "src/config.js": "fa7a01c29835bd63f883ed6d092febcffa3389b586aa5135c99aa633327f55f2",
   "public/luo-session-boot.js": "2068acd5af69f38ccf4f25ab3647a39a2087dc4fe97307c3e4b400705c440b64",
-  "public/luo-auth-premium.css": "e418ef836af858e4d53debe5726473753e708d091350eb7801793a3795c6deea",
-  "vercel.json": "6009db6f855892388a6656a797dfdcc140ac5ea7505d3aca06a347bb408bfe65"
+  "public/luo-auth-premium.css": "e418ef836af858e4d53debe5726473753e708d091350eb7801793a3795c6deea"
 };
+ // Hosting changes are explicitly requested for SEO/security. Their invariants
+ // are tested semantically in site-quality, rather than freezing the old file.
  for(const [path,hash] of Object.entries(expected))assert.equal(digest(await readFile(path)),hash,path+' must match the live backup');
  const pkg=JSON.parse(await readFile('package.json','utf8')),lock=JSON.parse(await readFile('package-lock.json','utf8'));
  assert.deepEqual(pkg.dependencies,{'@supabase/supabase-js':'2.118.0',gifenc:'1.0.3',qrcode:'1.5.4'});

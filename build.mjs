@@ -3,12 +3,16 @@ import {cp,mkdir,readFile,writeFile,rm,rename,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {SUPABASE_URL,SUPABASE_KEY} from './src/config.js';
 import {validatePublicConfig} from './scripts/public-config.mjs';
+import {enhanceSite} from './scripts/site-quality.mjs';
+import {optimizePNGs} from './scripts/optimize-png.mjs';
 const hosting=JSON.parse(await readFile('vercel.json','utf8'));
 const csp=hosting.headers?.find(rule=>rule.source==='/(.*)')?.headers?.find(header=>header.key.toLowerCase()==='content-security-policy')?.value;
 validatePublicConfig({url:SUPABASE_URL,key:SUPABASE_KEY,csp});
 const release=JSON.parse(await readFile('package.json','utf8')).version;
 if(!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(release))throw Error('A valid release version is required.');
 await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});await cp('public','dist',{recursive:true});
+await enhanceSite('dist');
+const images=await optimizePNGs('dist');console.log('Lossless PNG compression:',JSON.stringify(images));
 await build({entryPoints:{app:'src/entry.js'},entryNames:'[name]',outdir:'dist',define:{'process.env.LUO_SUPABASE_URL':JSON.stringify(process.env.LUO_SUPABASE_URL||''),'process.env.LUO_SUPABASE_KEY':JSON.stringify(process.env.LUO_SUPABASE_KEY||'')},bundle:true,format:'esm',target:['es2022'],minify:true,legalComments:'eof'});
 // esbuild's graph hash can differ across source paths even for identical bytes.
 // Address the emitted file by its bytes, just like CSS/icons below.
@@ -24,6 +28,10 @@ const manifest=JSON.parse(await readFile('dist/manifest.json','utf8'));for(const
 let html=await readFile('dist/index.html','utf8');html=html.replace('<span id="appVersion">development</span>','<span id="appVersion">'+release+'</span>').replace('</head>','<meta name="luo-version" content="'+release+'"></head>');for(const [old,fresh] of Object.entries(iconMap))html=html.replaceAll(old,fresh);html=html.replace('src="/app.js"','src="/'+js+'"').replace('href="/style.css"','href="/'+css+'"').replace('href="/luo-social-feed.css"','href="/'+socialCSS+'"');await writeFile('dist/index.html',html);
 html=html.replace(/href="\/luo-call-quality\.css(?:\?[^"]*)?"/,'href="/'+callCSS+'"');await writeFile('dist/index.html',html);
 const shell=['/index.html','/'+js,'/'+css,'/'+socialCSS,'/'+callCSS,...Object.values(iconMap),'/'+manifestName];
+// Self-service diagnostics must follow this build, not obsolete bundle hashes.
+let checks=await readFile('dist/connection-checks.js','utf8');
+checks=checks.replace(/\/app-[A-Z0-9]+\.js/g,'/'+js).replace(/\/style-[a-f0-9]+\.css/g,'/'+css).replace(/\/icon-192-[a-f0-9]+\.png/g,iconMap['/icon-192.png']);
+await writeFile('dist/connection-checks.js',checks);
 const version=createHash('sha256').update(html).digest('hex').slice(0,12);
 await writeFile('dist/sw.js',`const CACHE='luo-chat-${version}',SHELL=${JSON.stringify(shell)};
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE_UPDATE')event.waitUntil(self.skipWaiting());});
@@ -31,6 +39,6 @@ self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(
 self.addEventListener('push',event=>{let payload;try{payload=event.data.json()}catch{payload={}}const owner=typeof payload?.data?.owner==='string'&&/^[a-f0-9-]{36}$/.test(payload.data.owner)?payload.data.owner:null;event.waitUntil(self.registration.showNotification('Luo Chat',{body:payload?.kind==='call'?'Incoming Luo Chat call':'You have a new message',tag:owner?'luo-push-'+owner:'luo-push',data:{luo:true,owner}}));});
 self.addEventListener('notificationclick',event=>{if(!event.notification.data?.luo)return;event.notification.close();event.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(async clients=>{const page=clients.find(client=>new URL(client.url).origin===self.location.origin);if(page)return page.focus();return self.clients.openWindow('/');}));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('luo-chat-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
-self.addEventListener('fetch',event=>{const request=event.request,url=new URL(request.url);if(request.method!=='GET'||url.origin!==self.location.origin)return;if(request.mode==='navigate'){event.respondWith(fetch(request).then(async response=>{if(response.ok){await(await caches.open(CACHE)).put('/index.html',response.clone());}return response;}).catch(()=>caches.match('/index.html')));return;}if(SHELL.includes(url.pathname)||/^\\/app-[A-Z0-9]+\\.js$|^\\/style-[a-f0-9]+\\.css$/.test(url.pathname)){event.respondWith(caches.match(request).then(cached=>cached||fetch(request).then(async response=>{if(response.ok)await(await caches.open(CACHE)).put(request,response.clone());return response;})));}});
+self.addEventListener('fetch',event=>{const request=event.request,url=new URL(request.url);if(request.method!=='GET'||url.origin!==self.location.origin)return;if(request.mode==='navigate'&&(url.pathname==='/'||url.pathname==='/index.html')){event.respondWith(fetch(request).then(async response=>{if(response.ok){await(await caches.open(CACHE)).put('/index.html',response.clone());}return response;}).catch(()=>caches.match('/index.html')));return;}if(SHELL.includes(url.pathname)||/^\\/app-[A-Z0-9]+\\.js$|^\\/style-[a-f0-9]+\\.css$/.test(url.pathname)){event.respondWith(caches.match(request).then(cached=>cached||fetch(request).then(async response=>{if(response.ok)await(await caches.open(CACHE)).put(request,response.clone());return response;})));}});
 `);
 console.log('Luo Chat production bundle and private-data-free offline shell ready');
