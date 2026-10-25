@@ -5,6 +5,11 @@ import {SUPABASE_URL,SUPABASE_KEY} from './src/config.js';
 import {validatePublicConfig} from './scripts/public-config.mjs';
 import {enhanceSite} from './scripts/site-quality.mjs';
 import {optimizePNGs} from './scripts/optimize-png.mjs';
+// Prevent the Reels preview branch from silently falling back to the live chat DB.
+// Only the isolated staging publishable key and project may be used in previews.
+if(process.env.VERCEL_ENV==='preview'&&process.env.VERCEL_GIT_COMMIT_REF==='feature/reels-immersive-20261025'){
+ if(process.env.LUO_SUPABASE_URL!=='https://itecovbwilcrvjqkdoyd.supabase.co'||!process.env.LUO_SUPABASE_KEY)throw Error('Reels preview requires the isolated staging Supabase URL and publishable key; refusing production fallback.');
+}
 const hosting=JSON.parse(await readFile('vercel.json','utf8'));
 const csp=hosting.headers?.find(rule=>rule.source==='/(.*)')?.headers?.find(header=>header.key.toLowerCase()==='content-security-policy')?.value;
 validatePublicConfig({url:SUPABASE_URL,key:SUPABASE_KEY,csp});
