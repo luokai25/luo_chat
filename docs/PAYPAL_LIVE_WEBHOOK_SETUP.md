@@ -2,6 +2,18 @@
 
 Operator: Luo's Creations. PayPal REST app: Luo Chat Payments.
 
+## CRITICAL: NVP/SOAP is not a REST application
+
+The merchant initially registered an app-specific webhook using the PayPal **NVP SOAP Webhooks** special app and subsequently changed its display name. **Renaming this special app does not convert it into a REST API app or make it deliver REST subscription events.** PayPal documentation states that NVP/SOAP special-app notifications come only from legacy NVP/SOAP transactions, not those processed by another REST app.
+
+The merchant must select/create an actual **Live REST API app**, ensure its Live client ID/secret are the ones stored in Vercel, and register the webhook inside that same REST app. A previous webhook ID must NOT be trusted based solely on the display name.
+
+Before enabling recurring billing, use the read-only `verifyLivePayPalWebhook` in `src/server/paypal-live-preflight.js`: it makes `GET /v1/notifications/webhooks/{id}` with the Live app OAuth credentials, verifies the registered URL and the required events, and fails closed if the webhook belongs to a different app. Also verify regular plan prices using `verifyLivePayPalPlans`.
+
+Reference: https://developer.paypal.com/api/rest/webhooks/ (under **Initial configuration**).
+
+The client secret shown in the conversation was exposed. **Do not open real checkout until it has been rotated, even if a reminder is scheduled for later.** Never store any actual secret value in code, docs, commits or AI chat.
+
 ## Current status
 - Three regular Live PayPal plan IDs are saved in **Production** Vercel settings: Standard 12 USD/month, Pro 24 USD/month, Maximum 30 USD/month.
 - Introductory discounts are intentionally postponed; do not create extra discounted billing plans.
