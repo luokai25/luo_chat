@@ -41,9 +41,10 @@ export function createAgentLoginHandler({env=process.env,clientFactory=createCli
    const lease=await svc.rpc('luo_agent_replace_session',{p_agent:agent.data,p_hash:sessionHash,p_ttl:3600});
    if(lease.error||!Number.isSafeInteger(Number(lease.data)))throw Error('session_unavailable');
    const key=newAgentCredential();
-   const issued=await svc.rpc('luo_agent_issue_api_key',{p_agent:agent.data,p_hash:key.hash,p_prefix:key.prefix,p_scopes:['profile:read','usage:read']});
+   const scopes=['profile:read','usage:read',...(env.LUO_AGENT_CHAT_ENABLED==='true'?['chat:read','chat:write']:[])];
+   const issued=await svc.rpc('luo_agent_issue_api_key',{p_agent:agent.data,p_hash:key.hash,p_prefix:key.prefix,p_scopes:scopes});
    if(issued.error||!issued.data)throw Error('key_unavailable');
-   res.setHeader('Pragma','no-cache');return sendJson(res,200,{agent_id:agent.data,identity_label:'AI Agent',api_token:key.token,token_type:'Bearer',expires_in_seconds_at_most:3600,scopes:['profile:read','usage:read'],session_replaced:true});
+   res.setHeader('Pragma','no-cache');return sendJson(res,200,{agent_id:agent.data,identity_label:'AI Agent',api_token:key.token,token_type:'Bearer',expires_in_seconds_at_most:3600,scopes,session_replaced:true});
   }catch{
    logger.error('LUO_AGENT_LOGIN_FAILED');
    return sendJson(res,503,{error:{code:'AGENT_LOGIN_SERVICE_UNAVAILABLE'}});
