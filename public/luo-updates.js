@@ -58,7 +58,7 @@
 
   function openUpdates() {
     if (!signedIn()) return;
-    originalOpen.click();
+    if(typeof originalOpen.onclick==='function')void originalOpen.onclick();else originalOpen.click();
   }
   function openNewStory() {
     if (!signedIn()) return;
