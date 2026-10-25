@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "3220b69de4fa7d86d80e21adcfaf7090794f19be",
+  "scope": "Development only; production, hosted backend, accounts, icon and APK unchanged",
+  "automated_tests": {"passed": 460, "failed": 0, "added": 9},
+  "clean_builds": {"independent_lockfile_installs": 2, "byte_identical_output_files": 100},
+  "native_camera_test": {
+    "passed": true,
+    "input": "Chromium synthetic camera/microphone",
+    "encoder": "Real MediaRecorder and canvas track, not a mocked recorder",
+    "saved_file": "Playable nonempty WebM; monochrome pixel-channel difference verified below threshold",
+    "checks": ["No camera access before explicit action", "Unsupported torch/zoom hidden", "Flip preserves effect and microphone", "Cancelled countdown does not record", "Processed track encoded with original audio", "Hold and slide locks recording after release", "No upload", "Track cleanup after finish/cancel", "Clean unmount"],
+    "viewports": ["320x640", "390x844", "844x390"],
+    "page_exceptions": 0
+  },
+  "call_browser_regression": "passed; fixture transport is not real RTP verification",
+  "reels_browser_regression": "passed including real trim/export and IndexedDB drafts",
+  "credential_pattern_scan": {"passed": true, "text_files": 361},
+  "production_dependency_audit": {"known_vulnerabilities": 0},
+  "new_dependencies": [],
+  "remaining": ["Unified Photo/Story routing", "Physical-device torch/zoom/touch/flip acceptance", "Advanced AR/tracking/background models", "Full multi-track editor", "Persistent effect favorites", "Trusted server media inspection", "Native background calling", "Remote two-device calling/TURN", "APK release", "Reels v2 staging activation"],
+  "report": "docs/REEL_CAMERA_READINESS.md"
+}

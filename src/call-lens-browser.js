@@ -1,11 +1,11 @@
 import {CALL_EFFECTS} from './call-effects.js';
 // Thumbnails are local camera snapshots processed by the same preset, never stock AR imagery.
-export function installCallLensBrowser({win,sheet,rail,getStream,isCurrent}){
+export function installCallLensBrowser({win,sheet,rail,getStream,isCurrent,prefix='call'}){
  const doc=win.document,favorites=new Set();let source=null,timer=null,generation=0;
- const browse=doc.createElement('button');browse.type='button';browse.id='callBrowseEffects';browse.textContent='Browse effects';browse.setAttribute('aria-expanded','false');
- const favorite=doc.createElement('button');favorite.type='button';favorite.id='callFavoriteEffect';favorite.textContent='Favorite selected';
- const search=doc.createElement('input');search.type='search';search.id='callEffectSearch';search.placeholder='Search bundled effects';search.setAttribute('aria-label','Search bundled effects');search.hidden=true;
- const category=doc.createElement('select');category.id='callEffectCategory';category.setAttribute('aria-label','Effect category');category.hidden=true;for(const [id,label] of [['all','All bundled'],['favorites','Session favorites'],['cinematic','Cinematic'],['luo','Luo Exclusive']]){const option=doc.createElement('option');option.value=id;option.textContent=label;category.append(option)}
+ const browse=doc.createElement('button');browse.type='button';browse.id=prefix+'BrowseEffects';browse.textContent='Browse effects';browse.setAttribute('aria-expanded','false');
+ const favorite=doc.createElement('button');favorite.type='button';favorite.id=prefix+'FavoriteEffect';favorite.textContent='Favorite selected';
+ const search=doc.createElement('input');search.type='search';search.id=prefix+'EffectSearch';search.placeholder='Search bundled effects';search.setAttribute('aria-label','Search bundled effects');search.hidden=true;
+ const category=doc.createElement('select');category.id=prefix+'EffectCategory';category.setAttribute('aria-label','Effect category');category.hidden=true;for(const [id,label] of [['all','All bundled'],['favorites','Session favorites'],['cinematic','Cinematic'],['luo','Luo Exclusive']]){const option=doc.createElement('option');option.value=id;option.textContent=label;category.append(option)}
  const bar=doc.createElement('div');bar.className='luo-lens-discovery';bar.append(browse,favorite,search,category);rail.before(bar);
  const empty=doc.createElement('p');empty.className='luo-lens-empty';empty.hidden=true;empty.textContent='No matching bundled effects.';rail.after(empty);
  for(const button of rail.children){const effect=CALL_EFFECTS.find(e=>e.id===button.dataset.effect);const canvas=doc.createElement('canvas');canvas.width=canvas.height=72;canvas.setAttribute('aria-hidden','true');const label=doc.createElement('span');label.textContent=effect.label;button.replaceChildren(canvas,label);button.title=effect.id==='original'?'Unmodified camera':'Luo Chat bundled color effect: '+effect.label;}

@@ -1,5 +1,7 @@
 # Immersive calling UI continuation
 
+The subsequent Reel video camera/saved-effects increment is documented in `docs/REEL_CAMERA_READINESS.md`; the results here describe the preceding call-screen update.
+
 Date: 2026-10-25. Base: `4997a101916608cd39bb74b44b2a94c55950e797`. Development branch only, alongside Reels, color effects and screen sharing. No production, hosted SQL, account changes, paid SDK, new dependency or APK release.
 
 ## Implemented from the expanded specification

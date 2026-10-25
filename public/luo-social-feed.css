@@ -84,3 +84,36 @@
 .luo-clip-composer{max-width:760px;margin:0 auto;padding:18px;color:#f5e5c7}.luo-clip-composer h2{color:#eed097}.luo-clip-composer header p{color:#c9b99c;font-size:13px}.luo-clip-preview{display:block;width:100%;height:min(48dvh,440px);background:#000;object-fit:contain;border:1px solid #65502e;border-radius:16px}.luo-clip-tools{display:flex;flex-wrap:wrap;gap:8px;padding:13px 0}.luo-clip-tool{border:1px solid #7c623a;border-radius:12px;background:#241d14;color:#f2d39b;min-height:44px;padding:9px 14px}.luo-clip-edit{border:1px solid #6a5431;border-radius:14px;padding:14px;display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}.luo-clip-edit label{font-size:12px;flex:1;min-width:100px}.luo-clip-composer input,.luo-clip-composer select,.luo-clip-composer textarea{max-width:100%;padding:11px;background:#201c16;color:#fff0d0;border:1px solid #7c6339;border-radius:10px;min-height:44px}.luo-clip-edit input,.luo-clip-edit select{width:100%;display:block;margin-top:7px}.luo-clip-publish{display:grid;gap:12px}.luo-clip-publish textarea{min-height:100px;resize:vertical}.luo-clip-tools input[type=file]{width:100%}
 .luo-feed-reels .luo-feed-actions>.luo-reel-repost>span{position:static!important;clip-path:none!important;height:auto!important;width:auto!important;overflow:visible!important}.luo-clip-progress{width:100%;height:8px;accent-color:#e8c171;margin-top:10px}
 .luo-clip-drafts{padding:12px;margin:14px 0;border:1px solid #67512e;border-radius:14px;background:#17130f}.luo-clip-drafts summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:#ebcb8c;font-weight:650}.luo-clip-drafts p{font-size:12px;color:#c9baa1}.luo-clip-draft-list{display:grid;gap:10px}.luo-clip-draft-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0;border-bottom:1px solid #4b3a24}.luo-clip-draft-row strong,.luo-clip-draft-row small{grid-column:1/-1;overflow-wrap:anywhere}.luo-clip-draft-row small{color:#bfae90}.luo-clip-draft-save{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.luo-clip-draft-save button{flex:1;min-width:190px}
+.luo-camera-hud[hidden]{display:none!important}
+.luo-clip-composer.luo-camera-live{position:fixed!important;inset:0!important;z-index:1300;max-width:none!important;margin:0!important;padding:0!important;background:#000;overflow:hidden;color:white}
+.luo-clip-composer.luo-camera-live>header,.luo-clip-composer.luo-camera-live>.luo-clip-tools,.luo-clip-composer.luo-camera-live>.luo-clip-edit,.luo-clip-composer.luo-camera-live>.luo-clip-publish,.luo-clip-composer.luo-camera-live>.luo-clip-drafts,.luo-clip-composer.luo-camera-live>.luo-clip-draft-save{display:none!important}
+.luo-clip-composer.luo-camera-live .luo-clip-preview{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:contain;border:0;border-radius:0;touch-action:none}
+.luo-camera-hud{position:absolute;inset:0;pointer-events:none}
+.luo-camera-hud button,.luo-camera-hud select,.luo-camera-hud input,.luo-camera-effects{pointer-events:auto}
+.luo-camera-hud button{min-width:48px;min-height:48px;border:1px solid #f1ce844d;border-radius:24px;background:#17130f99;color:white;padding:8px 14px;touch-action:manipulation}
+.luo-camera-hud button[hidden],.luo-camera-hud input[hidden],.luo-camera-effects[hidden],.luo-camera-hud select[hidden]{display:none!important}
+.luo-camera-hud :focus-visible{outline:3px solid #f1c96c;outline-offset:3px}
+.luo-camera-top{position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;gap:8px}
+.luo-camera-rail{position:absolute;right:12px;top:calc(100px + env(safe-area-inset-top));display:grid;gap:12px;max-width:120px}
+.luo-camera-rail input[type=range]{max-width:116px}
+.luo-camera-bottom{position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));left:12px;right:12px;display:flex;align-items:center;flex-direction:column;gap:12px;color:white;text-shadow:0 1px 4px #000}
+.luo-camera-bottom strong{color:#f4cd7c;font-size:12px;letter-spacing:.08em}
+.luo-camera-bottom small{font-size:11px;max-width:280px;text-align:center}
+.luo-camera-bottom #clipCameraShutter{position:relative;width:82px;height:82px;border-radius:50%;border:3px solid #f0cb7e;background:conic-gradient(#ef5266 var(--capture-progress,0%),#17130faa 0);padding:6px;touch-action:none}
+.luo-camera-bottom #clipCameraShutter::after{content:'';position:absolute;inset:6px;background:white;border-radius:50%;transition:background .16s,border-radius .16s}
+.luo-camera-live[data-recording=true] #clipCameraShutter::after{background:#dc4156;border-radius:14px;inset:17px}
+.luo-camera-live #clipCameraStop{background:#b82e43;border:1px solid #e86c7c}
+.luo-clip-composer.luo-camera-live>.luo-feed-feedback{position:absolute;top:calc(70px + env(safe-area-inset-top));left:16px;right:16px;z-index:2;margin:0;font-size:12px;text-align:center;color:#fff;text-shadow:0 2px 4px #000;pointer-events:none}
+.luo-clip-composer.luo-camera-live>.luo-clip-progress{position:absolute;top:0;left:0;right:0;margin:0;height:4px;width:100%}
+.luo-camera-effects{position:absolute;left:0;right:0;bottom:0;max-height:65dvh;overflow:auto;padding:14px 12px calc(16px + env(safe-area-inset-bottom));border:1px solid #ac8945;border-radius:24px 24px 0 0;background:#15120ff5;box-shadow:0 -12px 36px #0006}
+.luo-camera-effects>button{float:right}
+.luo-camera-effects .luo-lens-discovery{display:flex;clear:both;flex-wrap:wrap;gap:8px;padding:10px 0}
+.luo-camera-effects .luo-lens-discovery input,.luo-camera-effects .luo-lens-discovery select{width:100%}
+.luo-camera-effects .luo-effects-carousel{display:flex;gap:10px;overflow:auto;padding:8px 0}
+.luo-camera-effects .luo-effects-carousel button{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;flex:0 0 76px;padding:4px;border:0;background:none;border-radius:0;font-size:11px}
+.luo-camera-effects canvas{width:64px;height:64px;border-radius:50%;background:#322818;border:2px solid #777}
+.luo-camera-effects [aria-pressed=true] canvas{border:3px solid #f0cb7e}
+.luo-camera-effects [data-favorite=true]::after{content:'★';position:absolute;right:8px;top:2px;color:#ffdb8c;text-shadow:0 1px 4px #000}
+.luo-camera-effects.luo-lenses-expanded .luo-effects-carousel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));justify-items:center;gap:12px}
+.luo-camera-effects p{font-size:11px;color:#e0d3b8}
+@media(prefers-reduced-motion:reduce){.luo-camera-hud *{animation:none!important;transition:none!important}}
