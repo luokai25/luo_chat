@@ -64,7 +64,7 @@ export function installCallExperience({win,dialog,$,note,onEnd}){
  $('callFit').onclick=()=>{const fill=dialog.classList.toggle('luo-call-cover');$('callFit').setAttribute('aria-pressed',String(fill));$('callFit').textContent=fill?'Fit Video':'Fill Screen'};
  const local=$('callLocal');
  function syncPreviewFacing(){dialog.classList.toggle('luo-selfie-preview',current?.getFacing?.()==='user'&&!sharing?.active)}
- const local=$('callLocal');local.tabIndex=0;local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');
+ local.tabIndex=0;local.setAttribute('aria-label','Your camera preview. Drag to move, or use arrow keys.');
  let drag=null,x=0,y=0;
  function move(dx,dy){const grid=local.parentElement.getBoundingClientRect(),box=local.getBoundingClientRect(),tray=sheet.hidden?grid.bottom:sheet.getBoundingClientRect().top,bottom=Math.min(tray,actions.getBoundingClientRect().top||grid.bottom);x=Math.min(Math.max(x+dx,-grid.width+box.width+24),0);y=Math.min(Math.max(y+dy,0),Math.max(0,bottom-(box.top-y)-box.height-12));local.style.setProperty('--call-pip-x',x+'px');local.style.setProperty('--call-pip-y',y+'px');}
  local.addEventListener('pointerdown',event=>{if(event.button!==0)return;delete local.dataset.dragged;drag={id:event.pointerId,x:event.clientX,y:event.clientY};local.setPointerCapture?.(event.pointerId);event.preventDefault()});
