@@ -26,15 +26,15 @@ export function buildPayPalPlanDefinition({plan,productId,promo=false}={}){
   quantity_supported:false
  };
 }
-export function paypalRequiredPlanSettings(){
- return Object.values(suffix).flatMap(tier=>[
+export function paypalRequiredPlanSettings({promotions=false}={}){
+ return Object.values(suffix).flatMap(tier=>promotions?[
   'LUO_PAYPAL_PLAN_'+tier+'_REGULAR','LUO_PAYPAL_PLAN_'+tier+'_PROMO'
- ]);
+ ]:['LUO_PAYPAL_PLAN_'+tier+'_REGULAR']);
 }
 export function paypalMerchantConfigured(env={}){
  return env.LUO_PAYPAL_ENV==='sandbox'
   &&typeof env.LUO_PAYPAL_CLIENT_ID==='string'&&env.LUO_PAYPAL_CLIENT_ID.length>12
   &&typeof env.LUO_PAYPAL_CLIENT_SECRET==='string'&&env.LUO_PAYPAL_CLIENT_SECRET.length>20
   &&typeof env.LUO_PAYPAL_WEBHOOK_ID==='string'&&env.LUO_PAYPAL_WEBHOOK_ID.length>=8
-  &&paypalRequiredPlanSettings().every(key=>/^P-[A-Z0-9-]{8,}$/.test(env[key]||''));
+  &&paypalRequiredPlanSettings({promotions:env.LUO_AGENT_PROMOTIONS_ENABLED==='true'}).every(key=>/^P-[A-Z0-9-]{8,}$/.test(env[key]||''));
 }
