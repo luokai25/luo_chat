@@ -21,7 +21,7 @@ create table luo_billing.agent_accounts(
 create unique index agent_accounts_unique_username on luo_billing.agent_accounts(username_canonical);
 create table luo_billing.billing_subscriptions(
  id uuid primary key default gen_random_uuid(),
- agent_id uuid not null unique references luo_billing.agent_accounts(id) on delete restrict,
+ agent_id uuid not null references luo_billing.agent_accounts(id) on delete restrict,
  provider text not null check(provider in ('stripe','paypal','wallet')),
  provider_subscription_id text not null,
  provider_customer_id text not null,
@@ -35,6 +35,9 @@ create table luo_billing.billing_subscriptions(
  created_at timestamptz not null default now(),
  unique(provider,provider_subscription_id)
 );
+-- Preserve canceled subscription history while preventing concurrent active or pending seats.
+create unique index one_open_subscription_per_agent on luo_billing.billing_subscriptions(agent_id)
+ where status in ('pending','active','trialing','past_due','paused');
 create table luo_billing.payment_events(
  provider text not null check(provider in ('stripe','paypal','wallet')),
  provider_event_id text not null,
