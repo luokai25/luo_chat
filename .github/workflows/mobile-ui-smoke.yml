@@ -1,0 +1,27 @@
+name: Mobile UI acceptance smoke
+on:
+  push:
+    branches: ['feature/reels-immersive-20261025']
+permissions:
+  contents: read
+concurrency:
+  group: mobile-ui-smoke-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    env:
+      LUO_BROWSER_CHANNEL: chrome
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: google-chrome --version
+      - run: node tests/browser-navigation-local.cjs
