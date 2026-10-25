@@ -105,7 +105,7 @@ export function paypalPaidEvidence({intent,subscription,transactions,planId}){
   return x.status==='COMPLETED'&&price?.currency_code==='USD'
   &&Number.isFinite(amount)&&Math.round(amount*100)===amount*100
   &&[intent.first_invoice_cents,intent.regular_cents].includes(Math.round(amount*100))
-  &&Math.abs(Date.parse(x.time)||Date.parse(x.create_time)-Date.parse(paidAt))<14*86400000;
+  &&Math.abs(Date.parse(x.time||x.create_time)-Date.parse(paidAt))<14*86400000;
  });
  if(!eligible)return null;
  return {subscription:subscription.id,customer:subscription.subscriber?.payer_id,
