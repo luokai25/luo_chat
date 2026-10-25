@@ -28,7 +28,7 @@ export function installCallLensBrowser({win,sheet,rail,getStream,isCurrent,prefi
   button.title=effect.kind==='ar'?'Face-tracked overlay: '+effect.label+'. Downloads the model only when selected.':
    effect.id==='original'?'Unmodified camera':'Color effect: '+effect.label;
   if(effect.kind==='ar'){button.dataset.ar='true';const mark=doc.createElement('small');mark.textContent='AR';mark.setAttribute('aria-hidden','true');button.append(mark);
-   const ctx=canvas.getContext('2d');if(ctx){ctx.fillStyle='#1e1c26';ctx.fillRect(0,0,72,72);ctx.fillStyle=effect.color;ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('AR',36,40)}}
+   const ctx=win.CanvasRenderingContext2D?canvas.getContext('2d'):null;if(ctx){ctx.fillStyle='#1e1c26';ctx.fillRect(0,0,72,72);ctx.fillStyle=effect.color;ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('AR',36,40)}}
  }
  function filter(){
   const expanded=sheet.classList.contains('luo-lenses-expanded'),needle=search.value.trim().toLowerCase();let count=0,visible=0;
