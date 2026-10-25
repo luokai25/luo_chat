@@ -101,7 +101,8 @@ function callControls(){
  const dialog=$('luoCall');if(!dialog)return;
  decorate();if(dialog.open)avatar();
  const actions=dialog.querySelector('.device-actions');
- if(!actions||actions.querySelector('#luoSpeakerSelect'))return;
+ // The development calling engine owns routing; do not add a second speaker control.
+ if(!actions||actions.querySelector('#luoSpeakerSelect')||dialog.classList.contains('luo-live-call'))return;
  const speaker=document.createElement('button');speaker.type='button';speaker.id='luoSpeakerSelect';speaker.className='luo-call-button';speaker.setAttribute('aria-label','Select speaker or audio output');speaker.innerHTML='<span class="luo-call-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4zM17 8c3 2 3 6 0 8M20 5c4 4 4 10 0 14"/></svg></span><span class="luo-call-caption">Speaker</span>';
  speaker.onclick=async()=>{
   const remote=$('callRemote');

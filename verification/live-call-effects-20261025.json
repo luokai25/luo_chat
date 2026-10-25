@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "82b83d1c18d322b598d17194465f3ad677b28d44",
+  "scope": "Combined Reels + first live-call effects increment on development branch only; no production deployment, hosted database changes or APK release",
+  "readiness": "Partial implementation, not production-ready full AR calling",
+  "automated_tests": {"passed": 428, "failed": 0},
+  "isolated_clean_builds": {"matching_production_files": 100, "independent_lockfile_installs": 2},
+  "credential_pattern_scan": {"passed": true, "text_files": 343},
+  "production_dependency_audit": {"vulnerabilities": 0},
+  "native_chromium_effect_output": {
+    "passed": true,
+    "real_captured_video_pixels": "Monochrome output: average channel difference 0; nonblank luminance",
+    "outgoing_sender_uses_processed_track": true,
+    "preview_uses_same_track": true,
+    "microphone_track_identity_preserved": true,
+    "processed_dimensions": {"width": 1280, "height": 720, "fps": 24},
+    "camera_switch_preserves_effect": true,
+    "camera_off_hold_original_and_end_cleanup": "passed",
+    "viewports": ["320x640", "390x844", "844x390", "1440x900"],
+    "page_exceptions": 0,
+    "transport": "Synthetic sender/signaling fixture only; no remote RTP claim"
+  },
+  "native_two_peer_transport": {
+    "status": "blocked / unverified",
+    "observation": "Zero caller/callee ICE candidates; separate minimal native data-channel test also gathered zero candidates",
+    "protections_bypassed": false,
+    "real_device_acceptance": "not performed"
+  },
+  "reels_browser_regression": "passed, including real trim/export and native IndexedDB draft reload and confirmed-publication cleanup",
+  "new_external_dependencies": [],
+  "remaining": ["Face/hand tracking", "Person segmentation and background effects", "3D assets, makeup, avatars and gestures", "TURN availability", "ICE-restart signaling", "Native background calling and Bluetooth acceptance", "Screen sharing", "In-call chat and group calls", "Consented recording", "Real-device/two-network testing", "APK release", "Staging activation of Reels v2 backend"],
+  "report": "docs/LIVE_CALL_EFFECTS_READINESS.md"
+}

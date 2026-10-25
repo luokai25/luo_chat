@@ -26,7 +26,7 @@ export async function configureCallSender(sender,profile=VIDEO_PROFILES[0]){
  };
  try{return await apply(true)}catch{try{return await apply(false)}catch{return false}}
 }
-export function installCallQuality({win,peer,isCurrent=()=>true}){
+export function installCallQuality({win,peer,isCurrent=()=>true,onMetrics=()=>{}}){
  let stopped=false,timer=null,busy=false,level=0,bad=0,good=0;
  const alive=()=>!stopped&&isCurrent();
  async function refresh(){if(!alive())return;for(const sender of peer.getSenders?.()||[]){if(!alive())return;await configureCallSender(sender,VIDEO_PROFILES[level]);}}
@@ -35,18 +35,22 @@ export function installCallQuality({win,peer,isCurrent=()=>true}){
   busy=true;
   try{
    const reports=await peer.getStats();if(!alive())return;
-   let loss=0,rtt=0,capacity=null,cpu=false;
+   let loss=0,rtt=0,jitter=0,capacity=null,cpu=false,route='unknown',hasLoss=false,hasRtt=false,hasJitter=false;
    for(const report of reports.values()){
     if(report.type==='candidate-pair'&&report.state==='succeeded'&&(report.nominated||report.selected)){
-     if(Number.isFinite(report.currentRoundTripTime))rtt=Math.max(rtt,report.currentRoundTripTime);
+     if(Number.isFinite(report.currentRoundTripTime)){rtt=Math.max(rtt,report.currentRoundTripTime);hasRtt=true;}
      if(report.availableOutgoingBitrate>0)capacity=report.availableOutgoingBitrate;
+     const local=reports.get(report.localCandidateId),remote=reports.get(report.remoteCandidateId);
+     if(local?.candidateType||remote?.candidateType)route=local?.candidateType==='relay'||remote?.candidateType==='relay'?'relay':'direct';
     }
     if(report.type==='remote-inbound-rtp'&&(report.kind==='video'||report.mediaType==='video')){
-     if(Number.isFinite(report.fractionLost))loss=Math.max(loss,report.fractionLost);
-     if(Number.isFinite(report.roundTripTime))rtt=Math.max(rtt,report.roundTripTime);
+     if(Number.isFinite(report.fractionLost)){loss=Math.max(loss,report.fractionLost);hasLoss=true;}
+     if(Number.isFinite(report.roundTripTime)){rtt=Math.max(rtt,report.roundTripTime);hasRtt=true;}
     }
     if(report.type==='outbound-rtp'&&(report.kind==='video'||report.mediaType==='video'))cpu||=report.qualityLimitationReason==='cpu';
+    if(report.type==='inbound-rtp'&&Number.isFinite(report.jitter)){jitter=Math.max(jitter,report.jitter);hasJitter=true;}
    }
+   onMetrics({loss:hasLoss?loss:null,rtt:hasRtt?rtt:null,jitter:hasJitter?jitter:null,capacity,route,profile:VIDEO_PROFILES[level].label});
    const congested=cpu||loss>.08||rtt>.55||(capacity!==null&&capacity<VIDEO_PROFILES[level].bitrate*.45);
    const healthy=!cpu&&loss<.025&&rtt<.25&&(capacity===null||capacity>VIDEO_PROFILES[Math.max(0,level-1)].bitrate*1.2);
    bad=congested?bad+1:0;good=healthy?good+1:0;

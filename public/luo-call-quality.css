@@ -2,3 +2,27 @@
 #luoCall.luo-video-layout .call-video-grid #callRemote{object-fit:contain!important;image-rendering:auto!important;transform:none!important;background:#08090a!important}
 /* Blurring an HD video behind moving controls adds unnecessary GPU work on phones. */
 #luoCall.luo-video-layout .device-actions{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(15,16,17,.9)!important}
+/* Development calling upgrade: immersive video, without forcing portrait cropping. */
+#luoCall.luo-live-call{background:#070709;color:#fff;border:1px solid #b99048;max-height:100dvh}
+#luoCall.luo-live-call .luo-call-tools{display:flex;gap:8px;flex-wrap:wrap;padding:10px;position:relative;z-index:4}
+#luoCall.luo-live-call .luo-call-tools[hidden],#luoCall.luo-live-call #callEffectsSheet[hidden]{display:none!important}
+#luoCall.luo-live-call button{min-height:44px;min-width:44px;touch-action:manipulation}
+#luoCall.luo-live-call button:focus-visible,#luoCall.luo-live-call #callLocal:focus-visible{outline:3px solid #f0c96e;outline-offset:3px}
+#luoCall.luo-live-call .luo-call-tools button{border:1px solid #716044;background:#161412;color:#fff;border-radius:24px;padding:10px 14px}
+#luoCall.luo-live-call [aria-pressed="true"]{color:#f0c96e!important;border-color:#f0c96e!important}
+#luoCall.luo-live-call.luo-live-video .call-video-grid{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;min-height:0;background:#000;overflow:hidden}
+#luoCall.luo-live-call.luo-live-video .luo-call-tools{margin:auto 12px 8px!important;justify-content:center;background:#111b;border-radius:24px;flex:0 0 auto}
+#luoCall.luo-live-call.luo-live-video .device-actions{margin-top:0!important}
+#luoCall.luo-live-call .luo-call-tools button[hidden]{display:none!important}
+#luoCall.luo-live-call #callNetwork{position:relative;z-index:7;font-size:11px;color:#e7cf9d;margin:0 12px 8px}
+#luoCall.luo-live-call.luo-live-video .call-video-grid #callRemote{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;border:0!important;border-radius:0!important;background:#000!important}
+#luoCall.luo-live-call.luo-live-video.luo-call-cover .call-video-grid #callRemote{object-fit:cover!important}
+#luoCall.luo-live-call.luo-live-video .call-video-grid #callLocal{position:absolute!important;inset:calc(12px + env(safe-area-inset-top)) 12px auto auto!important;top:calc(12px + env(safe-area-inset-top))!important;right:12px!important;width:clamp(88px,25%,160px)!important;height:auto!important;aspect-ratio:3/4;object-fit:cover!important;border-radius:18px!important;border:1px solid #d5ac5d!important;z-index:3;transform:translate(var(--call-pip-x,0px),var(--call-pip-y,0px))!important;touch-action:none;cursor:move}
+#luoCall.luo-live-call #callEffectsSheet{position:absolute;inset:auto 0 0;z-index:10;max-height:45dvh;overflow:auto;padding:16px 12px calc(16px + env(safe-area-inset-bottom));background:#13110ff5;border:1px solid #6a542f;border-radius:24px 24px 0 0;box-shadow:0 -12px 36px #0008;animation:luo-call-sheet-in .16s ease-out}
+#luoCall.luo-live-call .luo-effects-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;touch-action:none}
+#luoCall.luo-live-call .luo-effects-heading button{background:#252019;color:#fff;border:1px solid #b99048;border-radius:12px;padding:10px 14px}
+#luoCall.luo-live-call .luo-effects-carousel{display:flex;gap:10px;overflow-x:auto;padding:5px;scroll-snap-type:x proximity}
+#luoCall.luo-live-call .luo-effects-carousel button{flex:0 0 82px;min-height:82px;border-radius:50%;border:2px solid #766139;background:radial-gradient(circle at 35% 25%,#8e692b,#100e0b);color:#fff;scroll-snap-align:center;font-size:12px}
+#luoCall.luo-live-call #callEffectsSheet p{font-size:12px;color:#e3d9c7;line-height:1.5}
+@keyframes luo-call-sheet-in{from{transform:translateY(20px);opacity:.3}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){#luoCall.luo-live-call #callEffectsSheet{animation:none}}

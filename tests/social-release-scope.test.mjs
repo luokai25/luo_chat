@@ -4,12 +4,11 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {JSDOM} from 'jsdom';
 const digest=value=>createHash('sha256').update(value).digest('hex');
-test('Social-only web release preserves live authentication, calls, stories and configuration',async()=>{
+// Calls are now explicitly in scope; behavior is covered by calls-flow/call-effects tests.
+test('Combined development update preserves live authentication, stories and configuration',async()=>{
  const expected={
   "src/auth-recovery.js": "dec3a845de0df5fea3fbf7d5cd84e3509a246c5ee44e727d662a535511a4e18d",
   "src/google-sign-in.js": "b66a66e214499bda486a2a671c7ab206fadc48631811f6bb18976ca65f99fbd3",
-  "src/calls.js": "d420301d6ff01e4bc0face19afb450fbd2ce0239b7ce29e7ec4a8e2d862d8602",
-  "src/call-quality.js": "95be3d761ae78a583b4c0e8a11f6e67b41417c2d44a497e20c7c83fd7eb54e38",
   "src/stories.js": "247d331ab656fcada46aad43c8a9180b957cd4479e1394ef711d5a72cc53c763",
   "src/settings.js": "dbefb1f5499c63c933df432650b6aa1006fa549f932a130975ce27829b6642c7",
   "src/experience.js": "373bf4615bcb49eca707f2217b55cd2cbad53a20b84dd9e06355b0e63bfce14f",
