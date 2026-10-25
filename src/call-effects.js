@@ -11,7 +11,7 @@ export const CALL_EFFECTS=Object.freeze([
  {id:'dreamy',label:'Dreamy',filter:'contrast(.88) saturate(1.18) brightness(1.08)'}
 ]);
 
-export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPreview=()=>{},onFailure=()=>{}}){
+export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPreview=()=>{},onFailure=()=>{},faceTrackerFactory=createFaceTracker}){
  let stopped=false,busy=false,pipeline=null,effect='original',enabled=true;
  const allocated=new Set();
  const alive=()=>!stopped&&isCurrent();
@@ -29,7 +29,7 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
   pipeline=p;
   let timeout;
   try{
-   if(preset.kind==='ar')p.tracker=await createFaceTracker({win});
+   if(preset.kind==='ar')p.tracker=await faceTrackerFactory({win});
    await Promise.race([video.play(),new Promise((_,reject)=>{timeout=win.setTimeout(()=>reject(Error('Camera preview timed out.')),5000)})]);
    if(!alive()||pipeline!==p)throw Error('Call ended.');
    const settings=getStream().getVideoTracks()[0]?.getSettings?.()||{};
