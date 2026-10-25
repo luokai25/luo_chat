@@ -98,3 +98,7 @@ dialog#luoCall.luo-live-call.luo-immersive-call .luo-lens-discovery input,dialog
 dialog#luoCall.luo-live-call.luo-immersive-call #callEffectsSheet.luo-lenses-expanded{max-height:66dvh}
 dialog#luoCall.luo-live-call.luo-immersive-call .luo-lenses-expanded .luo-effects-carousel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;justify-items:center;gap:14px}
 dialog#luoCall.luo-live-call.luo-immersive-call #callEffectsSheet .luo-lens-empty[hidden]{display:none!important}
+
+/* Mirror only the front-facing SELF preview. Outgoing video, peer video and screen share are untouched. */
+#luoCall.luo-live-call.luo-selfie-preview:not(.luo-screen-sharing) .call-video-grid #callLocal{transform:translate(var(--call-pip-x,0px),var(--call-pip-y,0px)) scaleX(-1)!important}
+#luoCall .call-video-grid #callRemote{transform:none!important}
