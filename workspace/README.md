@@ -52,3 +52,28 @@ Integrations: direct management destinations for Supabase production and staging
 - Before adding direct management actions, require owner authorization, auditable server-side permission checks, CSRF defense, rate limits, and independent confirmation for destructive actions.
 - Do not make PayPal charge/revenue claims until real merchant subscription reconciliation is connected and the previously exposed Live secret is rotated.
 - Keep the site `noindex`, disable caching of login and account information, and never include personal user data in public `/api/status`.
+
+
+## Workspace v2 (additive, 26 October 2026)
+
+The original six pages, owner sign-in, black-and-gold theme, and Cloudflare hostname remain unchanged.
+
+Three additional views:
+- **Growth insights**: 30-day UTC daily account signups, messages, stories and last known sign-ins. Latest-sign-in per account is *not* all login events, and there is no reliable online-now or website-visitor counter.
+- **Financial intelligence**: connected PayPal merchant-account invoice count/status, limited date-range transaction search and disputes, plus the approved Standard/Pro/Maximum pricing. A paid invoice is **not** proof of a paid Luo Chat AI subscription, and real agent revenue/subscriber counts are **unknown** until payment reconciliation is implemented.
+- **Connector intelligence**: scoped and timestamped snapshots from GitHub, Vercel, Resend, Cloudflare and PayPal.
+
+A compact extra-connector summary also appears beneath the existing Overview KPIs.
+
+The additive SQL migration, \`luo-workspace-insights-v2.sql\`, adds a private \`luo_workspace.connector_snapshots\` table and a new \`public.luo_workspace_insights()\` RPC, both protected by the *same owner-only allowlist* as the original Workspace snapshot. It **does not modify** Luo Chat messages, account passwords, human subscriptions, billing payments, or production checkout.
+
+**Freshness contract:**
+- Supabase analytics are live at every Workspace Refresh.
+- GitHub Actions and Luo Chat public health are queried on the read-only status endpoint.
+- PayPal, Vercel deployment counts, Resend and Cloudflare summaries are **last-synced snapshots**, saved after a connected-service read. They do not update just because the browser Refresh button was pressed.
+- Connector snapshot collection windows are explicit; figures are not global totals unless the provider says so. No provider API secrets are stored in the browser or the public Worker.
+- Source records, recipient emails, invoice content, credentials and transaction details are *never exposed* in the public status endpoint.
+
+The Cloudflare Worker template includes the fourth static asset \`/insights.js\`. Rebuild the template with \`index.html\`, \`style.css\`, \`app.js\`, and \`insights.js\` before deploying. The UI uses text nodes for untrusted provider data, not HTML injection.
+
+Monitoring infrastructure, visitors, email deliveries, recurring payments and agent entitlement checks can be expanded into true refreshable provider feeds later only through authenticated backend integrations. Do not call a one-off plugin lookup a permanent live API connection.
