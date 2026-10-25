@@ -4,9 +4,8 @@ import {createHmac} from 'node:crypto';
 import {isIP} from 'node:net';
 import {createClient} from '@supabase/supabase-js';
 import {normalizeAgentUsername,sendJson} from './agent-platform.js';
+import {agentRuntime,isValidAgentOrigin} from './agent-environment.js';
 
-const STAGING_URL='https://itecovbwilcrvjqkdoyd.supabase.co';
-const BRANCH='feature/reels-immersive-20261025';
 const allowedKeys=new Set(['username','password','plan']);
 function dataFromRequest(req){
  const size=Number(req.headers?.['content-length']||'0');
@@ -16,14 +15,8 @@ function dataFromRequest(req){
  return body;
 }
 export function registrationIsEnabled(env){
- return env.VERCEL_ENV==='preview'
-  &&env.VERCEL_GIT_COMMIT_REF===BRANCH
-  &&env.LUO_AGENT_PENDING_REGISTRATION_ENABLED==='true'
-  &&env.LUO_AGENT_STAGING_URL===STAGING_URL
-  &&typeof env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY==='string'
-  &&env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY.length>=32
-  &&typeof env.LUO_AGENT_SIGNUP_HASH_KEY==='string'
-  &&env.LUO_AGENT_SIGNUP_HASH_KEY.length>=32;
+ return !!agentRuntime(env)&&env.LUO_AGENT_PENDING_REGISTRATION_ENABLED==='true'
+ &&typeof env.LUO_AGENT_SIGNUP_HASH_KEY==='string'&&env.LUO_AGENT_SIGNUP_HASH_KEY.length>=32;
 }
 function remoteIP(req,env){
  // Only an edge-controlled ingress header may be used; a global DB cap also
@@ -33,10 +26,6 @@ function remoteIP(req,env){
  return address;
 }
 const digest=(secret,input)=>createHmac('sha256',secret).update(input).digest('hex');
-function allowedOrigin(req){
- const origin=req.headers?.origin;
- return !origin||origin==='null'?origin!=='null': /^https:\/\/luo-chat-luokai25-[a-z0-9]+-luokai25s-projects\.vercel\.app$/.test(origin);
-}
 export function createAgentRegistrationHandler({env=process.env,clientFactory=createClient,logger=console}={}){
  return async function handler(req,res){
   res.setHeader('Cache-Control','no-store');
@@ -46,7 +35,7 @@ export function createAgentRegistrationHandler({env=process.env,clientFactory=cr
    res.setHeader('Retry-After','86400');
    return sendJson(res,503,{error:{code:'AGENT_MEMBERSHIPS_NOT_ACTIVE',message:'Pending agent registration is unavailable.'}});
   }
-  if(req.headers?.['sec-fetch-site']==='cross-site'||!allowedOrigin(req))return sendJson(res,403,{error:{code:'ORIGIN_DENIED'}});
+  if(req.headers?.['sec-fetch-site']==='cross-site'||!isValidAgentOrigin(req,env))return sendJson(res,403,{error:{code:'ORIGIN_DENIED'}});
   if(req.headers?.['content-type']?.split(';')[0]?.trim()!=='application/json')return sendJson(res,415,{error:{code:'UNSUPPORTED_CONTENT_TYPE'}});
   let input;try{input=dataFromRequest(req)}catch{return sendJson(res,400,{error:{code:'INVALID_BODY'}})}
   const username=normalizeAgentUsername(input.username);
@@ -57,7 +46,7 @@ export function createAgentRegistrationHandler({env=process.env,clientFactory=cr
   }
   const ip=remoteIP(req,env);
   if(!ip)return sendJson(res,503,{error:{code:'RATE_LIMIT_UNAVAILABLE'}});
-  const db=clientFactory(STAGING_URL,env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+  const db=clientFactory(agentRuntime(env).url,agentRuntime(env).serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
   const hashKey=env.LUO_AGENT_SIGNUP_HASH_KEY;
   let userId=null;
   try{
