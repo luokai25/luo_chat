@@ -1,6 +1,7 @@
 import {mountSocialFeed} from './social-feed.js';
 import {installReelMessagePreviews} from './reel-message-preview.js';
 import {mountClipComposer} from './clip-composer.js';
+import {createClipDrafts} from './clip-drafts.js';
 import {installSocialSessions} from './social-sessions.js';
 import {mountCompanion3D} from './companion-3d.js';
 import {mountCommunityModeration} from './community-moderation.js';
@@ -9,6 +10,7 @@ import {renderMemoryConstellations} from './memory-constellations.js';
 // Do not persist another copy of private social content in localStorage.
 export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPerson}) {
  const doc=win.document;
+ const clipDrafts=createClipDrafts({win,getUser});
  const mk=(tag,cls,text)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n};
  const btn=(label,fn,cls='ghost')=>{const n=mk('button',cls,label);n.type='button';n.addEventListener('click',async()=>{if(n.disabled)return;n.disabled=true;try{await fn()}catch(err){if(getUser())note(err.message||'This action could not finish.')}finally{n.disabled=n.dataset.locked==='true'}});return n};
  const input=(type,placeholder,max)=>{const n=mk(type==='textarea'?'textarea':'input','field');if(type!=='textarea')n.type=type;n.placeholder=placeholder||'';if(max)n.maxLength=max;return n};
@@ -112,7 +114,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  if(key==='memories'){releaseMemory=renderMemoryConstellations({win,db,note,getUser,getChats,output});return}
  if(key==='sessions'){await sessions.render(output);return}
  if(key==='publish-clip'){
-  releaseFeed=mountClipComposer({win,output,getUser,db,note,onPublished:()=>show('clips')});
+  releaseFeed=mountClipComposer({win,output,getUser,db,note,drafts:clipDrafts,onPublished:()=>show('clips')});
   return
  }
  if(key==='events'){
@@ -142,5 +144,5 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  }
  let sharedOpened=false;
  installReelMessagePreviews({win,container:$('messages'),getUser,openClip:id=>{sharedClip=id;section='clips';tab('social')}});
- return {openSection(key){if(!options.some(([name])=>name===key))return;section=key;tab('social')},onTab(key){const shared=new URLSearchParams(win.location.hash.slice(1)).get('luo-clip');if(!sharedOpened&&getUser()&&/^[0-9a-f-]{36}$/i.test(shared||'')){sharedOpened=true;section='clips';if(key!=='social'){tab('social');return}}if(key==='social')Promise.resolve(show(section)).catch(err=>{if(getUser())status.textContent=err.message||'Social features unavailable'});else{request++;sessions.leave();releaseMemory();releaseFeed()}},signedOut(){releaseFeed();releaseMemory();sessions.signedOut();request++;epoch++;output.replaceChildren();status.textContent='';closeCapsule()}};
+ return {openSection(key){if(!options.some(([name])=>name===key))return;section=key;tab('social')},onTab(key){const shared=new URLSearchParams(win.location.hash.slice(1)).get('luo-clip');if(!sharedOpened&&getUser()&&/^[0-9a-f-]{36}$/i.test(shared||'')){sharedOpened=true;section='clips';if(key!=='social'){tab('social');return}}if(key==='social')Promise.resolve(show(section)).catch(err=>{if(getUser())status.textContent=err.message||'Social features unavailable'});else{request++;sessions.leave();releaseMemory();releaseFeed()}},signedOut(){releaseFeed();releaseMemory();sessions.signedOut();clipDrafts.signedOut(getUser()?.id).catch(()=>win.console?.warn('LUO_DEVICE_DRAFT_CLEANUP_FAILED'));request++;epoch++;output.replaceChildren();status.textContent='';closeCapsule()}};
 }

@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {JSDOM} from 'jsdom';import {mountClipComposer} from '../src/clip-composer.js';
+const tick=async()=>{for(let i=0;i<5;i++)await new Promise(r=>setImmediate(r))};
+test('publishing waits for a pending explicit draft save and removes the saved draft only after confirmation',async()=>{
+ const dom=new JSDOM('<main></main>',{url:'https://luo.example',pretendToBeVisual:true}),w=dom.window,d=w.document,calls=[],removed=[];let resolveSave,published=false;
+ w.URL.createObjectURL=()=> 'blob:synthetic-test';w.URL.revokeObjectURL=()=>{};w.HTMLMediaElement.prototype.pause=function(){};w.HTMLMediaElement.prototype.load=function(){};Object.defineProperty(w.HTMLMediaElement.prototype,'duration',{get:()=>5});
+ const drafts={list:async()=>[],save:()=>new Promise(r=>resolveSave=r),remove:async id=>removed.push(id)},db={rpc:async(name,args)=>{calls.push(args);return {data:{}}},storage:{from:()=>({upload:async()=>({data:{}})})}};
+ const dispose=mountClipComposer({win:w,output:d.querySelector('main'),getUser:()=>({id:'me'}),db,drafts,note:()=>{},onPublished:()=>{published=true}});
+ try{const file=new w.File(['video'],'clip.webm',{type:'video/webm'}),input=d.querySelector('input[type=file]');Object.defineProperty(input,'files',{value:[file]});input.onchange();d.querySelector('video').dispatchEvent(new w.Event('loadedmetadata'));await tick();const save=[...d.querySelectorAll('button')].find(b=>b.textContent==='Save draft on this device'),send=[...d.querySelectorAll('button')].find(b=>b.textContent==='Publish Reel'),form=d.querySelector('form');
+  save.click();await tick();assert.equal(send.disabled,true);form.dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.equal(calls.length,0);resolveSave({id:'saved-draft'});await tick();assert.equal(send.disabled,false);form.dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.deepEqual(calls.map(x=>x.action),['entry.create','entry.publish']);assert.deepEqual(removed,['saved-draft']);assert.equal(published,true);
+ }finally{dispose();w.close()}
+});

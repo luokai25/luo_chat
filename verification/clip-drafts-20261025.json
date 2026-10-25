@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "a64a855c37f8d09ac778fe3e11e62259899e981c",
+  "scope": "Development branch only; production, hosted backend and APK unchanged",
+  "automated_tests": {"passed": 417, "failed": 0},
+  "isolated_clean_builds": {"matching_production_files": 100},
+  "credential_pattern_scan": "passed",
+  "native_chromium_indexeddb": {
+    "save_video_without_upload": "passed",
+    "reload_and_restore_video_caption_and_selection": "passed",
+    "remove_saved_copy_after_confirmed_publication": "passed",
+    "page_exceptions": 0,
+    "publishing_backend": "Synthetic fixture, no hosted writes"
+  },
+  "draft_policy": {"max_count": 3, "logical_budget_mb": 100, "max_video_mb": 50, "retention_days": [7, 30], "saving": "Explicit user action", "encrypted": false, "cloud_synced": false, "sign_out": "Invalidate pending operations and queue account-specific deletion"},
+  "limitations": ["Browser eviction or site-data clearing may remove drafts", "Expiry prunes on access, not while app is closed", "Sign-out cleanup is asynchronous and can be interrupted", "No exactly-once publication guarantee across an ambiguous response and app restart", "Real Android, Safari and WebView acceptance still pending"],
+  "report": "docs/CLIP_DRAFTS.md"
+}

@@ -2,6 +2,7 @@
 
 Date: 2026-10-25. Base: `2090f0827032b4b41f579d770b557eafdf71e282`.
 This is a development-branch change, **not a production release or APK build**.
+Device draft support was added subsequently; see [Device Reel drafts](CLIP_DRAFTS.md).
 
 ## Feature coverage
 
@@ -14,7 +15,7 @@ This is a development-branch change, **not a production release or APK build**.
 | Discovery preferences | Persisted Interested / Not Interested choices; hidden items excluded from Explore/Following | Actual recommendation-ranking system; preference does not imply AI ranking |
 | Camera | Explicit permission, preview, recording progress, 90-second limit, track cleanup and gallery import | Clip stacking, facing-mode selector, timer, flash, dual camera, AR/effects/green screen |
 | Editor | Real local trim/speed export, preview selection, output review before publishing | Multi-track timeline, split/reorder/add clips, undo/redo, burned-in text/stickers, voiceover/audio mixing, captions, templates |
-| Publishing | Caption, audience choice, validated MP4/WebM/size/duration, retry-safe draft ID and upload reuse after confirmed upload | Persistent draft library, schedules, covers, tags, locations and new collaboration controls |
+| Publishing | Caption, audience choice, validated MP4/WebM/size/duration, retry-safe draft ID and upload reuse after confirmed upload; subsequent device draft library | Schedules, covers, tags, locations and new collaboration controls |
 | Audio | Original audio attribution retained; exported source audio where captureStream provides it | Licensed music discovery/reuse/audio detail page; real-device audio export acceptance |
 | Reliability | Capability negotiation, old-server fallback, stale-account guards, request timeout, bounded pages, no private media URL sharing | Full hosted-schema restore, multi-connection race testing, two-device production acceptance |
 
@@ -97,7 +98,7 @@ not an authoritative server-side 90-second security limit. A trusted media
 inspection/transcoding worker is still required before claiming that limit is
 enforced against crafted API requests.
 
-Drafts and edits are held in the current page, not a persistent draft library.
+Unsaved edits are page-local; explicit device draft saving is documented separately.
 An ambiguous failed upload retry chooses a new object path; the old draft-owned
 object may require later orphan cleanup. Nothing is uploaded until Publish.
 No secrets, service-role credentials, external media services or paid resources
