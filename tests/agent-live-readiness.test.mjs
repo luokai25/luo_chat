@@ -73,7 +73,7 @@ test('staging remains staging even if live PayPal environment vars are included 
  LUO_AGENT_STAGING_PUBLISHABLE_KEY:'staging_public_'.padEnd(40,'p'),LUO_PAYPAL_ENV:'sandbox',
  LUO_PAYPAL_CLIENT_ID:'sandbox_client_'.padEnd(40,'a'),
  LUO_PAYPAL_CLIENT_SECRET:'sandbox_secret_'.padEnd(40,'b'),
- LUO_AGENT_BILLING_ENABLED:'true',...Object.fromEntries(Object.entries(prod).filter(([key])=>key.startsWith('LUO_PAYPAL_LIVE')))};
+ LUO_AGENT_BILLING_ENABLED:'true',...Object.fromEntries(Object.entries(prod).filter(([key])=>key.startsWith('LUO_PAYPAL_LIVE')||key.startsWith('LUO_PAYPAL_PLAN_')))};
  assert.equal(agentRuntime(preview)?.mode,'sandbox');
  assert.equal(paypalMerchantSettings(preview)?.api,'https://api-m.sandbox.paypal.com');
  assert.equal(checkoutReady(preview,'paypal'),true);
