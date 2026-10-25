@@ -7,7 +7,7 @@ const dateTime=value=>value?new Date(value).toLocaleString(undefined,{year:'nume
 const number=value=>Number(value||0).toLocaleString();
 const make=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e};
 let snapshot=null,project=null,loading=false,active='overview';
-const titles={overview:'Overview',users:'People & accounts',activity:'Platform activity',engineering:'Engineering',billing:'Memberships & billing',integrations:'Integrations'};
+const titles={overview:'Overview',users:'People & accounts',activity:'Platform activity',engineering:'Engineering',billing:'Memberships & billing',integrations:'Integrations',growth:'Growth insights',finance:'Financial intelligence',connectors:'Connector intelligence'};
 const INTEGRATIONS=[
  {symbol:'◈',name:'Supabase',desc:'Live owner-only account, messaging, login and community metrics. Full user management opens securely in Supabase.',status:'Live metrics',url:'https://supabase.com/dashboard/project/byjixqwpjvsgmqilmzbm'},
  {symbol:'⌘',name:'GitHub',desc:'Recent workflows and build health from the Luo Chat repository, with release checks and source management.',status:'Live checks',url:'https://github.com/luokai25/luo_chat'},
@@ -73,7 +73,8 @@ async function refresh(){
  if(!session){loading=false;$('refresh').disabled=false;showLoggedOut();return}
  const responses=await Promise.allSettled([
    db.rpc('luo_workspace_snapshot'),
-   fetch('/api/status',{cache:'no-store'}).then(async res=>{if(!res.ok)throw Error('Status provider unavailable');return res.json()})
+   fetch('/api/status',{cache:'no-store'}).then(async res=>{if(!res.ok)throw Error('Status provider unavailable');return res.json()}),
+   db.rpc('luo_workspace_insights')
  ]);
  if(responses[0].status!=='fulfilled'||responses[0].value.error){
   const message='Access denied or private metrics unavailable. Sign in with the owner account.';
@@ -83,6 +84,8 @@ async function refresh(){
  if(responses[1].status==='fulfilled')project=responses[1].value;
  else project={error:'Public health providers unavailable',runs:[],plans:{billing_enabled:false}};
  renderStats(snapshot.stats||{});renderChart(snapshot.registrations);renderRecent(snapshot.recent_accounts||[]);renderAccounts();renderHealth();renderEngineering();renderIntegrations();
+ const insights=responses[2]?.status==='fulfilled'&&!responses[2].value.error?responses[2].value.data:null;
+ window.dispatchEvent(new CustomEvent('luo-workspace:stats',{detail:{insights,project,snapshot}}));
  $('refresh-at').textContent=new Date().toLocaleTimeString();sync('Live production metrics confirmed · '+dateTime(snapshot.as_of)+(project?.error?' · External provider unavailable':''));
  loading=false;$('refresh').disabled=false;
 }
@@ -91,7 +94,7 @@ $('login-form').addEventListener('submit',async event=>{
  try{const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error||!data?.session){$('login-error').textContent='Sign-in unsuccessful. Check your credentials.';return}showLoggedIn(data.user?.email);await refresh();}
  catch{$('login-error').textContent='Sign-in service unavailable.'}finally{btn.disabled=false;}
 });
-$('logout').addEventListener('click',async()=>{await db.auth.signOut();snapshot=null;project=null;showLoggedOut();});
+$('logout').addEventListener('click',async()=>{await db.auth.signOut();snapshot=null;project=null;window.dispatchEvent(new CustomEvent('luo-workspace:clear'));showLoggedOut();});
 $('refresh').addEventListener('click',refresh);
 $('search-users').addEventListener('input',renderAccounts);
 document.addEventListener('click',event=>{const b=event.target.closest('[data-go],[data-view]');if(b)view(b.dataset.go||b.dataset.view)});
