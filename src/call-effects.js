@@ -25,18 +25,32 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
   if(!context||!canvas.captureStream||!('filter' in context)){video.srcObject=null;throw Error('Live color effects are unavailable in this browser.');}
   const preset=CALL_AR_EFFECTS.find(e=>e.id===id)||CALL_EFFECTS.find(e=>e.id===id);
   const p={video,canvas,context,track:null,timer:null,tracker:null,failed:false};allocated.add(p);
-  // Register early so closing while play() is pending always detaches the source.
-  pipeline=p;
+  // Keep the previous sender/effect producing frames while the new tracker loads.
+  // The allocated set also lets stop() cancel this candidate during a pending import.
   let timeout;
   try{
-   if(preset.kind==='ar')p.tracker=await faceTrackerFactory({win});
+   if(preset.kind==='ar'){
+    const pending=Promise.resolve().then(()=>faceTrackerFactory({win}));
+    // If import/model initialization eventually resolves after stop or timeout,
+    // dispose the late tracker rather than leaking a CPU/video processor.
+    pending.then(tracker=>{if(p.disposed)tracker?.close?.()}).catch(()=>{});
+    const modelTimeout=win.setTimeout(()=>{},0);win.clearTimeout(modelTimeout);
+    let watchdog;
+    try{
+     const tracker=await Promise.race([pending,new Promise((_,reject)=>{
+      watchdog=win.setTimeout(()=>reject(Error('Face tracking setup timed out.')),15000);
+     })]);
+     if(p.disposed||!alive()) {tracker?.close?.();throw Error('Call ended.')}
+     p.tracker=tracker;
+    }finally{win.clearTimeout(watchdog)}
+   }
    await Promise.race([video.play(),new Promise((_,reject)=>{timeout=win.setTimeout(()=>reject(Error('Camera preview timed out.')),5000)})]);
    if(!alive()||pipeline!==p)throw Error('Call ended.');
    const settings=getStream().getVideoTracks()[0]?.getSettings?.()||{};
    const width=video.videoWidth||settings.width||640,height=video.videoHeight||settings.height||480;
    const scale=Math.min(1,1280/width,720/height);canvas.width=Math.max(2,Math.round(width*scale));canvas.height=Math.max(2,Math.round(height*scale));
    function frame(){
-    if(!alive()||pipeline!==p||p.failed)return;
+    if(!alive()||p.disposed||p.failed)return;
     try{
      context.filter='none';context.fillStyle='#000';context.fillRect(0,0,canvas.width,canvas.height);
      if(enabled&&video.readyState>=2){context.filter=preset.filter;context.drawImage(video,0,0,canvas.width,canvas.height);context.filter='none';if(p.tracker){const face=p.tracker.detect(video);if(face)drawFaceOverlay(context,face,canvas.width,canvas.height,preset,win.performance.now())}}
@@ -50,7 +64,7 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
    if(!p.track)throw Error('Video effects could not start.');
    p.track.enabled=enabled;p.track.contentHint='motion';p.timer=win.setInterval(frame,1000/24);
    return p;
-  }catch(error){if(pipeline===p)pipeline=null;dispose(p);throw error}finally{win.clearTimeout(timeout)}
+  }catch(error){dispose(p);throw error}finally{win.clearTimeout(timeout)}
  }
  return{
   get effect(){return effect},get busy(){return busy},
