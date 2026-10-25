@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {paypalLiveConfigPresent,exactRegularPayPalPlan,verifyLivePayPalPlans,LIVE_PAYPAL_WEBHOOK_PATH} from '../src/server/paypal-live-preflight.js';
+import {paypalLiveConfigPresent,exactRegularPayPalPlan,verifyLivePayPalPlans,verifyLivePayPalWebhook,sameAppWebhook,LIVE_PAYPAL_WEBHOOK_PATH} from '../src/server/paypal-live-preflight.js';
 const ids={starter:'P-4KE07040G5697374RNLPE3GI',pro:'P-1B27162996533990SNLPE64I',max:'P-51S06783TK159900ENLPE7SI'};
 const env={LUO_PAYPAL_LIVE_CLIENT_ID:'example_live_client_id',LUO_PAYPAL_LIVE_CLIENT_SECRET:'example_private_secret',
  LUO_PAYPAL_PLAN_STANDARD_REGULAR:ids.starter,LUO_PAYPAL_PLAN_PRO_REGULAR:ids.pro,LUO_PAYPAL_PLAN_MAXIMUM_REGULAR:ids.max};
@@ -50,4 +50,38 @@ test('Wrong merchant currency, duplicate or changed plans cannot pass',async()=>
  const result=await verifyLivePayPalPlans({env,fetcher:bad});
  assert.equal(result.ok,false);assert.equal(result.reason,'PRICE_OR_PLAN_MISMATCH');
  assert.equal((await verifyLivePayPalPlans({env:{},fetcher:()=>{throw Error('should not run')}})).reason,'CONFIGURATION_INCOMPLETE');
+});
+
+test('A renamed SOAP webhook or unexpected URL never counts as the PayPal REST app listener',()=>{
+ const w={id:'3H475085R9576554V',url:'https://luo-chat-luokai25.vercel.app/api/v1/billing/paypal-webhook',
+ event_types:[
+  'BILLING.SUBSCRIPTION.CREATED','BILLING.SUBSCRIPTION.ACTIVATED',
+  'BILLING.SUBSCRIPTION.CANCELLED','BILLING.SUBSCRIPTION.SUSPENDED',
+  'BILLING.SUBSCRIPTION.EXPIRED','BILLING.SUBSCRIPTION.PAYMENT.FAILED',
+  'PAYMENT.SALE.COMPLETED','PAYMENT.SALE.REFUNDED','PAYMENT.SALE.REVERSED'
+ ].map(name=>({name}))};
+ assert.equal(sameAppWebhook(w,{id:w.id,url:w.url}),true);
+ assert.equal(sameAppWebhook({...w,url:'https://wrong.invalid/'},{id:w.id,url:w.url}),false);
+ assert.equal(sameAppWebhook({...w,event_types:[{name:'PAYMENT.SALE.COMPLETED'}]},{id:w.id,url:w.url}),false);
+});
+test('App-specific remote check fails closed for SOAP webhook, and passes for a real REST-app webhook',async()=>{
+ const webhookId='3H475085R9576554V',liveEnv={...env,LUO_PAYPAL_LIVE_WEBHOOK_ID:webhookId};
+ const failure=await verifyLivePayPalWebhook({env:liveEnv,fetcher:async(url)=>{
+  if(url.endsWith('/oauth2/token'))return{ok:true,json:async()=>({access_token:'safe_mock_paypal_live_token'})};
+  return{ok:false,status:404};
+ }});
+ assert.equal(failure.ok,false);assert.equal(failure.reason,'WEBHOOK_NOT_IN_THIS_REST_APP');
+ assert.equal((await verifyLivePayPalWebhook({env})).reason,'LIVE_REST_APP_WEBHOOK_NOT_CONFIGURED');
+ const valid={id:webhookId,url:'https://luo-chat-luokai25.vercel.app/api/v1/billing/paypal-webhook',
+ event_types:[{name:'*'}]};
+ let calls=0;
+ const success=await verifyLivePayPalWebhook({env:liveEnv,fetcher:async(url,init)=>{
+  calls++;
+  if(url.endsWith('/oauth2/token'))return{ok:true,json:async()=>({access_token:'safe_mock_paypal_live_token'})};
+  assert.equal(init.method,undefined);
+  assert.ok(url.endsWith('/v1/notifications/webhooks/'+webhookId));
+  return{ok:true,json:async()=>valid};
+ }});
+ assert.equal(success.ok,true);
+ assert.equal(calls,2);
 });
