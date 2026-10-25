@@ -34,13 +34,13 @@ export function createCallEffects({win,peer,getStream,isCurrent=()=>true,onPrevi
     // If import/model initialization eventually resolves after stop or timeout,
     // dispose the late tracker rather than leaking a CPU/video processor.
     pending.then(tracker=>{if(p.disposed)tracker?.close?.()}).catch(()=>{});
-    const modelTimeout=win.setTimeout(()=>{},0);win.clearTimeout(modelTimeout);
     let watchdog;
     try{
      const tracker=await Promise.race([pending,new Promise((_,reject)=>{
       watchdog=win.setTimeout(()=>reject(Error('Face tracking setup timed out.')),15000);
      })]);
-     if(p.disposed||!alive()) {tracker?.close?.();throw Error('Call ended.')}
+     if(p.disposed)throw Error('Call ended.');
+     if(!alive()){tracker?.close?.();throw Error('Call ended.')}
      p.tracker=tracker;
     }finally{win.clearTimeout(watchdog)}
    }
