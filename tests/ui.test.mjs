@@ -41,6 +41,25 @@ test('Shift+Enter preserves multiline composing and font settings apply only aft
 test('poll creation validates unique choices before sending a request',async()=>{const {w,dom,calls}=await setup();w.document.querySelector('.chatrow').click();await tick();w.document.getElementById('createPoll').click();w.document.getElementById('pollQuestion').value='Choose a time';w.document.getElementById('pollOptions').value='Morning\nmorning';w.document.getElementById('pollForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.match(w.document.getElementById('pollStatus').textContent,/different options/);assert.equal(calls.filter(c=>c.name==='create_chat_simple_poll').length,0);w.document.getElementById('pollOptions').value='Morning\nEvening';w.document.getElementById('pollForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.deepEqual(Array.from(calls.find(c=>c.name==='create_chat_simple_poll').args.option_texts),['Morning','Evening']);dom.window.close()});
 
 test('account modes expose signup fields and reject mismatched passwords before submission',async()=>{const {w,dom,calls}=await setup(false);const d=w.document;d.getElementById('authModeSignup').click();assert.equal(d.getElementById('username').classList.contains('hidden'),false);assert.equal(d.getElementById('signin').classList.contains('hidden'),true);d.getElementById('email').value='ui@example.invalid';d.getElementById('password').value='long-password';d.getElementById('username').value='valid_user';d.getElementById('signupConfirm').value='wrong-password';d.getElementById('signup').click();assert.match(d.getElementById('authmsg').textContent,/do not match/);assert.equal(calls.length,0);d.getElementById('authModeSignin').click();assert.equal(d.getElementById('password').autocomplete,'current-password');dom.window.close()});
+test('signup rejects children under 12 and pauses registration for minors without contacting Auth',async()=>{
+ const {w,dom,calls}=await setup(false);try{
+  const d=w.document;d.getElementById('authModeSignup').click();
+  d.getElementById('email').value='minor@example.invalid';
+  d.getElementById('password').value='long-password';
+  d.getElementById('signupConfirm').value='long-password';
+  d.getElementById('username').value='minor_account';
+  const now=new Date();
+  const birthday=years=>new Date(Date.UTC(now.getUTCFullYear()-years,now.getUTCMonth(),now.getUTCDate())).toISOString().slice(0,10);
+  d.getElementById('signupBirthDate').value=birthday(11);
+  d.getElementById('signup').click();
+  assert.match(d.getElementById('authmsg').textContent,/age 12/);
+  assert.equal(calls.length,0);
+  d.getElementById('signupBirthDate').value=birthday(12);
+  d.getElementById('signup').click();
+  assert.match(d.getElementById('authmsg').textContent,/temporarily paused/);
+  assert.equal(calls.length,0);
+ }finally{dom.window.close()}
+});
 test('password visibility control describes its state accessibly',async()=>{const {w,dom}=await setup(false);const d=w.document;d.getElementById('showPassword').click();assert.equal(d.getElementById('password').type,'text');assert.equal(d.getElementById('showPassword').getAttribute('aria-pressed'),'true');d.getElementById('showPassword').click();assert.equal(d.getElementById('password').type,'password');dom.window.close()});
 test('desktop navigation keeps screen state consistent when leaving and returning to a room',async()=>{const {w,dom}=await setup();const d=w.document;d.querySelector('.chatrow').click();await tick();assert.equal(d.querySelector('.app').dataset.screen,'room');d.querySelector('[data-tab="profile"]').click();assert.equal(d.querySelector('.app').dataset.screen,'home');assert.equal(d.querySelector('.app').dataset.tab,'profile');d.querySelector('[data-tab="chats"]').click();assert.equal(d.querySelector('.app').dataset.screen,'room');assert.equal(d.querySelector('.app').dataset.tab,'chats');dom.window.close()});
 test('keyboard shortcuts open actual search and compose views',async()=>{const {w,dom}=await setup();const d=w.document;d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'k',ctrlKey:true,cancelable:true}));assert.equal(d.getElementById('globalSearchPanel').classList.contains('hidden'),false);assert.equal(d.activeElement.id,'globalSearchInput');d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'n',ctrlKey:true,cancelable:true}));assert.equal(d.querySelector('.app').dataset.tab,'new');assert.equal(d.activeElement.id,'target');await tick();dom.window.close()});
