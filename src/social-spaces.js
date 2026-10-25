@@ -21,7 +21,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  const actual=owner=>!!owner&&getUser()?.id===owner;
  const call=async(action,input={})=>{const r=await db.rpc('luo_space',{action,input});if(r.error)throw Error(r.error.message);return r.data};
  const nav=doc.querySelector('.workspace-nav'),settings=nav?.querySelector('[data-tab="profile"]');
- const socialTab=btn('Social',()=>{const before=request;tab('social');if(request===before&&doc.querySelector('.app')?.dataset.tab==='social')return show(section)},'tab');
+ const socialTab=btn('Social',()=>{section='clips';feedMode='public';const before=request;tab('social');if(request===before&&doc.querySelector('.app')?.dataset.tab==='social')return show('clips')},'tab');
  socialTab.dataset.tab='social';socialTab.title='Social spaces';socialTab.setAttribute('aria-label','Social spaces');
  if(nav)nav.insertBefore(socialTab,settings||null);
  const page=mk('section','sub hidden luo-social-page');page.id='social';
@@ -29,7 +29,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  const hero=mk('div','luo-social-hero');hero.append(mk('p','luo-social-eyebrow','LUO SOCIAL'),mk('h2','','Together feels closer'),mk('p','muted','Friends, memories, stories and special moments in one place.'));
  const options=[['feed','Friends'],['public','Public'],['compose','Create post'],['publish-clip','Publish clip'],['search','Search'],['clips','Clips'],['sessions','Together'],['memories','Memories'],['capsule','Time Capsules'],['pair','Shared bonds'],['questions','Questions'],['events','Events'],['communities','Communities'],['profile','My interests'],['alerts','Alerts'],['activity','Activity']];
  const tabs=mk('div','luo-social-tabs');tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Social features');
- let section='feed',epoch=0,request=0,releaseMemory=()=>{},releaseFeed=()=>{},feedMode='friends',sharedClip=null;
+ let section='clips',epoch=0,request=0,releaseMemory=()=>{},releaseFeed=()=>{},feedMode='public',sharedClip=null;
  const output=mk('div','luo-social-content');output.setAttribute('aria-live','polite');
  const sessions=installSocialSessions({win,db,note,getUser,getChats});
  const status=mk('p','luo-social-status');status.setAttribute('role','status');
