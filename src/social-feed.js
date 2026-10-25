@@ -6,7 +6,7 @@ const paths={heart:'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-
 
 // This is a presentation layer over the existing authorization-aware RPC.
 // Public additionally excludes non-public rows; the client never grants visibility.
-export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,mode='friends',clipsOnly=false,onNavigate,onMode,initialClip=null}){
+export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,mode='friends',clipsOnly=false,reelsView='explore',onNavigate,onMode,initialClip=null}){
  const doc=win.document,owner=getUser()?.id;
  let disposed=false,loading=false,activeCard=null,allowPlayback=clipsOnly,muted=true;
  const timers=new Set();
@@ -24,7 +24,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  if(clipsOnly){
   const top=el('nav','luo-reels-top');top.setAttribute('aria-label','Clip navigation');
   top.append(el('strong','','LUO · Clips'));
-  for(const [value,title] of [['public','Explore'],['public','Public'],['friends','Friends']]){const b=button(title,()=>onMode?.(value),'luo-reels-tab');b.setAttribute('aria-pressed',String(mode===value&&(title!=='Public')));b.title=title==='Explore'?'Browse public clips':title==='Public'?'All public clips':'Clips from friends';top.append(b)}
+  for(const [value,title] of [['explore','Explore'],['public','Public'],['friends','Friends']]){const b=button(title,()=>onMode?.(value),'luo-reels-tab');b.setAttribute('aria-pressed',String(reelsView===value));b.title=title==='Explore'?'Browse public clips':title==='Public'?'All public clips':'Clips from friends';top.append(b)}
   const create=button('Create clip',()=>onNavigate?.('publish-clip'),'luo-reels-create');create.prepend(el('b','','+'));top.append(create);root.prepend(top);
  }
  const kinds=clipsOnly?['clip']:['post','clip'];
