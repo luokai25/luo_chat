@@ -343,3 +343,11 @@ Worlds voice transport, agent enrollment and billing, underage account approval,
 - WhatsApp/Instagram *patterns*, not duplicated artwork: status cards -> full screen media viewer -> simple reply/reaction; direct chat -> tap avatar for details -> attachment actions contextual in compose; options in secondary sheets, not stacked diagnostic screens.
 - Discord-style Worlds: discover -> choose world -> text channels -> membership/roles/admin; onboarding and voice are backlog unless server enforcement exists.
 - Google Search Central Preferred Sources (https://developers.google.com/search/docs/appearance/preferred-sources): explicit selection link or supported widget, not a Google-approved badge. Site may not qualify for publishers' Top Stories surfaces.
+
+## Skeleton V4 measured layouts
+
+Production-aligned dimensions: Inbox rows 78px and 53px avatars; direct-message bubble widths 44% to 81%; Status cards 220px tall with 116–153px responsive width; Luonix regular posts with 39px author avatars and 4:5 media; reels as full-height frames; Worlds discovery icons 45px and channels 43px high; profiles 88px avatars, and comment avatars 32px.
+
+Loading is tied to actual pending requests. A 120ms startup delay reduces flashes, 180ms minimum display prevents jumps, and a 12-second slow-response notice avoids indefinite unexplained shimmer. Loading ends on success, failure, signout or navigation. Decorative stages use aria-hidden; containers use aria-busy, and reduced-motion and data-saver users receive static placeholders. This is CSS/source verified, not yet measured on real Android devices.
+
+See public/luo-skeleton-v4.js and public/luo-skeleton-v4.css. The full Android/PWA acceptance suite is still outstanding.

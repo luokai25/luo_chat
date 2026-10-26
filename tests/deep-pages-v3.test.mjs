@@ -7,6 +7,7 @@ import {renderMarketingPage} from '../scripts/generate-localized-marketing.mjs';
 import {renderProductGuide} from '../scripts/generate-product-pages.mjs';
 
 const source=await readFile('public/luo-deep-pages-v3.js','utf8');
+const skeleton=await readFile('public/luo-skeleton-v4.js','utf8');
 const html=await readFile('public/index.html','utf8');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 function run({loading=true}={}){
@@ -20,6 +21,7 @@ function run({loading=true}={}){
  // Updates V2 owns this rail; the fixture supplies its already-mounted destination.
  const statusRail=d.createElement('div');statusRail.id='luoUpdatesV2Rail';d.getElementById('chats').append(statusRail);
  w.eval(source);
+ w.eval(skeleton);
  d.dispatchEvent(new w.Event('DOMContentLoaded'));
  return {dom,w,d,app,close(){w.dispatchEvent(new w.Event('pagehide'));w.close()}};
 }
@@ -73,20 +75,23 @@ test('settings categories become real nested mobile views and preserve original 
 test('real loading states get skeletons; resolved and signed-out screens do not retain fake cards',async()=>{
  const f=run();
  try{
-  const {w,d,app}=f;await delay(80);
+  const {w,d,app}=f;await delay(175);
   const host=d.getElementById('chatlist');
   assert.equal(host.getAttribute('aria-busy'),'true');
-  const skeleton=host.querySelector('.luo-skeleton-stage');
-  assert.ok(skeleton);assert.equal(skeleton.getAttribute('aria-hidden'),'true');
+  const stage=host.querySelector('.luo-skeleton-stage');
+  assert.ok(stage);assert.equal(stage.getAttribute('aria-hidden'),'true');
+  assert.equal(stage.querySelectorAll('.sk-chat-row').length,4);
   host.replaceChildren(d.createElement('article'));
-  await delay(70);
+  await delay(240);
   assert.equal(host.querySelector('.luo-skeleton-stage'),null);
   assert.equal(host.hasAttribute('aria-busy'),false);
+  w.LuoUpdatesV2={active:()=>true};
   d.getElementById('storyFeedStatus').textContent='Loading stories…';
-  await delay(70);assert.ok(d.querySelector('#luoUpdatesV2Rail .luo-skeleton-stage'));
+  await delay(170);assert.ok(d.querySelector('#luoUpdatesV2Rail .luo-skeleton-stage'));
+  assert.equal(d.querySelectorAll('#luoUpdatesV2Rail .sk-status-card').length,3);
   d.getElementById('storyFeedStatus').textContent='No stories';
-  await delay(70);assert.equal(d.querySelector('#luoUpdatesV2Rail .luo-skeleton-stage'),null);
-  app.dataset.screen='auth';await delay(70);
+  await delay(235);assert.equal(d.querySelector('#luoUpdatesV2Rail .luo-skeleton-stage'),null);
+  app.dataset.screen='auth';await delay(40);
   assert.equal(d.querySelectorAll('.luo-skeleton-stage').length,0);
  }finally{f.close()}
 });
@@ -124,6 +129,8 @@ test('five localizations and product guides link to the official Google source-s
 test('navigation assets and documented surface inventory are present',async()=>{
  assert.ok(html.includes('/luo-deep-pages-v3.js'));
  assert.ok(html.includes('/luo-deep-pages-v3.css'));
+ assert.ok(html.includes('/luo-skeleton-v4.js'));
+ assert.ok(html.includes('/luo-skeleton-v4.css'));
  const matrix=await readFile('docs/LUO_COMPLETE_SURFACE_AUDIT_20261026.md','utf8');
  assert.match(matrix,/Total catalogued interaction surfaces:\*\* \*\*234\*\*/);
  assert.match(matrix,/SERVICE_GAP/);

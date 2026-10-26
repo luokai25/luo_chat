@@ -148,42 +148,8 @@
   if(dialog.id==='personDialog')dialog.classList.add('luo-deep-person');
   if(dialog.id==='personPhotoDialog'||dialog.id==='avatarDialog')dialog.classList.add('luo-deep-photo');
  }
- const kinds={
-  chats:{host:'#chatlist',state:()=>{const list=$('chatlist');return !!list?.querySelector('.empty')&&/loading conversations/i.test(list.querySelector('.empty').textContent)},type:'chat',count:4},
-  messages:{host:'#messages',state:()=>{const el=$('messages');return !!el?.querySelector('.empty')&&/loading (messages|history|device copy)/i.test(el.querySelector('.empty').textContent)},type:'message',count:4},
-  person:{host:'#personBody',state:()=>/^Loading profile/.test($('personStatus')?.textContent||''),type:'profile',count:1},
-  connections:{host:'#connectionList',state:()=>/^Loading/i.test($('connectionStatus')?.textContent||'')&&!($('connectionList')?.querySelector('.connection-row')),type:'chat',count:3},
-  worlds:{host:'.worlds-content',state:()=>/^Loading (Worlds|channels)/i.test(doc.querySelector('.worlds-status')?.textContent||'')&&!doc.querySelector('.worlds-content .worlds-discover-card'),type:'world',count:3},
-  luonix:{host:'.luo-feed-list',state:()=>/^Finding your next moment/i.test(doc.querySelector('.luo-feed-feedback')?.textContent||'')&&!doc.querySelector('.luo-feed-list .luo-feed-card'),type:'post',count:2},
-  social:{host:'.luo-social-content',state:()=>{const v=doc.querySelector('.luo-social-content');return !!v?.querySelector('.luo-social-empty')&&/^Loading/i.test(v.querySelector('.luo-social-empty').textContent)},type:'post',count:2},
-  stories:{host:'#luoUpdatesV2Rail',state:()=>/Loading stories/i.test($('storyFeedStatus')?.textContent||''),type:'story',count:4}
- };
- let raf=0,lastActive=false;
- function ensureSkeleton(host,key,kind,rows,on){
-  const found=host.querySelector(':scope > .luo-skeleton-stage[data-loading="'+key+'"]');
-  if(!on){if(found)found.remove();if(!host.querySelector(':scope > .luo-skeleton-stage')){host.removeAttribute('aria-busy');host.classList.remove('luo-skeleton-active')}return}
-  if(found)return;
-  const stage=make('div','luo-skeleton-stage');stage.dataset.loading=key;stage.setAttribute('aria-hidden','true');stage.dataset.kind=kind;
-  for(let i=0;i<rows;i++){
-   const card=make('div','luo-skeleton-tile');
-   card.append(make('span','luo-skeleton-avatar'),make('span','luo-skeleton-lines'));
-   stage.append(card);
-  }
-  host.append(stage);host.setAttribute('aria-busy','true');host.classList.add('luo-skeleton-active');
- }
- function syncSkeletons(){
-  raf=0;
-  if(app.dataset.screen==='auth'){
-   for(const node of doc.querySelectorAll('.luo-skeleton-stage'))node.remove();
-   for(const node of doc.querySelectorAll('.luo-skeleton-active')){node.classList.remove('luo-skeleton-active');node.removeAttribute('aria-busy')}
-   return;
-  }
-  for(const [key,rule] of Object.entries(kinds)){
-   const host=doc.querySelector(rule.host);if(!host)continue;
-   ensureSkeleton(host,key,rule.type,rule.count,Boolean(rule.state()));
-  }
- }
- const scheduleSkeleton=()=>{if(raf)return;raf=requestAnimationFrame(syncSkeletons)};
+ // Loading visuals are owned by the single size-accurate Luo Skeleton V4 controller.
+ const scheduleSkeleton=()=>{};
  function syncDialogs(root){
   if(root?.matches?.('dialog'))decorate(root);
   for(const el of root?.querySelectorAll?.('dialog')||[])decorate(el);
