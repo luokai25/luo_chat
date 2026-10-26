@@ -148,7 +148,10 @@
   if(dialog.id==='personDialog')dialog.classList.add('luo-deep-person');
   if(dialog.id==='personPhotoDialog'||dialog.id==='avatarDialog')dialog.classList.add('luo-deep-photo');
  }
- // Loading visuals are owned by the single size-accurate Luo Skeleton V4 controller.
+ // Compatibility facade. Skeleton V4 owns loading; the V3 page module still
+ // exposes syncSkeletons to existing callers and cleans up its own observers.
+ let raf=0;
+ const syncSkeletons=()=>window.LuoSkeletonV4?.refresh?.();
  const scheduleSkeleton=()=>{};
  function syncDialogs(root){
   if(root?.matches?.('dialog'))decorate(root);
