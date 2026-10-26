@@ -1,0 +1,66 @@
+/* One status-first Updates experience, based on mobile Status navigation.
+   Pure styling: real private Stories backend and app controls remain authoritative. */
+.app.luo-updates-v2-open #chats{position:relative;isolation:isolate;min-height:0}
+#luoUpdatesV2[hidden],#luoUpdatesV2Viewer:not([open]){display:none!important}
+.app.luo-updates-v2-open #luoUpdatesV2{display:flex;position:absolute;inset:0 0 0 0;z-index:45;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;background:#09090b;color:#f7f1e6;padding:0 0 85px;box-sizing:border-box}
+.app.luo-updates-v2-open #luoStatusPage,.app.luo-updates-v2-open #luoApprovedFab,.app.luo-updates-v2-open #luoApprovedHeader,.app.luo-updates-v2-open #luoApprovedFilters{display:none!important}
+.luo-status-v2 *,.luo-status-v2-viewer *{box-sizing:border-box}
+.luo-status-v2-header{display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5;background:#09090bea;backdrop-filter:blur(9px);padding:22px 16px 17px}
+.luo-status-v2-header h1{margin:0 auto 0 0;color:#fff0d1;font-size:clamp(25px,5vw,34px);font-weight:750;letter-spacing:-.75px}
+.luo-status-icon{width:42px;height:42px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:#eed7a3;font-size:26px;cursor:pointer}
+.luo-status-icon:hover,.luo-status-icon:focus-visible{background:#3c2b1d}
+.luo-status-v2-search{display:block;width:calc(100% - 32px);margin:0 16px 12px;height:44px;border-radius:24px;padding:10px 15px;border:1px solid #6f573c;background:#1e1b1d;color:#f6e9d3;font-size:16px}
+.luo-status-v2-search[hidden],.luo-status-v2-menu[hidden]{display:none!important}
+.luo-status-v2-menu{display:flex;flex-direction:column;gap:3px;margin:0 16px 12px;padding:8px;background:#242025;border:1px solid #554027;border-radius:13px}
+.luo-status-v2-menu button{display:block;padding:10px 14px;text-align:left;background:transparent;border:0;color:#f4d9a8;min-height:41px;border-radius:9px}
+.luo-status-v2-menu button:hover{background:#493222}
+.luo-status-v2-section{margin:31px 16px 15px;color:#f1e5d0;font-size:21px;font-weight:780;letter-spacing:-.35px}
+.luo-status-v2-rail{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;min-height:208px;padding:0 16px 18px;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.luo-status-v2-rail::-webkit-scrollbar{display:none}
+.luo-status-v2-tile{flex:0 0 clamp(116px,31vw,153px);height:220px;display:flex;flex-direction:column;position:relative;scroll-snap-align:start;overflow:hidden;border:1px solid #70543580;border-radius:18px;background:#19161c;color:#f7e8d4;padding:0;cursor:pointer;text-align:left;box-shadow:0 10px 25px #0003}
+.luo-status-v2-tile-art{position:relative;display:flex;flex:1;flex-direction:column;justify-content:space-between;overflow:hidden;padding:17px 11px 35px;width:100%;background:radial-gradient(circle at 25% 19%,#be94564a,transparent 35%),radial-gradient(circle at 75% 65%,#ab7c6033,transparent 55%),linear-gradient(160deg,#392c24,#17141b 65%,#08090e)}
+.luo-status-v2-tile:not(.luo-status-v2-my) .luo-status-v2-tile-art{filter:hue-rotate(var(--status-hue,0deg))}
+.luo-status-v2-initial{display:grid;place-items:center;align-self:flex-start;width:48px;height:48px;border:3px solid #e3bd6b;border-radius:50%;font-size:20px;background:#2d261f;color:#f2cf8e;font-weight:900;box-shadow:0 0 0 3px #16141a}
+.luo-status-v2-excerpt{font-size:12px;line-height:1.35;color:#fff3e5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;word-break:break-word;max-height:3.8em;text-shadow:0 2px 4px #0009}
+.luo-status-v2-label{position:absolute;bottom:0;left:0;width:100%;padding:15px 10px 10px;font-size:15px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:linear-gradient(transparent,#100f15de 50%,#08080bec)}
+.luo-status-v2-my-art{display:flex;justify-content:center;align-items:center;background:linear-gradient(125deg,#604826,#15131b 58%,#302d28);font-size:38px;font-weight:900;color:#e6bb69}
+.luo-status-v2-plus{position:absolute;top:58px;left:58px;display:grid;place-items:center;background:#e0b86e;color:#18130d;border-radius:50%;width:37px;height:37px;font-size:28px;border:3px solid #141319}
+.luo-status-v2-empty{margin:26px 16px;color:#a99e8d;text-align:center;font-size:13px;line-height:1.5}
+.luo-status-v2-actions{position:sticky;bottom:20px;align-self:flex-end;display:flex;flex-direction:column;gap:14px;z-index:5;padding:20px 18px}
+.luo-status-v2-actions button{display:grid;place-items:center;width:55px;height:55px;border-radius:17px;border:1px solid #80613a;box-shadow:0 8px 24px #0005;cursor:pointer}
+.luo-status-v2-pencil{background:#352c23;color:#edcd91;font-size:27px}
+.luo-status-v2-camera{background:linear-gradient(130deg,#f0d49f,#b9924e);color:#1d160d;font-size:28px}
+dialog#luoUpdatesV2Viewer[open]{display:flex!important;flex-direction:column;position:fixed!important;inset:0!important;z-index:9999!important;width:100vw!important;height:100dvh!important;max-width:100vw!important;max-height:100dvh!important;margin:0!important;padding:calc(10px + env(safe-area-inset-top,0px)) 0 calc(10px + env(safe-area-inset-bottom,0px))!important;border:0!important;border-radius:0!important;background:#050507!important;color:#fff8ed!important;overflow:hidden!important}
+#luoUpdatesV2Viewer::backdrop{background:#000}
+.luo-status-v2-progress{display:flex;gap:4px;height:4px;padding:0 8px;margin:0 0 10px}
+.luo-status-v2-bar{flex:1;background:#ffffff48;border-radius:5px;overflow:hidden}
+.luo-status-v2-bar i{display:block;height:100%;width:0;background:#e8bc6f;border-radius:5px;transition:width .1s linear}
+.luo-status-v2-vhead{position:relative;z-index:3;display:flex;align-items:center;gap:10px;padding:7px 13px;min-height:60px;background:#05050777}
+.luo-status-v2-avatar{display:grid;place-items:center;width:41px;height:41px;border-radius:50%;border:2px solid #e4bc6e;color:#f3d69a;background:#271f1c;font-weight:850}
+.luo-status-v2-who{display:grid;gap:1px;flex:1;min-width:0}
+.luo-status-v2-who strong{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.luo-status-v2-who small{font-size:11px;color:#bdb1ab}
+.luo-status-v2-view-menu{position:absolute;z-index:12;right:20px;top:90px;display:flex;flex-direction:column;gap:5px;background:#27212b;border:1px solid #856c47;padding:8px;border-radius:14px}
+.luo-status-v2-view-menu[hidden]{display:none}
+.luo-status-v2-view-menu button{color:#f4dba5;background:transparent;border:0;border-radius:6px;padding:12px 19px;text-align:left}
+.luo-status-v2-media{display:grid;place-items:center;flex:1;min-height:0;overflow:hidden;width:100%;background:radial-gradient(circle at 50% 50%,#211b1d,#08080b)}
+.luo-status-v2-media img,.luo-status-v2-media video{width:100%;height:100%;max-height:100%;object-fit:contain}
+.luo-status-v2-media audio{width:min(95%,460px)}
+.luo-status-v2-caption{position:relative;margin:0 auto;max-width:80ch;padding:20px 35px;max-height:32dvh;overflow:auto;text-align:center;font-size:clamp(16px,3vw,23px);line-height:1.48;color:#f6e1bd;overflow-wrap:anywhere;white-space:pre-wrap}
+.luo-status-v2-caption:empty{display:none}
+.luo-status-v2-view-message{position:relative;min-height:0;color:#dabf8e;font-size:12px;text-align:center;margin:0;padding:0 10px}
+.luo-status-v2-hit{position:absolute;z-index:2;top:120px;height:calc(100% - 235px);width:28%;border:0;background:transparent;cursor:pointer}
+.luo-status-v2-hit-back{left:0}.luo-status-v2-hit-next{right:0}
+.luo-status-v2-hit:disabled{pointer-events:none}
+.luo-status-v2-footer{position:relative;z-index:6;display:flex;align-items:center;gap:8px;min-height:62px;padding:8px 13px;background:#060609}
+.luo-status-v2-reply{display:flex;gap:6px;flex:1;align-items:center;min-width:0}
+.luo-status-v2-reply[hidden],.luo-status-v2-react[hidden]{display:none}
+.luo-status-v2-reply input{height:45px;min-width:0;flex:1;background:#151419;border:1px solid #886842;border-radius:24px;color:#fff1dd;padding:10px 15px;font-size:16px}
+.luo-status-v2-send,.luo-status-v2-react{display:grid;place-items:center;width:45px;min-width:45px;height:45px;background:#292016;color:#edc785;border:1px solid #775633;border-radius:50%;font-size:22px}
+.luo-status-v2-reactions{position:absolute;right:6px;bottom:70px;display:flex;justify-content:center;flex-wrap:wrap;gap:6px;width:min(98vw,440px);border:1px solid #67502e;background:#211d25f4;border-radius:28px;padding:10px;box-shadow:0 12px 45px #0008}
+.luo-status-v2-reactions[hidden]{display:none}
+.luo-status-v2-emoji{display:grid;place-items:center;font-size:22px;min-width:38px;height:38px;padding:4px;border:0;border-radius:50%;background:transparent}
+.luo-status-v2-emoji:hover{background:#c5a27332}
+.luo-status-v2 button:focus-visible,.luo-status-v2-viewer button:focus-visible{outline:3px solid #f5d693;outline-offset:2px}
+@media(min-width:900px){#luoUpdatesV2{max-width:100%!important}.luo-status-v2-rail{max-width:1100px}}
+@media(prefers-reduced-motion:reduce){.luo-status-v2 *,.luo-status-v2-viewer *{transition:none!important;animation:none!important}}

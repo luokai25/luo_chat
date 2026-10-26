@@ -35,6 +35,7 @@ function begin(){
  $('luoFindGroupsFromCommunity').onclick=()=>{show(null);tab('chats');$('search')?.focus()};
  nav.addEventListener('click',e=>{
   const b=e.target.closest('button[data-target]');if(!b)return;
+  if(b.dataset.target==='updates'&&window.LuoUpdatesV2)return;
   if(b.dataset.target==='updates'||b.dataset.target==='group'){
    if(b.dataset.target==='group'&&document.querySelector('#group .worlds-app')){e.preventDefault();e.stopImmediatePropagation();show(null);tab('group');return}
    e.preventDefault();e.stopImmediatePropagation();

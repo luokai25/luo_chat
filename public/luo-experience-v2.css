@@ -1,0 +1,56 @@
+@import url("/luo-updates-v2.css");
+/* Instagram-inspired direct-message ergonomics, Luo black/gold identity. */
+#room.screen{background:#050506!important}
+#room .roomhead{min-height:66px!important;height:66px!important;padding:7px 10px!important;background:#08080b!important;border-bottom:1px solid #49402c60!important;box-shadow:none!important}
+#room .roomhead #back{font-size:27px!important;color:#f7e7c6!important}
+#room .roomhead #roomavatar{width:43px!important;min-width:43px!important;height:43px!important;border-radius:50%!important;border:1.5px solid #c69d58!important}
+#room .roomhead .room-identity{flex:1;min-width:0;cursor:pointer;padding:7px 4px;border-radius:9px}
+#room .roomhead .room-identity:focus-visible{outline:2px solid #e5c17b}
+#room .roomhead #roomtitle{font-size:16px!important;color:#faf2e4;font-weight:800!important;letter-spacing:-.2px}
+#room .roomhead #roomsub{font-size:11px!important;opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#room .roomhead .roomtools{gap:1px!important}
+#room .roomhead .roomtools #openPins,#room .roomhead .roomtools #openMedia,#room .roomhead .roomtools #createPoll{display:none!important}
+#room .roomhead .roomtools #roomSearchToggle{display:none!important}
+#room .roomhead .luo-dm-info{order:3;border:0!important;background:transparent!important;min-width:34px!important;width:34px!important;height:38px!important;padding:0!important;font-size:24px!important;line-height:1;color:#e6c17c!important;margin:0 2px!important}
+#room .roomhead .luo-dm-info:hover{background:#4c381d55!important}
+#room .roomhead .roomtools .luo-approved-icon{width:39px!important;height:40px!important;min-width:37px!important;border:0!important;background:transparent!important}
+#room #messages{background-color:#070709!important;box-shadow:inset 0 12px 20px #0002;padding:18px 10px 22px!important;gap:2px!important}
+#room #messages .bubble{position:relative;max-width:min(84%,530px)!important;margin-block:4px!important;padding:11px 14px!important;border-radius:22px 22px 22px 6px!important;background:#222124ef!important;border:0!important;box-shadow:none!important}
+#room #messages .bubble.mine{background:linear-gradient(130deg,#8a632d,#5e462c)!important;border-radius:22px 22px 6px 22px!important}
+#room #messages .bubble-body{font-size:15px!important;line-height:1.47!important;letter-spacing:0;overflow-wrap:anywhere;white-space:pre-wrap}
+#room #messages .bubble .stamp{font-size:9px!important;opacity:.55;margin-top:4px;text-align:right}
+#room #messages .bubble .reply-quote{font-size:12px;background:#09080b53!important;padding:7px 9px!important;margin:2px 0 8px!important;border:0!important;border-inline-start:3px solid #dfba7b!important}
+#room #messages .bubble .msg-actions{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;opacity:.65}
+#room #messages .bubble button[data-action="reply"]{font-size:11px;color:#e8c591;opacity:.65}
+#room #messages .bubble .msg-actions button{font-size:10px}
+#room #messages .bubble .bubble-sender{font-size:11px;color:#f0ca86}
+#room #messages .bubble .luo-share-rich{margin-top:2px}
+#room #sendform{position:relative;display:flex!important;align-items:center!important;padding:7px 9px calc(9px + env(safe-area-inset-bottom,0px))!important;border:0!important;background:#09090bf4!important;backdrop-filter:blur(15px)!important;gap:5px!important}
+#room #sendform #body{min-height:45px!important;max-height:145px!important;border:1px solid #544535!important;background:#212124!important;border-radius:25px!important;padding:11px 15px!important;color:#fff3e6!important;font-size:16px!important;resize:none!important}
+#room #sendform #body::placeholder{color:#9f9a9d}
+#room #sendform #attach{font-size:26px!important;background:#272125!important;color:#edcb8e!important;border:1px solid #8f703d!important;min-width:42px!important;width:42px!important;height:43px!important;border-radius:50%!important}
+#room #sendform #scheduleText{display:none!important}
+#room #sendform .send,#room #sendform #luoApprovedMic{background:#d7b475!important;color:#1a1206!important;border-radius:50%!important;min-width:45px!important;width:45px!important;height:45px!important}
+#room .luo-dm-attach-sheet{display:grid;position:absolute;bottom:74px;left:11px;right:11px;z-index:35;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;border:1px solid #67502c;padding:13px;background:#17151bf8;border-radius:18px;box-shadow:0 16px 55px #000b;backdrop-filter:blur(10px)}
+#room .luo-dm-attach-sheet[hidden]{display:none!important}
+#room .luo-dm-sheet-action{min-height:54px;border:1px solid #725934;background:#282125;color:#ead19d;border-radius:13px;font-size:13px;font-weight:750}
+#room .luo-dm-sheet-action:hover{background:#443223}
+#room .luo-dm-settings-head{padding-bottom:12px}
+#room .roomhead details.room-menu .room-menu-items{background:#16151b;border:1px solid #846235;box-shadow:0 12px 32px #0009}
+#room .roomhead details.room-menu .room-menu-items button{font-size:13px;text-align:left}
+#profile.settings-hub{background:#09090c;color:#f5e8d4}
+#profile.settings-hub .page-heading{padding:22px 12px 8px}
+#profile.settings-hub .page-heading h2{font-size:clamp(25px,4vw,35px);letter-spacing:-.7px;margin:0}
+#profile.settings-hub .page-heading .eyebrow{display:none}
+#profile.settings-hub .settings-profile-card{border:1px solid #634b2f;border-radius:16px;background:#1b1718;margin:10px 8px 24px;padding:14px;gap:12px}
+#profile.settings-hub #settingsSearch{background:#221e24;color:#f8e6cf;border:1px solid #705533;min-height:46px;border-radius:25px;padding:10px 16px;margin-bottom:12px}
+#profile.settings-hub #settingsNav{display:grid;gap:5px;align-content:start}
+#profile.settings-hub .settings-nav-item{min-height:52px;background:transparent;border:0;border-radius:12px;text-align:left;color:#f1e7d8;padding:12px 14px}
+#profile.settings-hub .settings-nav-item:hover,#profile.settings-hub .settings-nav-item.active{background:#3c2b1b!important;color:#efd19c!important}
+#profile.settings-hub .settings-nav-item strong{font-size:14px!important}
+#profile.settings-hub .settings-nav-item small{color:#998f87;font-size:11px}
+#profile.settings-hub .settings-panel:not(.hidden){background:#141217;border:1px solid #483826;border-radius:16px;padding:18px;max-width:100%}
+#profile.settings-hub button:focus-visible,#room button:focus-visible{outline:2px solid #f4d18b;outline-offset:2px}
+@media(max-width:630px){#room .roomhead{padding:6px 5px!important;gap:2px!important}#room .roomhead #back{min-width:31px!important;width:31px!important}#room .roomhead .luo-dm-info{min-width:30px!important;width:30px!important}#room .roomhead .roomtools .luo-approved-icon{width:34px!important;min-width:33px!important}#room #messages{padding:12px 9px 24px!important}#room #messages .bubble{max-width:88%!important}#room #sendform{padding:7px 7px calc(8px + env(safe-area-inset-bottom,0px))!important}#profile.settings-hub .settings-nav-item small{display:none}#profile.settings-hub .settings-profile-card{flex-wrap:wrap}}
+@media(hover:hover) and (pointer:fine){#room #messages .bubble .msg-actions,#room #messages .bubble button[data-action="reply"]{opacity:.16}#room #messages .bubble:hover .msg-actions,#room #messages .bubble:hover button[data-action="reply"],#room #messages .bubble:focus-within .msg-actions,#room #messages .bubble:focus-within button[data-action="reply"]{opacity:1}}
+@media(prefers-reduced-motion:reduce){#room #messages .bubble,#room .luo-dm-attach-sheet *{animation:none!important;transition:none!important}}

@@ -174,10 +174,27 @@ document.addEventListener('click',event=>{
  const button=event.target.closest?.('#luoApprovedNav button[data-target="updates"]');
  if(!button||!user)return;
  window.setTimeout(()=>{
-  if(!user||!document.querySelector('.app[data-screen="home"]')||$('storiesDialog')?.open)return;
+  if(!user||window.LuoUpdatesV2?.active?.()||!document.querySelector('.app[data-screen="home"]')||$('storiesDialog')?.open)return;
   if(typeof $('openStories')?.onclick==='function')void $('openStories').onclick();
  },120);
 },true);
+window.addEventListener('luo:status-reply',async event=>{
+ // Reuse the audited direct-chat RPC and native send handler. No parallel chat backend.
+ const payload=event.detail||{},username=String(payload.username||''),text=String(payload.body||'').trim();
+ if(!user||!/^[a-z0-9_]{3,24}$/.test(username)||!text||text.length>10000)return;
+ const actor=user.id,revision=accountGeneration,active=()=>isAccount(actor,revision);
+ try{
+  const result=await db.rpc('start_direct_chat',{target_username:username});
+  if(result.error)throw result.error;
+  if(!active())return;
+  const id=typeof result.data==='string'?result.data:result.data?.id||result.data?.conversation_id;
+  if(!id)throw Error('Chat unavailable');
+  await loadChats();if(!active())return;
+  await openRoom(id);if(!active()||current?.id!==id)return;
+  const input=$('body');input.value=text;input.dispatchEvent(new Event('input',{bubbles:true}));
+  $('sendform').requestSubmit();
+ }catch(error){if(active())note('Could not send status reply: '+(error.message||'Please retry.'))}
+});
 const deviceNotifications=installDeviceNotifications({win:window});
 const deviceAccess=installDeviceAccess({win:window,$,getUser:()=>user,getCurrent:()=>current,setFile:file=>{selectedFile=file;showFile()},note});
 const fileEditor=installImageEditor({win:window,$,getUser:()=>user,getFile:()=>selectedFile,setFile:file=>{selectedFile=file;showFile()},note});
