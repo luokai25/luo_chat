@@ -205,5 +205,5 @@ test('invalid photo files are rejected before creating a post draft',async()=>{
 test('real tab callbacks load Social once and leaving invalidates pending results',async()=>{
  const dom=new JSDOM('<div class="app" data-tab="chats"><nav class="workspace-nav"></nav><div><section id="chats"></section></div></div>',{url:'https://luo.example'}),w=dom.window,d=w.document;
  let hub;const calls=[];hub=installSocialSpaces({win:w,db:{rpc:async(name,args)=>{calls.push(args);return{data:[]}}},$:id=>d.getElementById(id),getUser:()=>({id:'me'}),getChats:()=>[],note:()=>{},tab:key=>{d.querySelector('.app').dataset.tab=key;hub.onTab(key)}});
- try{d.querySelector('[data-tab="social"]').click();await new Promise(r=>setImmediate(r));assert.equal(calls.filter(x=>x.action==='feed').length,1,'Social directly requests only the clips stream');hub.onTab('chats');assert.equal(d.querySelector('.luo-feed'),null)}finally{w.close()}
+ try{d.querySelector('[data-tab="social"]').click();await new Promise(r=>setImmediate(r));assert.equal(calls.filter(x=>x.action==='feed').length,4,'Luonix requests public and friends clips plus written/photo posts without duplicate items');hub.onTab('chats');assert.equal(d.querySelector('.luo-feed'),null)}finally{w.close()}
 });

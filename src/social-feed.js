@@ -18,17 +18,18 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  function button(text,fn,cls='luo-feed-icon',symbol){const b=el('button',cls);b.type='button';b.setAttribute('aria-label',text);b.title=text;if(symbol)b.append(icon(symbol));b.append(el('span','',text));b.onclick=async()=>{if(b.disabled||!valid())return;b.disabled=true;try{await fn(b)}catch(e){if(valid())note(e.message||'Please try again.')}finally{if(valid())b.disabled=false}};return b}
  function deadline(promise){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=win.setTimeout(()=>reject(Error('Connection timed out. Try again.')),12000)})]).finally(()=>win.clearTimeout(timer))}
  async function rpc(action,input){if(!valid())throw Error('Please reopen Social.');const r=await deadline(db.rpc('luo_space',{action,input}));if(r.error)throw Error(r.error.message);return r.data}
- const root=el('section','luo-feed'+(clipsOnly?' luo-feed-reels':''));root.setAttribute('aria-label',clipsOnly?'Luo Clips':mode==='public'?'Public feed':'Friends feed');
+ const root=el('section','luo-feed'+(clipsOnly?' luo-feed-reels':''));root.setAttribute('aria-label',clipsOnly?'Luonix · videos, photos and posts':mode==='public'?'Public feed':'Friends feed');
  const list=el('div','luo-feed-list'),feedback=el('p','luo-feed-feedback');feedback.setAttribute('role','status');
  const more=button('Load more',load,'luo-feed-more');root.append(list,feedback,more);output.append(root);
  if(clipsOnly){
   const top=el('nav','luo-reels-top');top.setAttribute('aria-label','Clip navigation');
-  top.append(el('strong','','LUO · Clips'));
+  top.append(el('strong','','LUO · Luonix'));
   for(const [value,title] of [['explore','Explore'],['public','Public'],['friends','Friends']]){const b=button(title,()=>onMode?.(value),'luo-reels-tab');b.setAttribute('aria-pressed',String(reelsView===value));b.title=title==='Explore'?'Browse public clips':title==='Public'?'All public clips':'Clips from friends';top.append(b)}
-  const create=button('Create clip',()=>onNavigate?.('publish-clip'),'luo-reels-create');create.prepend(el('b','','+'));top.append(create);root.prepend(top);
+  const create=button('Create Luonix',()=>onNavigate?.('publish-clip'),'luo-reels-create');create.prepend(el('b','','+'));top.append(create);root.prepend(top);
  }
- const kinds=clipsOnly?['clip']:['post','clip'];
- const streams=new Map(kinds.map(kind=>[kind,{before:null,before_id:null,more:true}]));
+ const kinds=clipsOnly?['clip','post']:['post','clip'];
+ const sources=clipsOnly&&mode==='mixed'?['public','friends']:[mode];
+ const streams=new Map(sources.flatMap(sourceMode=>kinds.map(kind=>[sourceMode+':'+kind,{kind,sourceMode,before:null,before_id:null,more:true}])));
  const seen=new Set(),media=new Map();
  const reduced=!!win.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
  const saver=!!win.navigator.connection?.saveData;
@@ -198,17 +199,17 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  async function load(){
   if(loading||!valid())return;loading=true;more.disabled=true;feedback.textContent='Finding your next moment…';
   let errors=0,added=0;const batch=[];
-  await Promise.all(kinds.map(async kind=>{
-   const stream=streams.get(kind);if(!stream.more)return;
-   try{const cursor=stream.before?{before:stream.before,before_id:stream.before_id}:{};let data;if(['following','saved'].includes(mode)){if(!extras||!await extras.ready())throw Error('This feed requires the Reels backend upgrade.');data=await extras.call('feed',{mode,...cursor})}else data=await rpc('feed',{kind,mode,...cursor});if(!valid())return;
+  await Promise.all([...streams.values()].map(async stream=>{
+   const {kind,sourceMode}=stream;if(!stream.more)return;
+   try{const cursor=stream.before?{before:stream.before,before_id:stream.before_id}:{};let data;if(['following','saved'].includes(sourceMode)){if(!extras||!await extras.ready())throw Error('This feed requires the Reels backend upgrade.');data=await extras.call('feed',{mode:sourceMode,...cursor})}else data=await rpc('feed',{kind,mode:sourceMode,...cursor});if(!valid())return;
     const rows=Array.isArray(data)?data:[];stream.more=rows.length===20;
     const last=rows.at(-1);if(last?.created_at&&last?.id){if(stream.before===last.created_at&&stream.before_id===last.id)stream.more=false;stream.before=last.created_at;stream.before_id=last.id}else if(rows.length)stream.more=false;
     // Both the SQL visibility predicate and this extra public-only filter apply.
-    for(const item of rows){if(!item?.id||seen.has(item.id)||item.kind!==kind||item.published===false||mode==='public'&&item.audience!=='public')continue;seen.add(item.id);batch.push(item);added++}
+    for(const item of rows){if(!item?.id||seen.has(item.id)||item.kind!==kind||item.published===false||sourceMode==='public'&&item.audience!=='public')continue;seen.add(item.id);batch.push(item);added++}
    }catch(e){if(valid()){errors++;feedback.textContent=e.message||'Feed unavailable. Try again.'}}
   }));
   if(!valid())return;batch.sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))||String(b.id).localeCompare(String(a.id)));for(const item of batch)card(item);loading=false;more.disabled=false;more.hidden=![...streams.values()].some(s=>s.more);
-  if(!errors)feedback.textContent=!seen.size?(mode==='public'?'No public moments yet. Be the first to share one.':'Your friends’ moments will appear here. Share your first post.'):(more.hidden?'You’re all caught up.':added?'':'No matching moments on this page. Keep exploring.');
+  if(!errors)feedback.textContent=!seen.size?(mode==='public'?'No public moments yet. Be the first to share one.':'No Luonix yet. Share a video, photo or written moment.'):(more.hidden?'You’re all caught up.':added?'':'No matching moments on this page. Keep exploring.');
   more.querySelector('span').textContent=errors?'Try again':'Load more';
  }
  const onKey=ev=>{if(!clipsOnly||!['ArrowDown','ArrowUp'].includes(ev.key)||/INPUT|TEXTAREA|BUTTON/.test(ev.target.tagName))return;ev.preventDefault();const cards=[...list.children],index=Math.max(0,cards.indexOf(activeCard||doc.activeElement));cards[Math.min(cards.length-1,Math.max(0,index+(ev.key==='ArrowDown'?1:-1)))]?.scrollIntoView?.({behavior:reduced?'instant':'smooth',block:'start'})};list.addEventListener('keydown',onKey);

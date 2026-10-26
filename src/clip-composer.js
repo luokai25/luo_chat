@@ -7,12 +7,12 @@ export function validateClipEdit({duration,start,end,speed=1}){
 }
 
 // Real media capture/export. No server upload until the user chooses Publish.
-export function mountClipComposer({win,output,getUser,db,note,onPublished,drafts}){
+export function mountClipComposer({win,output,getUser,db,note,onPublished,onCancel,drafts}){
  const doc=win.document,owner=getUser()?.id;let cameraUI=null,timeline=null,timelineAbort=null;let disposed=false,revision=0,stream=null,recorder=null,timer=null,file=null,objectURL=null,duration=0,exporting=false,draftId=null,restoring=false,savingDraft=false,publishing=false;
  const valid=()=>!disposed&&getUser()?.id===owner&&root.isConnected;
  const el=(tag,cls,text)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
  const root=el('section','luo-clip-composer'),header=el('header'),preview=el('video','luo-clip-preview'),status=el('p','luo-feed-feedback'),progress=el('progress','luo-clip-progress');progress.max=90;progress.value=0;progress.hidden=true;progress.setAttribute('aria-label','Recording duration');status.setAttribute('role','status');preview.controls=true;preview.playsInline=true;preview.muted=true;preview.preload='metadata';preview.setAttribute('aria-label','Clip preview');
- header.append(el('h2','','Create a Luo Reel'),el('p','','Record or import. Camera recording uses your camera and microphone. Nothing uploads until Publish.'));root.append(header,preview,progress,status);output.append(root);
+ header.append(el('h2','','Create Luonix'),el('p','','A real three-step flow: select media, edit your video, and choose who can watch. Publishing requires your confirmation.'));const closeCreator=el('button','luonix-close','×');closeCreator.type='button';closeCreator.setAttribute('aria-label','Close Luonix creator');closeCreator.onclick=()=>{if((file||stream)&&!win.confirm('Discard this editing session? Save a device draft first if you want to keep it.'))return;onCancel?.()};header.append(closeCreator);root.append(header,preview,progress,status);output.append(root);
  const button=(title,fn)=>{const b=el('button','luo-clip-tool',title);b.type='button';b.onclick=async()=>{if(!valid()||b.disabled)return;b.disabled=true;try{await fn(b)}catch(e){if(valid())status.textContent=e.message||'Please retry.'}finally{if(valid())b.disabled=b.dataset.locked==='true'}};return b};
  function stopCamera(){if(timer)win.clearInterval(timer);timer=null;const encoder=recorder;recorder=null;if(encoder){encoder.ondataavailable=encoder.onstop=encoder.onerror=null;if(encoder.state!=='inactive')try{encoder.stop()}catch{}}cameraUI?.stop();for(const track of stream?.getTracks()||[])track.stop();stream=null;preview.srcObject=null}
  function releaseURL(){if(objectURL)win.URL.revokeObjectURL(objectURL);objectURL=null}
@@ -27,10 +27,42 @@ export function mountClipComposer({win,output,getUser,db,note,onPublished,drafts
  for(const value of [.5,1,1.5,2]){const option=el('option','',value+'×');option.value=String(value);option.selected=value===1;speed.append(option)}control('Playback / export speed',speed);
  const previewSelection=button('Preview selection',async()=>{const values=validateClipEdit({duration,...(timeline?.dirty?timeline.selectedRange:{start:Number(start.value),end:Number(end.value),speed:Number(speed.value)})});preview.currentTime=values.start;preview.playbackRate=values.speed;preview.muted=false;await preview.play()});edit.append(previewSelection);preview.ontimeupdate=()=>{if(!exporting&&file&&preview.currentTime>=(timeline?.dirty?timeline.selectedRange.end:Number(end.value))&&Number(end.value)>Number(start.value))preview.pause()};
  const exportButton=button('Apply trim and speed',applyEdit);edit.append(exportButton);edit.disabled=true;root.append(edit);
- const publish=el('form','luo-clip-publish'),caption=el('textarea'),audience=el('select');caption.maxLength=12000;caption.placeholder='Write a caption…';caption.setAttribute('aria-label','Clip caption');audience.setAttribute('aria-label','Clip audience');for(const [value,title]of [['friends','Friends'],['public','Public'],['private','Only me']]){const option=el('option','',title);option.value=value;audience.append(option)}const send=el('button','primary','Publish Reel');send.type='submit';send.disabled=true;publish.append(caption,audience,send);root.append(publish);
+ const publish=el('form','luo-clip-publish'),caption=el('textarea'),audience=el('select');caption.maxLength=12000;caption.placeholder='Write a caption…';caption.setAttribute('aria-label','Clip caption');audience.setAttribute('aria-label','Clip audience');for(const [value,title]of [['friends','Friends'],['public','Public'],['private','Only me']]){const option=el('option','',title);option.value=value;audience.append(option)}const send=el('button','primary','Share Luonix');send.type='submit';send.disabled=true;
+ const shareHeading=el('div','luonix-share-head');shareHeading.append(el('h3','','Share your Luonix'),el('p','','Write a caption, add #hashtags, choose your audience and review your video before sharing.'));
+ const captionLabel=el('label','luonix-caption-label','Caption and hashtags');captionLabel.append(caption);
+ const audienceLabel=el('label','luonix-audience-label','Who can view?');audienceLabel.append(audience);
+ publish.append(shareHeading,captionLabel,audienceLabel,send);root.append(publish);
+ const wizard=el('nav','luonix-publishing-steps');wizard.setAttribute('aria-label','Video publishing steps');
+ const stepLinks={};
+ for(const [step,title] of [['media','1 · Media'],['edit','2 · Edit'],['share','3 · Share']]){
+  const b=el('button','luonix-step',title);b.type='button';b.dataset.step=step;
+  b.onclick=()=>setPublishStep(step);wizard.append(b);stepLinks[step]=b;
+ }
+ header.after(wizard);
+ const navActions=el('div','luonix-publish-actions');
+ const back=el('button','luonix-back','‹ Back');back.type='button';
+ const next=el('button','luonix-next','Next ›');next.type='button';
+ const stepHint=el('p','luonix-step-hint','Choose a video or record with the camera.');
+ navActions.append(back,stepHint,next);root.append(navActions);
+ let publishStep='media';root.dataset.luonixStep=publishStep;
+ function setPublishStep(nextStep){
+  if(!valid())return;
+  if(!['media','edit','share'].includes(nextStep))return;
+  if(nextStep!=='media'&&!file){status.textContent='Import or record a video first.';return}
+  if(nextStep==='share'&&(needsExport()||exporting||publishing||restoring||savingDraft)){status.textContent='Apply all timeline and speed edits before sharing.';return}
+  if(root.classList.contains('luo-camera-live')||recorder?.state==='recording'){status.textContent='Finish recording before moving to the next step.';return}
+  publishStep=nextStep;root.dataset.luonixStep=nextStep;
+  for(const [key,btn] of Object.entries(stepLinks)){btn.setAttribute('aria-current',String(key===nextStep?'step':'false'));btn.disabled=key!=='media'&&!file;}
+  back.hidden=nextStep==='media';next.hidden=nextStep==='share';
+  next.textContent=nextStep==='media'?'Next: Edit ›':'Next: Share ›';
+  stepHint.textContent=nextStep==='media'?'1 of 3 · Import or record a video':nextStep==='edit'?'2 of 3 · Edit and preview your video':'3 of 3 · Caption, audience and final review';
+ }
+ back.onclick=()=>setPublishStep(publishStep==='share'?'edit':'media');
+ next.onclick=()=>setPublishStep(publishStep==='media'?'edit':'share');
+
  let draftList=null,saveDraft=null,expiry=null,draftRun=0;
  if(drafts){
-  const panel=el('details','luo-clip-drafts'),summary=el('summary','','Reel drafts on this device'),help=el('p','','Saved locally, not encrypted or synced. Cleared on sign-out; your browser may also remove them. Maximum 3 drafts / 100 MB.');draftList=el('div','luo-clip-draft-list');
+  const panel=el('details','luo-clip-drafts'),summary=el('summary','','Luonix drafts on this device'),help=el('p','','Saved locally, not encrypted or synced. Cleared on sign-out; your browser may also remove them. Maximum 3 drafts / 100 MB.');draftList=el('div','luo-clip-draft-list');
   expiry=el('select');expiry.setAttribute('aria-label','Draft retention');for(const days of [7,30]){const option=el('option','',days+' days');option.value=String(days);expiry.append(option)}
   saveDraft=button('Save draft on this device',async()=>{if(timeline?.dirty)throw Error('Apply timeline edits before saving a device draft.');if(!file||exporting||recorder?.state==='recording'||restoring||publishing)throw Error('Import or finish a clip before saving a draft.');const ticket=revision,snapshot=file;savingDraft=true;send.disabled=true;lockComposer(true);try{const saved=await drafts.save({id:draftId,file:snapshot,name:snapshot.name,caption:caption.value,audience:audience.value,edit:{start:Number(start.value),end:Number(end.value),speed:Number(speed.value)},days:Number(expiry.value)});if(!valid()||ticket!==revision)return;draftId=saved.id;status.textContent='Draft saved on this device.';await refreshDrafts()}finally{savingDraft=false;if(valid()){lockComposer(false);send.disabled=submitted||needsExport()}}});
   const clear=button('Delete all saved drafts',async()=>{if(!win.confirm('Delete all saved Reel drafts for this account on this device? This cannot be undone.'))return;await drafts.clear();if(valid()){draftId=null;status.textContent='Saved drafts deleted. The current open clip is unchanged.';await refreshDrafts()}});
@@ -52,7 +84,7 @@ export function mountClipComposer({win,output,getUser,db,note,onPublished,drafts
   if(!valid()||ticket!==revision)return;duration=preview.duration;if(!Number.isFinite(duration)||duration<=0)throw Error('Could not determine the video duration.');file=selected;start.value='0';end.value=String(Math.min(duration,90));speed.value='1';timeline?.load(duration);for(const input of [start,end,speed])input.disabled=false;exportButton.textContent='Apply trim and speed';edit.disabled=false;send.disabled=duration>90;status.textContent=duration>90?'Trim to 90 seconds before publishing.':'Preview ready. Review the video and visibility before publishing.';
  }
  function lockComposer(value){choose.disabled=camera.disabled=caption.disabled=audience.disabled=value;edit.disabled=value||!file;if(expiry)expiry.disabled=value}
- choose.onchange=()=>{if(exporting||recorder?.state==='recording'||restoring||savingDraft||publishing){status.textContent='Finish the current operation first.';return}selectFile(choose.files?.[0]).catch(e=>{if(valid())status.textContent=e.message})};
+ choose.onchange=()=>{if(exporting||recorder?.state==='recording'||restoring||savingDraft||publishing){status.textContent='Finish the current operation first.';return}selectFile(choose.files?.[0]).then(()=>{if(valid()&&file)setPublishStep('edit')}).catch(e=>{if(valid())status.textContent=e.message})};
  async function startRecording(){
   if(!stream)throw Error('Open the camera first.');if(recorder)throw Error('Wait for the previous recording to finish.');const mime=['video/webm;codecs=vp8,opus','video/webm','video/mp4'].find(t=>win.MediaRecorder.isTypeSupported(t));if(!mime)throw Error('Recording is unsupported here. Import a video instead.');
   const chunks=[];let bytes=0;const ticket=revision,source=stream,output=cameraUI?.recordingStream()||source,encoder=new win.MediaRecorder(output,{mimeType:mime,videoBitsPerSecond:3000000});recorder=encoder;const began=win.performance.now();record.disabled=true;record.dataset.locked='true';stop.disabled=false;stop.dataset.locked='false';camera.disabled=true;choose.disabled=true;
@@ -86,7 +118,7 @@ export function mountClipComposer({win,output,getUser,db,note,onPublished,drafts
   const identity=[snapshot,body,visibility];if(!uploadOperation||uploadOperation.identity.some((x,i)=>x!==identity[i])){uploadOperation={id:win.crypto.randomUUID(),identity};uploadPath=owner+'/'+uploadOperation.id+'/'+win.crypto.randomUUID()+'.'+(file.type==='video/mp4'?'mp4':'webm');uploaded=false;submitted=false}
   await call('entry.create',{id:uploadOperation.id,kind:'clip',body,audience:visibility});if(!valid()||ticket!==revision)return;
   if(!uploaded){const r=await db.storage.from('luo-social').upload(uploadPath,file,{upsert:false,contentType:file.type});if(r.error){uploadPath=owner+'/'+uploadOperation.id+'/'+win.crypto.randomUUID()+'.'+(file.type==='video/mp4'?'mp4':'webm');throw Error('Upload failed. Your draft is retained; retry publishing.')}uploaded=true}if(!valid()||ticket!==revision)return;
-  await call('entry.publish',{id:uploadOperation.id,media:[{path:uploadPath,duration}]});submitted=true;if(valid()&&ticket===revision){if(drafts&&draftId){try{await drafts.remove(draftId)}catch{if(valid()&&ticket===revision)note?.('Reel published. Its saved device draft could not be removed; delete it from Drafts.')}}if(valid()&&ticket===revision){status.textContent='Reel published.';await onPublished()}}
+  await call('entry.publish',{id:uploadOperation.id,media:[{path:uploadPath,duration}]});submitted=true;if(valid()&&ticket===revision){if(drafts&&draftId){try{await drafts.remove(draftId)}catch{if(valid()&&ticket===revision)note?.('Luonix published. Its saved device draft could not be removed; delete it from Drafts.')}}if(valid()&&ticket===revision){status.textContent='Luonix published.';await onPublished()}}
  }catch(e){if(valid()&&ticket===revision)status.textContent=e.message||'Publishing failed. Please retry.'}finally{publishing=false;if(valid()){lockComposer(false);send.disabled=submitted||needsExport()}}};
  const cancelTimeline=button('Cancel timeline export',()=>timelineAbort?.abort());cancelTimeline.classList.add('luo-timeline-cancel');cancelTimeline.hidden=true;edit.after(cancelTimeline);
  timeline=installClipTimeline({win,edit,preview,isCurrent:valid,isLocked:()=>exporting||savingDraft||restoring||publishing||!!recorder,onStatus:message=>status.textContent=message,onChange:dirty=>{for(const input of [start,end,speed])input.disabled=dirty;exportButton.textContent=dirty?'Apply timeline edits':'Apply trim and speed';send.disabled=needsExport();status.textContent=dirty?'Timeline changed. Apply edits before publishing or saving a draft.':'Timeline restored. Review your video.';}});
@@ -96,5 +128,6 @@ export function mountClipComposer({win,output,getUser,db,note,onPublished,drafts
   finally{if(timelineAbort===controller)timelineAbort=null;exporting=false;if(valid()){cancelTimeline.hidden=true;lockComposer(false);send.disabled=submitted||needsExport();}}
  }
  cameraUI=installClipCamera({win,root,preview,status,getStream:()=>stream,isCurrent:valid,getRecorder:()=>recorder,onRecord:startRecording,onStop:()=>{if(recorder?.state==='recording')recorder.stop()},onCancel:()=>{revision++;stopCamera();progress.hidden=true;camera.disabled=choose.disabled=false;record.disabled=true;record.dataset.locked='true';status.textContent='Camera closed. Nothing was uploaded.';},onReplaceCamera:async replacement=>{if(!replacement||!stream)throw Error('Camera unavailable.');const previous=stream.getVideoTracks()[0];if(previous){stream.removeTrack(previous);previous.stop()}stream.addTrack(replacement)}});
+ setPublishStep('media');
  return ()=>{disposed=true;revision++;timelineAbort?.abort();stopCamera();cameraUI.dispose();timeline.dispose();preview.pause();preview.removeAttribute('src');preview.load();releaseURL();root.remove()};
 }

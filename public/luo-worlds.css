@@ -1,0 +1,90 @@
+/* Luo Worlds: Discord-inspired channels, gold-and-black identity, real backend state. */
+#group:has(.worlds-app){padding:0!important;max-width:none!important;height:100%;min-height:0;overflow:hidden!important;background:#0b0b0f!important}
+.worlds-app{--w-bg:#101014;--w-side:#17171e;--w-rail:#08090d;--w-panel:#1e1d23;--w-border:#37302b;--w-gold:#e8bc70;display:grid;grid-template-columns:64px minmax(195px,250px) minmax(0,1fr) minmax(0,210px);height:100%;width:100%;min-height:0;color:#ece7e2;font:14px/1.45 Inter,system-ui,sans-serif;background:var(--w-bg);isolation:isolate}
+.worlds-app *{box-sizing:border-box}
+.worlds-app button,.worlds-app input,.worlds-app textarea,.worlds-app select{font:inherit}
+.worlds-app button{cursor:pointer}
+.worlds-app :focus-visible{outline:2px solid var(--w-gold);outline-offset:2px}
+.worlds-rail{display:flex;flex-direction:column;align-items:center;gap:11px;padding:16px 7px;background:var(--w-rail);overflow:auto;border-right:1px solid #272322}
+.worlds-rail-logo,.worlds-rail-item{flex-shrink:0;display:grid;place-items:center;width:47px;height:47px;border-radius:17px;background:#292521;border:1px solid #574426;color:var(--w-gold);font-size:17px;font-weight:900;transition:border-radius .17s,background .17s}
+.worlds-rail-logo{background:linear-gradient(135deg,#e7bd75,#997135);color:#120e08;font-size:26px}
+.worlds-rail-item[aria-pressed=true],.worlds-rail-item:hover{border-radius:13px;background:#6b4c28;color:#fff}
+.worlds-rail-add{border:1px dashed #947047}
+.worlds-rail-divider{width:32px;height:1px;background:#66502f}
+.worlds-servers,.worlds-channels{display:grid;align-content:start;gap:5px;min-height:0;overflow-y:auto}
+.worlds-sidebar{background:var(--w-side);border-right:1px solid var(--w-border);display:flex;flex-direction:column;min-height:0;padding:0 12px 14px;gap:12px}
+.worlds-header{padding:19px 7px 5px}
+.worlds-header h1{margin:0;font-size:23px;letter-spacing:-.8px;color:var(--w-gold)}
+.worlds-header small{display:block;font-size:10px;color:#a49b91;margin-top:5px;line-height:1.5}
+.worlds-head-actions{display:flex;gap:7px}
+.worlds-button,.worlds-create,.worlds-refresh,.worlds-primary{border:1px solid #55452e;border-radius:9px;min-height:39px;background:#29231d;color:#ebd3aa;padding:9px 12px;font-weight:700}
+.worlds-create{flex:1;font-size:12px}
+.worlds-refresh{flex:none}
+.worlds-primary{background:linear-gradient(120deg,#f0cd89,#b99048);border-color:#ae8642;color:#17120e}
+.worlds-button:hover,.worlds-create:hover{background:#3b2c1d}
+.worlds-search{width:100%;border:1px solid #443e39;background:#0e0e13;color:#f9efdf;border-radius:8px;padding:11px;min-height:42px}
+.worlds-server,.worlds-channel{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:0;border-radius:9px;color:#bcb6b2;padding:9px 8px;min-height:43px}
+.worlds-server:hover,.worlds-server.selected,.worlds-channel:hover,.worlds-channel[aria-pressed=true]{background:#302820;color:#f5e2c2}
+.worlds-server-icon{width:35px;height:35px;display:grid;place-items:center;border-radius:12px;background:#463923;border:1px solid #836438;color:#ebcb89;font-size:11px;flex:none}
+.worlds-server-name{min-width:0;overflow:hidden}.worlds-server-name strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+.worlds-server-name small{display:block;font-size:10px;color:#9f968d}
+.worlds-channel-heading,.worlds-category{font-size:10px;font-weight:800;color:#a39b93;letter-spacing:1.1px;margin:7px 3px}
+.worlds-category{margin-top:16px}
+.worlds-channel{font-size:12px;min-height:37px}
+.worlds-soon{font-size:11px;line-height:1.6;color:#807c7d;padding:0 10px}
+.worlds-main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.worlds-titlebar{height:63px;min-height:63px;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--w-border);background:#151419}
+.worlds-titlebar strong{font-size:15px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.worlds-titlebar small{color:#99918b;font-size:11px;margin-left:auto}
+.worlds-title-icon{font-size:20px;color:var(--w-gold)}
+.worlds-status{font-size:12px;color:#e9be72;margin:0;padding:0 18px}
+.worlds-status:empty{display:none}
+.worlds-content{flex:1;overflow:auto;padding:22px;min-width:0}
+.worlds-welcome{text-align:center;background:radial-gradient(circle at 50% 0,#6044213a,transparent 65%),#18171b;border:1px solid #4a3825;border-radius:17px;padding:28px 18px;margin-bottom:20px}
+.worlds-welcome h2{font-size:clamp(18px,3vw,27px);line-height:1.2;margin:14px 0;color:#f8e8ca}
+.worlds-welcome p{font-size:13px;color:#afa7a1;line-height:1.7;max-width:440px;margin:10px auto 18px}
+.worlds-welcome small{color:var(--w-gold);font-size:11px;letter-spacing:1px}
+.worlds-emblem{display:grid;place-items:center;width:65px;height:65px;margin:auto;border-radius:21px;font-weight:900;font-size:27px;color:#130d07;background:linear-gradient(140deg,#ffdf99,#b18438)}
+.worlds-discover-card{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:9px;padding:14px;border:1px solid #39302b;background:#1a191e;border-radius:13px;margin-bottom:10px}
+.worlds-discover-card h3{font-size:13px;margin:0}
+.worlds-discover-card p{font-size:11px;color:#b3a9a2;margin:5px 0}
+.worlds-discover-card small{font-size:10px;color:#d6bc86}
+.worlds-card-icon{grid-row:span 3;display:grid;place-items:center;border:1px solid #7b592d;border-radius:13px;width:45px;height:45px;color:#e8c17e;background:#322718;font-weight:900}
+.worlds-discover-card .worlds-button{grid-column:3;grid-row:1/span 3;font-size:11px;white-space:nowrap}
+.worlds-selected-banner{margin-top:0}
+.worlds-section-title{font-size:11px;letter-spacing:1px;color:#c8ae86;font-weight:800;margin-bottom:14px}
+.worlds-message{font-size:13px;color:#aba4a3}
+.worlds-actions{display:flex;justify-content:center}
+.worlds-empty{font-size:12px;line-height:1.6;color:#96909a;padding:15px 7px}
+.worlds-members{background:#15141a;border-left:1px solid var(--w-border);padding:22px 12px;overflow:auto;font-size:12px}
+.worlds-members h3{font-size:10px;color:#c7a869;letter-spacing:1px}
+.worlds-member{background:#252025;border-radius:9px;padding:12px 9px;margin:8px 0}
+.worlds-member-note{font-size:11px;line-height:1.6;color:#9c9696}
+.worlds-moderation{font-size:12px}
+.worlds-modal-backdrop{position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:#000b;padding:18px;overflow:auto}
+.worlds-modal{width:min(490px,100%);max-height:calc(100dvh - 50px);overflow:auto;background:#1b191d;color:#e9dfcc;padding:25px;border:1px solid #8a6b3d;border-radius:17px;box-shadow:0 20px 80px #0009}
+.worlds-modal h2{font-size:22px;margin:0}
+.worlds-modal p{font-size:12px;color:#aca398;line-height:1.5}
+.worlds-field{display:grid;gap:7px;margin:15px 0;font-size:12px;color:#d6c5a8}
+.worlds-field input,.worlds-field textarea,.worlds-field select{width:100%;min-height:43px;color:#fff0d4;background:#0f0e12;border:1px solid #6e593c;border-radius:9px;padding:10px}
+.worlds-field textarea{min-height:90px;resize:vertical}
+.worlds-modal-buttons{display:flex;justify-content:flex-end;gap:9px}
+.worlds-form-error{color:#f0a39a!important}
+@media(max-width:1090px){.worlds-app{grid-template-columns:60px 220px minmax(0,1fr)}.worlds-members{display:none}}
+@media(max-width:680px){.worlds-app{grid-template-columns:53px minmax(125px,36vw) minmax(0,1fr)}.worlds-rail{padding:12px 3px}.worlds-rail-item,.worlds-rail-logo{height:43px;width:43px}.worlds-sidebar{padding:0 7px 12px;gap:8px}.worlds-header{padding-top:13px}.worlds-header h1{font-size:19px}.worlds-header small{display:none}.worlds-head-actions{flex-wrap:wrap}.worlds-create{font-size:10px;padding:6px}.worlds-search{font-size:11px;padding:6px}.worlds-server-name strong{font-size:11px}.worlds-main .worlds-titlebar small{display:none}.worlds-content{padding:10px}.worlds-welcome{padding:14px 10px}.worlds-titlebar{height:50px;min-height:50px;padding:0 10px}.worlds-discover-card{grid-template-columns:1fr;gap:6px}.worlds-discover-card .worlds-card-icon{grid-row:auto}.worlds-discover-card .worlds-button{grid-column:auto;grid-row:auto}.worlds-modal{padding:20px}}
+@media(max-width:380px){.worlds-app{grid-template-columns:46px minmax(105px,33vw) minmax(0,1fr)}.worlds-rail-item,.worlds-rail-logo{width:37px;height:37px}.worlds-server-icon{display:none}.worlds-create{min-width:0}.worlds-content{padding:7px}.worlds-welcome h2{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.worlds-app *{transition:none!important;animation:none!important}}
+
+/* True per-room text messaging, RLS-backed and separate from the chats screen. */
+.worlds-thread{height:100%;min-height:300px;display:flex;flex-direction:column;gap:10px;background:#141318;border-radius:13px;border:1px solid #322b23;overflow:hidden}
+.worlds-thread-toolbar{display:flex;gap:9px;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #443629}
+.worlds-thread-toolbar button{font-size:11px}
+.worlds-thread-history{flex:1;min-height:200px;max-height:65dvh;overflow-y:auto;padding:10px 15px;display:flex;flex-direction:column;gap:14px}
+.worlds-thread-message{background:transparent;border-bottom:1px solid #28262a;padding:3px 0 11px}
+.worlds-thread-message strong{color:#f1d18e;font-size:12px}
+.worlds-thread-message time{color:#888184;font-size:10px;margin-left:10px}
+.worlds-thread-message p{color:#e8e1dc;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;margin:5px 0}
+.worlds-thread-compose{display:flex;gap:9px;padding:12px;background:#211e22;border-top:1px solid #423426}
+.worlds-thread-compose textarea{width:100%;min-width:0;flex:1;resize:vertical;max-height:160px;min-height:46px;border:1px solid #745935;border-radius:9px;background:#141216;color:#f4eadb;padding:10px;font:inherit}
+.worlds-thread-compose button{align-self:end}
+@media(max-width:540px){.worlds-thread-toolbar{flex-wrap:wrap}.worlds-thread-compose{flex-wrap:wrap}.worlds-thread-compose button{width:100%}.worlds-thread-history{padding:8px}}

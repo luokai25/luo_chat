@@ -21,20 +21,20 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  const actual=owner=>!!owner&&getUser()?.id===owner;
  const call=async(action,input={})=>{const r=await db.rpc('luo_space',{action,input});if(r.error)throw Error(r.error.message);return r.data};
  const nav=doc.querySelector('.workspace-nav'),settings=nav?.querySelector('[data-tab="profile"]');
- const socialTab=btn('Social',()=>{section='clips';feedMode='public';reelsView='explore';const before=request;tab('social');if(request===before&&doc.querySelector('.app')?.dataset.tab==='social')return show('clips')},'tab');
+ const socialTab=btn('Social',()=>{section='clips';feedMode='mixed';reelsView='explore';const before=request;tab('social');if(request===before&&doc.querySelector('.app')?.dataset.tab==='social')return show('clips')},'tab');
  socialTab.dataset.tab='social';socialTab.title='Social spaces';socialTab.setAttribute('aria-label','Social spaces');
  if(nav)nav.insertBefore(socialTab,settings||null);
  const page=mk('section','sub hidden luo-social-page');page.id='social';
  page.setAttribute('aria-label','Luo social spaces');
  const hero=mk('div','luo-social-hero');hero.append(mk('p','luo-social-eyebrow','LUO SOCIAL'),mk('h2','','Together feels closer'),mk('p','muted','Friends, memories, stories and special moments in one place.'));
- const options=[['feed','Friends'],['public','Public'],['compose','Create post'],['publish-clip','Publish clip'],['search','Search'],['clips','Clips'],['sessions','Together'],['memories','Memories'],['capsule','Time Capsules'],['pair','Shared bonds'],['questions','Questions'],['events','Events'],['communities','Communities'],['profile','My interests'],['alerts','Alerts'],['activity','Activity']];
+ const options=[['feed','Friends'],['public','Public'],['compose','Create post'],['publish-clip','Create Luonix'],['search','Search'],['clips','Luonix'],['sessions','Together'],['memories','Memories'],['capsule','Time Capsules'],['pair','Shared bonds'],['questions','Questions'],['events','Events'],['communities','Worlds'],['profile','My interests'],['alerts','Alerts'],['activity','Activity']];
  const tabs=mk('div','luo-social-tabs');tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Social features');
- let section='clips',epoch=0,request=0,releaseMemory=()=>{},releaseFeed=()=>{},feedMode='public',reelsView='explore',sharedClip=null;
+ let section='clips',epoch=0,request=0,releaseMemory=()=>{},releaseFeed=()=>{},feedMode='mixed',reelsView='explore',sharedClip=null;
  const output=mk('div','luo-social-content');output.setAttribute('aria-live','polite');
  const sessions=installSocialSessions({win,db,note,getUser,getChats});
  const status=mk('p','luo-social-status');status.setAttribute('role','status');
  const tools=mk('details','luo-social-tools'),summary=mk('summary','','Explore more'),toolGrid=mk('div','luo-social-tool-grid');tools.append(summary,toolGrid);
- for(const [key,title] of options){const b=btn(title,()=>{tools.open=false;show(key)},'luo-social-chip');b.dataset.section=key;(['feed','public','clips'].includes(key)?tabs:toolGrid).append(b)}
+ for(const [key,title] of options){const b=btn(title,()=>{tools.open=false;if(key==='communities'){tab('group');return}show(key)},'luo-social-chip');b.dataset.section=key;(['feed','public','clips'].includes(key)?tabs:toolGrid).append(b)}
  const top=mk('div','luo-social-topbar'),wordmark=mk('div','luo-social-wordmark','Luo');wordmark.append(mk('small','','SOCIAL'));const topActions=mk('div','luo-social-top-actions');const create=btn('+',()=>show(section==='clips'?'publish-clip':'compose'));create.setAttribute('aria-label','Create a post or clip');const search=btn('⌕',()=>show('search'));search.setAttribute('aria-label','Search Social');topActions.append(search,create);top.append(wordmark,topActions);
  page.append(top,tabs,tools,status,output);
  $('chats')?.parentElement?.append(page);
@@ -77,7 +77,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  card.append(actions);return card}
  async function feed(kind='post'){const actor=getUser()?.id,ticket=++request;output.replaceChildren(mk('p','luo-social-empty','Loading…'));try{const items=await call('feed',{kind});if(!alive(actor,ticket))return;output.replaceChildren();if(!items?.length)output.append(mk('p','luo-social-empty',kind==='capsule'?'No letters yet. Create one for an approved friend.':'Nothing here yet.'));for(const item of items||[])output.append(itemCard(item,kind));}catch(err){if(alive(actor,ticket))output.replaceChildren(mk('p','luo-social-empty',err.message||'Could not load.'))}}
  async function show(key){releaseFeed();releaseFeed=()=>{};releaseMemory();releaseMemory=()=>{};if(key!=='sessions')sessions.leave();section=key;page.dataset.socialView=key;for(const b of page.querySelectorAll('[data-section]'))b.setAttribute('aria-pressed',String(b.dataset.section===key));if(!getUser())return;status.textContent='';++request;output.replaceChildren();
- if(['feed','public','clips'].includes(key)){if(key!=='clips')feedMode=key==='public'?'public':'friends';releaseFeed=mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,mode:feedMode,clipsOnly:key==='clips',reelsView,onNavigate:show,onMode:value=>{reelsView=value;feedMode=value==='friends'?'friends':'public';return show('clips')},initialClip:key==='clips'?(sharedClip||new URLSearchParams(win.location.hash.slice(1)).get('luo-clip')):null});sharedClip=null;return}
+ if(['feed','public','clips'].includes(key)){if(key!=='clips')feedMode=key==='public'?'public':'friends';releaseFeed=mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,mode:feedMode,clipsOnly:key==='clips',reelsView,onNavigate:show,onMode:value=>{reelsView=value;feedMode=value==='friends'?'friends':value==='public'?'public':'mixed';return show('clips')},initialClip:key==='clips'?(sharedClip||new URLSearchParams(win.location.hash.slice(1)).get('luo-clip')):null});sharedClip=null;return}
  if(key==='compose'){
   const owner=getUser()?.id,title=input('text','Give your post a title (optional)',160),body=input('textarea','Share a moment…',12000),photos=input('file'),audience=select([['friends','Friends only'],['private','Only me'],['public','Public']]),collab=select([['','Post alone']]);photos.accept='image/jpeg,image/png,image/webp';photos.multiple=true;
   friends().then(people=>{if(actual(owner)&&section==='compose'&&collab.isConnected)for(const p of people){const option=mk('option','',p.display_name||p.username);option.value=p.id;collab.append(option)}}).catch(()=>{});
@@ -115,7 +115,7 @@ export function installSocialSpaces({win,db,$,note,getUser,getChats,tab,openPers
  if(key==='memories'){releaseMemory=renderMemoryConstellations({win,db,note,getUser,getChats,output});return}
  if(key==='sessions'){await sessions.render(output);return}
  if(key==='publish-clip'){
-  releaseFeed=mountClipComposer({win,output,getUser,db,note,drafts:clipDrafts,onPublished:()=>show('clips')});
+  releaseFeed=mountClipComposer({win,output,getUser,db,note,drafts:clipDrafts,onPublished:()=>show('clips'),onCancel:()=>show('clips')});
   return
  }
  if(key==='events'){
