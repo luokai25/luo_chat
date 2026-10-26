@@ -4,11 +4,19 @@ const auth=(await transform((await readFile('supabase/functions/luo-auth/index.t
 function setup(allowed=true,authError=null){let handler;const calls=[];const send=async(name,email,args)=>{calls.push([name,email,args]);if(authError==='throw')throw Error('synthetic private provider detail');return{error:authError}};const db={rpc:async(name,args)=>{calls.push([name,args]);return{data:allowed}},from:()=>({select(){return this},eq(){return this},maybeSingle:async()=>({data:null})}),auth:{resetPasswordForEmail:(email,args)=>send('reset',email,args),resend:args=>send('resend',args.email,args),signUp:args=>send('signup',args.email,args)}};vm.runInNewContext(shared+'\n'+auth,{createClient:()=>db,Deno:{env:{get:()=> 'fixture'},serve:f=>handler=f},Response,Request,URL,TextEncoder,TextDecoder,Uint8Array,AbortSignal,crypto:webcrypto,atob,setTimeout,clearTimeout,fetch});return{handler,calls}};
 
 test('age restrictions fail closed before rate limits or Auth provider signup',async()=>{
- for(const [age_band,status] of [['under12',403],['12-17',503],['bogus',400],['',400]]){
+ for(const [age_band,status] of [['under13',403],['under12',403],['13-14',503],['15-17',503],['12-17',503],['bogus',400],['',400]]){
   const s=setup(),r=await s.handler(req({email:'minor@example.invalid',action:'signup',username:'minor',password:'test-password',age_band}));
   assert.equal(r.status,status,'age group '+age_band);
   assert.equal(s.calls.length,0,'unexpected backend mutation or rate-limit call');
  }
+});
+test('guardian-code leftovers cannot bypass currently closed youth registration',async()=>{
+ const s=setup(),r=await s.handler(req({
+  email:'teen@example.invalid',action:'signup',username:'teen',password:'test-password',
+  age_band:'13-14',guardian_approval:'v1.fake'
+ }));
+ assert.equal(r.status,503);
+ assert.equal(s.calls.length,0);
 });
 test('adult registration includes age band and still passes server validation',async()=>{
  const s=setup(),r=await s.handler(req({email:'adult@example.invalid',action:'signup',username:'adult',password:'test-password',age_band:'18+'}));

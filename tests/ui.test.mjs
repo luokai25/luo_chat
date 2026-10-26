@@ -43,7 +43,7 @@ test('Shift+Enter preserves multiline composing and font settings apply only aft
 test('poll creation validates unique choices before sending a request',async()=>{const {w,dom,calls}=await setup();w.document.querySelector('.chatrow').click();await tick();w.document.getElementById('createPoll').click();w.document.getElementById('pollQuestion').value='Choose a time';w.document.getElementById('pollOptions').value='Morning\nmorning';w.document.getElementById('pollForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.match(w.document.getElementById('pollStatus').textContent,/different options/);assert.equal(calls.filter(c=>c.name==='create_chat_simple_poll').length,0);w.document.getElementById('pollOptions').value='Morning\nEvening';w.document.getElementById('pollForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.deepEqual(Array.from(calls.find(c=>c.name==='create_chat_simple_poll').args.option_texts),['Morning','Evening']);dom.window.close()});
 
 test('account modes expose signup fields and reject mismatched passwords before submission',async()=>{const {w,dom,calls}=await setup(false);const d=w.document;d.getElementById('authModeSignup').click();assert.equal(d.getElementById('username').classList.contains('hidden'),false);assert.equal(d.getElementById('signin').classList.contains('hidden'),true);d.getElementById('email').value='ui@example.invalid';d.getElementById('password').value='long-password';d.getElementById('username').value='valid_user';d.getElementById('signupConfirm').value='wrong-password';d.getElementById('signup').click();assert.match(d.getElementById('authmsg').textContent,/do not match/);assert.equal(calls.length,0);d.getElementById('authModeSignin').click();assert.equal(d.getElementById('password').autocomplete,'current-password');dom.window.close()});
-test('signup rejects children under 12 and pauses registration for minors without contacting Auth',async()=>{
+test('signup blocks independent under-13 accounts and pauses teenager accounts until protected access is ready',async()=>{
  const {w,dom,calls}=await setup(false);try{
   const d=w.document;d.getElementById('authModeSignup').click();
   d.getElementById('email').value='minor@example.invalid';
@@ -54,9 +54,9 @@ test('signup rejects children under 12 and pauses registration for minors withou
   const birthday=years=>new Date(Date.UTC(now.getUTCFullYear()-years,now.getUTCMonth(),now.getUTCDate())).toISOString().slice(0,10);
   d.getElementById('signupBirthDate').value=birthday(11);
   d.getElementById('signup').click();
-  assert.match(d.getElementById('authmsg').textContent,/age 12/);
+  assert.match(d.getElementById('authmsg').textContent,/independent social account is unavailable under age 13/i);
   assert.equal(calls.length,0);
-  d.getElementById('signupBirthDate').value=birthday(12);
+  d.getElementById('signupBirthDate').value=birthday(13);
   d.getElementById('signup').click();
   assert.match(d.getElementById('authmsg').textContent,/temporarily paused/);
   assert.equal(calls.length,0);
