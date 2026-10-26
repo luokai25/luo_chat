@@ -9,9 +9,12 @@ import {createPaymentWebhookHandler} from '../src/server/agent-payment-webhooks.
 import {createAgentMessagingHandler} from '../src/server/agent-messaging.js';
 import {createAgentVerificationHandler} from '../src/server/agent-verification.js';
 import {createAgentOnboardingHandler} from '../src/server/agent-onboarding.js';
+import {createRecommendationHandler} from '../src/server/luo-for-you-api.js';
 export const config={api:{bodyParser:false}};
 const routes=Object.freeze({
  platform:(req,res)=>methodOnlyGet(req,res,agentPlatformInfo()),
+ 'recommendations/feed':createRecommendationHandler({mode:'feed'}),
+ 'recommendations/feedback':createRecommendationHandler({mode:'feedback'}),
  'agents/onboarding':createAgentOnboardingHandler(),
  plans:(req,res)=>methodOnlyGet(req,res,{billing_enabled:checkoutReady(process.env,'paypal')||checkoutReady(process.env,'stripe'),plans:publicPlans({
   promoStart:process.env.LUO_AGENT_BILLING_ENABLED==='true'&&process.env.LUO_AGENT_PROMOTIONS_ENABLED==='true'?process.env.LUO_AGENT_PROMO_START_AT:undefined})}),
