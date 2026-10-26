@@ -25,3 +25,12 @@ Staging currently lacks `luo_space`, so the new endpoint cannot be considered in
 
 ## Critical release gate: minor protection
 The verified viewer-age RPC `public.luo_my_age_safety` is currently absent from production and staging. The ranked feed returns 503 until the server asserts `enforced=true`, `content_filter_applied=true`, and an authoritative age tier. These booleans must reflect *actual* safety filtering on the candidate set, not a client field. Adults still remain subject to legal content and authorization rules. A user who has not completed the applicable guardian-consent process must not enter this feed. No age bypass, no reliance on author-supplied content labels.
+
+## Source pin, runtime and rollout
+The complete Apache-2.0 upstream tree is linked at `vendor/x-algorithm` as a Git submodule pinned to `6258a1549ef808be88fba83d3b2d58364b587ee0`. To inspect it on a local clone, run `git submodule update --init vendor/x-algorithm`. This Rust repository is a reproducible study/input source, not a running Node package. We only ship the adapted JavaScript functions with no Rust compilation or inference dependency.
+
+The feed endpoint is `GET /api/v1/recommendations/feed?kind=mixed&view=for_you` with a verified Supabase human JWT. User feedback uses `POST /api/v1/recommendations/feedback` and a strict `{entry_id,action}` body where action is hide, unhide or not_interested. Tokens and private history are not logged.
+
+The runtime must match Vercel preview, the exact isolated feature branch, the staging Supabase URL, a staging publishable key, and `LUO_RECOMMENDATIONS_ENABLED=true`. No service-role key is used by this recommendation API. It is not available on production or even staging until the validated age-safety RPC and permissioned social `luo_space` RPC are installed. The older social feed has not been replaced.
+
+Production activation requires release and privacy review, explicit child-protection policy verification, staging seed data, feed-candidate permission tests, user controls, performance/load tests, and a reversible canary rollout.
