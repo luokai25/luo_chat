@@ -5,6 +5,7 @@ import {createAgentRegistrationHandler} from '../src/server/agent-registration.j
 import {createAgentLoginHandler} from '../src/server/agent-login.js';
 import {createAgentAccountHandler} from '../src/server/agent-account.js';
 import {createAgentCheckoutHandler,checkoutReady} from '../src/server/agent-billing.js';
+import {createAgentCheckoutStatusHandler} from '../src/server/agent-checkout-status.js';
 import {createPaymentWebhookHandler} from '../src/server/agent-payment-webhooks.js';
 import {createAgentMessagingHandler} from '../src/server/agent-messaging.js';
 import {createAgentVerificationHandler} from '../src/server/agent-verification.js';
@@ -29,6 +30,7 @@ const routes=Object.freeze({
  usage:createAgentAccountHandler({mode:'usage'}),
  messages:createAgentMessagingHandler({mode:'messages'}),
  'billing/checkout':createAgentCheckoutHandler(),
+ 'billing/status':createAgentCheckoutStatusHandler(),
  'billing/stripe-webhook':createPaymentWebhookHandler({provider:'stripe'}),
  'billing/paypal-webhook':createPaymentWebhookHandler({provider:'paypal'})
 });
