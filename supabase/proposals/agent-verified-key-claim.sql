@@ -39,4 +39,15 @@ $$;
 revoke all on function public.luo_agent_create_verified_pending_identity(uuid,text,text,uuid)
  from public,anon,authenticated;
 grant execute on function public.luo_agent_create_verified_pending_identity(uuid,text,text,uuid) to service_role;
+-- Login must also enforce a bound Ed25519 identity when proof mode is required.
+create or replace function public.luo_agent_find_verified_paid_identity(p_auth_user uuid,p_username text)
+returns uuid language sql stable security definer set search_path='' as $
+ select a.id from luo_billing.agent_accounts a
+ where a.auth_user_id=p_auth_user and a.username=p_username
+ and a.verified_key_fingerprint is not null
+ and a.state='active' and public.luo_agent_has_active_entitlement(a.id)
+ limit 1;
+$;
+revoke all on function public.luo_agent_find_verified_paid_identity(uuid,text) from public,anon,authenticated;
+grant execute on function public.luo_agent_find_verified_paid_identity(uuid,text) to service_role;
 commit;
