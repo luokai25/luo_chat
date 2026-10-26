@@ -59,3 +59,22 @@ test('Workspace adds owner-only product telemetry without exposing message bodie
  assert.doesNotMatch(sql,/SELECT\s+body\s+FROM/i);
  assert.match(view,/data-page="product"/);assert.match(app,/luo_workspace_product_insights/);
 });
+
+test('Chat details never cover an open profile or photo dialog',async()=>{
+ const dom=new JSDOM('<div class="app" data-screen="room"><section id="chats"></section><section id="room"><div class="roomhead"><div class="roomtools"></div></div><div id="messages"></div></section></div><dialog id="personDialog"></dialog><dialog id="personPhotoDialog"></dialog>',{url:'https://luo.test'});
+ const w=dom.window,d=w.document;
+ w.HTMLDialogElement.prototype.showModal=function(){this.open=true};
+ w.HTMLDialogElement.prototype.close=function(){this.open=false};
+ const api=installInstagramChats({win:w,getUser:()=>({id:'human1'}),getCurrent:()=>({id:'room1',kind:'direct',person:{username:'Peer'}}),getChats:()=>[],openRoom:()=>{}});
+ try{
+  d.getElementById('personDialog').showModal();
+  d.querySelector('.luo-dm-info').click();
+  assert.equal(d.querySelector('.luo-dm-settings').open,false);
+  d.getElementById('personDialog').close();
+  d.querySelector('.luo-dm-info').click();
+  assert.equal(d.querySelector('.luo-dm-settings').open,true);
+  d.getElementById('personPhotoDialog').showModal();
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(d.querySelector('.luo-dm-settings').open,false);
+ }finally{api.signedOut();w.close()}
+});

@@ -53,7 +53,11 @@ export function installInstagramChats({win,db,getUser,getCurrent,getChats,openRo
  const shortcuts=[['⌕ Search','roomSearchToggle'],['▣ Media','openMedia'],['♧ Pins','openPins'],['♧ Personalize','openPersonalize'],['⋯ More','roomMenu']];
  for(const [label,id] of shortcuts){const b=button(label,()=>{if(id==='roomMenu'){options.close();doc.querySelector('#roomMenu summary')?.click()}else openExisting(id)},'luo-dm-action');actions.append(b)}
  const headerButton=button('Chat details',()=>{}, 'luo-dm-info');headerButton.setAttribute('aria-label','Open chat details and 100 wallpapers');
- headerButton.onclick=()=>{if(!active())return;fill();options.showModal()};
+ // Chat-details cannot become a competing top-layer modal over someone’s profile.
+ const profileDialogOpen=()=>Boolean(doc.getElementById('personDialog')?.open||doc.getElementById('personPhotoDialog')?.open);
+ headerButton.onclick=()=>{if(!active()||profileDialogOpen())return;fill();options.showModal()};
+ const modalObserver=new win.MutationObserver(()=>{if(profileDialogOpen()&&options.open)options.close()});
+ modalObserver.observe(doc.body,{subtree:true,attributes:true,attributeFilter:['open']});
  const roomHead=room.querySelector('.roomhead'),tools=room.querySelector('.roomtools');if(tools)tools.before(headerButton);else roomHead?.append(headerButton);
  function apply(theme,motionEnabled){
   const item=byId.get(theme)||wallpapers[0];
