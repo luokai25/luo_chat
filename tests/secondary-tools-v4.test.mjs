@@ -78,8 +78,8 @@ test('repeated screen enhancement is idempotent; reduced motion and safe areas e
   assert.equal(x.d.querySelectorAll('.luo-secondary-context').length,2);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(css,/env\(safe-area-inset-bottom/);
-  assert.match(css,/\.luo-secondary-person/);
-  assert.match(css,/\.luo-secondary-social-sheet/);
+  assert.match(css,/#personDialog \.person-hero/);
+  assert.match(css,/\.luo-feed-comments\[open\]/);
   assert.match(html,/\/luo-secondary-v4\.css/);
   assert.match(html,/\/luo-secondary-v4\.js/);
  }finally{x.close()}
