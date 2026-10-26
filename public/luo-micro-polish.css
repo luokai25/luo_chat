@@ -1,0 +1,65 @@
+/* Luo micro-interactions: modest, consistent polish across secondary screens.
+   No new business actions, app-level routing, or fake loading states. */
+:root{--luo-micro-focus:#f1d49c;--luo-micro-tap:44px;--luo-micro-surface:#1b171e;--luo-micro-separator:#c6a16c29}
+:is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,#mediaViewer,.luo-feed-comments,.luo-dm-settings)[open]{
+ overscroll-behavior:contain;scrollbar-gutter:stable;
+}
+:is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,#mediaViewer,.luo-feed-comments,.luo-dm-settings) :is(button,[role="button"],input,select,textarea):focus-visible{
+ outline:2px solid var(--luo-micro-focus)!important;outline-offset:3px!important;
+}
+:is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) :is(button,[role="button"]):not([disabled]):not([aria-disabled="true"]){
+ touch-action:manipulation;
+ -webkit-tap-highlight-color:transparent;
+ transition:background-color .15s ease,color .15s ease,border-color .15s ease,transform .15s ease;
+}
+@media(hover:hover) and (pointer:fine){
+ :is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) :is(button,[role="button"]):not([disabled]):hover{
+  border-color:#d1ac72!important;filter:brightness(1.09);
+ }
+}
+:is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) button:not([disabled]):active{
+ transform:scale(.985);
+}
+:is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) :is(button,input,select,textarea)[disabled]{
+ cursor:not-allowed;opacity:.52;
+}
+:is(#sharedDialog,#personDialog,#pollDialog,#scheduleDialog) :is(button,.icon-button){
+ min-height:var(--luo-micro-tap);
+}
+:is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) :is(input,textarea,select){
+ font-size:max(16px,1em);
+ min-width:0;
+}
+:is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) :is(h2,h3,.dialog-heading,button,label){
+ overflow-wrap:anywhere;
+}
+:is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) :is(.muted,.empty,[role="status"],[aria-live]){
+ overflow-wrap:anywhere;line-height:1.5;
+}
+#sharedDialog #sharedList>*{min-width:0}
+#sharedDialog .luo-shared-v4-tabs{scroll-snap-type:x proximity;scroll-padding-inline:8px;overscroll-behavior-inline:contain}
+#sharedDialog .luo-shared-v4-tab{scroll-snap-align:start;min-height:var(--luo-micro-tap);white-space:nowrap}
+#sharedDialog .luo-shared-v4-tab[aria-pressed="true"]{box-shadow:inset 0 0 0 1px #fff3}
+#personDialog #personBody{scrollbar-gutter:stable;overscroll-behavior:contain}
+#personDialog .person-hero .person-bio,#personDialog .person-hero h3{word-break:normal;overflow-wrap:anywhere}
+.luo-feed-comments .luo-feed-comment-list{scrollbar-gutter:stable;overscroll-behavior:contain}
+.luo-feed-comments .luo-feed-sheet-head{padding-top:calc(7px + env(safe-area-inset-top,0px)*.06)}
+#pollDialog.luo-secondary-poll #pollOptions{line-height:1.55;resize:vertical}
+#scheduleDialog .luo-secondary-preview-bubble{min-width:0;max-inline-size:100%;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:430px){
+ #personDialog.person-dialog[open]{max-width:100vw!important;border-radius:19px!important}
+ #personDialog .dialog-heading{padding-inline:14px!important}
+ #personDialog #personBody{padding-inline:12px}
+ #sharedDialog.luo-secondary-shared[open]{max-inline-size:100vw}
+ .luo-feed-comments[open]{max-block-size:calc(100dvh - env(safe-area-inset-top,0px) - 12px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ :is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) *{
+  transition-duration:0s!important;animation-duration:0s!important;scroll-behavior:auto!important;
+ }
+}
+@media(prefers-contrast:more){
+ :is(#personDialog,#sharedDialog,#pollDialog,#scheduleDialog,.luo-feed-comments,.luo-dm-settings) :is(button,input,select,textarea){
+  border-width:2px!important;border-color:#e8c18a!important;
+ }
+}
