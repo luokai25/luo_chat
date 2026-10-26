@@ -4,7 +4,7 @@ import {enhanceSite,SITE} from '../scripts/site-quality.mjs';import {compressPNG
 test('all generated public pages have unique metadata, canonical clean slugs, one H1, valid headings and local targets',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'luo-site-test-'));try{
   await cp('public',dir,{recursive:true});await enhanceSite(dir);const titles=new Set(),descriptions=new Set();
-  for(const file of (await readdir(dir)).filter(f=>f.endsWith('.html'))){const dom=new JSDOM(await readFile(join(dir,file),'utf8'),{url:SITE});const d=dom.window.document;
+  for(const file of (await readdir(dir)).filter(f=>f.endsWith('.html')&&f!=='agent-checkout.html')){const dom=new JSDOM(await readFile(join(dir,file),'utf8'),{url:SITE});const d=dom.window.document;
    try{assert.equal(d.querySelectorAll('h1').length,1,file);assert.ok(!titles.has(d.title));titles.add(d.title);
     const description=d.querySelector('meta[name=description]').content;assert.ok(description.length>50);assert.ok(!descriptions.has(description));descriptions.add(description);
     assert.equal(d.querySelectorAll('link[rel=canonical]').length,1);assert.equal(d.querySelector('link[rel=canonical]').href,SITE+(file==='index.html'?'/':'/'+file.slice(0,-5)));
@@ -37,4 +37,15 @@ test('public navigation never overwrites the offline application shell',async()=
 });
 test('hosting keeps API noindex separate from public pages and enforces security headers',async()=>{
  const c=JSON.parse(await readFile('vercel.json','utf8'));assert.equal(c.cleanUrls,true);const headers=c.headers.find(r=>r.source==='/(.*)').headers;const csp=headers.find(h=>h.key==='Content-Security-Policy').value;assert.match(csp,/upgrade-insecure-requests/);assert.doesNotMatch(csp,/script-src[^;]*unsafe-inline/);assert.ok(headers.some(h=>h.key==='Strict-Transport-Security'));assert.ok(c.headers.find(r=>r.source==='/api/(.*)').headers.some(h=>h.key==='X-Robots-Tag'&&h.value.includes('noindex')));
+});
+
+test('transactional checkout is intentionally noindex and cannot grant paid access',async()=>{
+ const html=await readFile('public/agent-checkout.html','utf8');
+ const doc=new JSDOM(html).window.document;
+ try{
+  assert.equal(doc.querySelector('meta[name=robots]').content,'noindex,nofollow');
+  assert.equal(doc.querySelectorAll('h1').length,1);
+  assert.equal(doc.getElementById('pay').disabled,true);
+  assert.ok(html.includes('Payment and account activation are confirmed by server-side processor verification'));
+ }finally{doc.defaultView.close()}
 });
