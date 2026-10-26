@@ -34,3 +34,38 @@ The feed endpoint is `GET /api/v1/recommendations/feed?kind=mixed&view=for_you` 
 The runtime must match Vercel preview, the exact isolated feature branch, the staging Supabase URL, a staging publishable key, and `LUO_RECOMMENDATIONS_ENABLED=true`. No service-role key is used by this recommendation API. It is not available on production or even staging until the validated age-safety RPC and permissioned social `luo_space` RPC are installed. The older social feed has not been replaced.
 
 Production activation requires release and privacy review, explicit child-protection policy verification, staging seed data, feed-candidate permission tests, user controls, performance/load tests, and a reversible canary rollout.
+
+## Extended actual pipeline integration (27 October 2026)
+
+Source comparison: official `xai-org/x-algorithm` README and the pinned
+submodule. These are new server-side *heuristic* stages, not a trained Phoenix
+model or a wholesale deployment of X's infrastructure:
+
+| Upstream X stage | Luo Chat state |
+| --- | --- |
+| Actor-scoped in-network/out-of-network retrieval | Existing friends/public `luo_space` candidate requests, development only |
+| Drop duplicates | Existing by-ID deduplication plus new long-form near-duplicate text collapse |
+| SelfTweetFilter | New `extraCandidateAllowed` excludes verified viewer's own posts; `viewer_id` is injected from Supabase Auth, not browser input |
+| OONRetweetReplyFilter | New public-reply suppression when linked to a parent post; in-network replies remain eligible |
+| Timeline age / hydration | 30-day product recency policy preserved; invalid/future dates rejected; authorized source fields required |
+| Muted keyword and visibility signals | New bounded `muted_terms` and explicit negative enforcement-label checks; backend must actually provide verified muted terms before this feature is active |
+| Author diversity | Existing two-per-author cap and repeated-author penalties |
+| New-author, in-network and OON weighting | Existing cold-start exploration plus adjusted in-network/out-of-network priorities |
+| VMRanker-style content diversification | New lightweight recent-topic soft penalty; **not** VMRanker DPP, no embeddings |
+| Phoenix multi-action probability scorer | **Not implemented.** Current score is bounded heuristic engagement features, not learned probabilities |
+| Thunder, SimClusters, ANN candidate index, Phoenix retrieval | **Not implemented or running**. The upstream Git submodule is only a source reference |
+| Visibility-filtering and ML-based safety ensembles | Server-side content and age authorization remains a hard release gate; ML safety, appeals and legal-region notices are **not** built |
+| Under the Hood transparency | Only aggregate pipeline counts and source-based explanation strings; account-level enforcement transparency not yet available |
+| Monetized blending / ads | Not implemented, and not required for organic Luo Chat recommendations |
+
+**Critical integration status:** The ranked endpoint remains disabled until
+staging contains the actual authorized social feed `luo_space`, trusted
+age/guardian content gating, and a verified muted/follow context source.
+Mocked ranker tests do not make it a live personalized feed. The existing
+chronological social feed is left unchanged, and no production changes were
+made. Do not treat user-entered content labels as safety clearance.
+
+One unresolved engineering item: per-source cursor windows currently advance
+with fetched candidates, not only displayed candidates. Cursor replay/carry-over
+needs a stable persisted frontier or bounded replay protocol before turning
+on the ranked feed, to avoid starving unseen posts.

@@ -8,7 +8,7 @@ test('secondary screen design unifies 44px targets, keyboard focus and anti-over
  assert.match(micro,/--luo-micro-tap:44px/);
  assert.match(micro,/:focus-visible/);
  assert.match(micro,/overscroll-behavior:contain/);
- assert.match(micro,/env\(safe-area-inset-bottom/);
+ assert.match(micro,/env\(safe-area-inset-top/);
 });
 test('micro-polish does not add fake business state or override motion preferences',()=>{
  assert.match(micro,/@media\(prefers-reduced-motion:reduce\)/);
