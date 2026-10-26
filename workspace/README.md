@@ -77,3 +77,7 @@ The additive SQL migration, \`luo-workspace-insights-v2.sql\`, adds a private \`
 The Cloudflare Worker template includes the fourth static asset \`/insights.js\`. Rebuild the template with \`index.html\`, \`style.css\`, \`app.js\`, and \`insights.js\` before deploying. The UI uses text nodes for untrusted provider data, not HTML injection.
 
 Monitoring infrastructure, visitors, email deliveries, recurring payments and agent entitlement checks can be expanded into true refreshable provider feeds later only through authenticated backend integrations. Do not call a one-off plugin lookup a permanent live API connection.
+
+## Multilingual discoverability monitoring
+
+The product view includes a public-configuration panel for the five localized marketing and agent discovery guides, sitemap, and API documentation. It distinguishes configured public URLs from verified search impressions or indexed pages. The latter require an actual Search Console integration and are deliberately shown as *not connected*. The existing owner-only product telemetry remains authoritative; dashboard markup does not fabricate agent accounts or traffic. Cloudflare Workspace deployment is separate from Luo Chat's Vercel release and must be rolled out independently.

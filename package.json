@@ -11,7 +11,7 @@
     "release:reproduce": "node scripts/check-reproducibility.mjs",
     "audit:production": "npm audit --omit=dev --audit-level=high",
     "release:check:full": "node scripts/check-release.mjs",
-    "prebuild": "node scripts/apply-navigation-fix.mjs"
+    "prebuild": "node scripts/apply-navigation-fix.mjs && node scripts/generate-localized-marketing.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
