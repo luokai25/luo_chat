@@ -26,7 +26,7 @@ export function renderMarketingPage(locale,type='home'){
  const header='<header><div class="wrap nav"><a class="logo" href="'+route(locale,'home')+'">Luo Chat ✦</a>'+links+'</div><div class="wrap"><nav class="lang" aria-label="Choose language">'+pageLinks+'</nav></div></header>';
  let body;
  if(!isAgents){
-  const features=t.features.map(([name,copy])=>'<article class="card"><h3>'+esc(name)+'</h3><p>'+esc(copy)+'</p></article>').join('');
+  const features=t.features.map(([name,copy],i)=>'<article class="card"><h3>'+esc(name)+'</h3><p>'+esc(copy)+'</p>'+(locale==='en'?'<p><a href="/en/'+['chats','luonix','worlds'][i]+'/">Read the detailed guide</a></p>':'')+'</article>').join('');
   const questions=t.faqs.map(([q,a])=>'<article><h3>'+esc(q)+'</h3><p>'+esc(a)+'</p></article>').join('');
   body='<section class="hero"><p class="eyebrow">'+esc(t.eyebrow)+'</p><h1>'+esc(t.heading)+'</h1><p class="lead">'+esc(t.lead)+'</p><div class="actions"><a class="primary" href="/">'+esc(t.actions[0])+'</a><a href="'+route(locale,'agents')+'">'+esc(t.actions[1])+'</a></div></section>'+
    '<section id="features"><h2>'+esc(t.featureHeading)+'</h2><div class="cards">'+features+'</div></section>'+
@@ -35,7 +35,7 @@ export function renderMarketingPage(locale,type='home'){
    '<section id="questions"><h2>'+esc(t.faqHeading)+'</h2><div class="faq">'+questions+'</div></section>';
  } else {
   const features=t.agentSections.map(([name,copy])=>'<article class="card"><h3>'+esc(name)+'</h3><p>'+esc(copy)+'</p></article>').join('');
-  const api=['/agents','/api/v1/platform','/api/v1/plans','/openapi.json','/llms.txt','/api/mcp'].map(p=>'<li><a href="'+p+'"><code>'+esc(MARKETING_ORIGIN+p)+'</code></a></li>').join('');
+  const api=['/agents','/api/v1/platform','/api/v1/plans','/openapi.json','/llms.txt'].map(p=>'<li><a href="'+p+'"><code>'+esc(MARKETING_ORIGIN+p)+'</code></a></li>').join('');
   body='<section class="hero"><p class="eyebrow">LUO CHAT / AI AGENTS</p><h1>'+esc(t.agentTitle)+'</h1><p class="lead">'+esc(t.agentLead)+'</p><div class="note" role="status">'+esc(t.agentStatus)+'</div><div class="actions"><a class="primary" href="/agents">'+esc(t.actions[1])+' · English API</a><a href="'+route(locale,'home')+'">'+esc(t.actions[0])+'</a></div></section>'+
    '<section><h2>'+esc(t.featureHeading)+'</h2><div class="cards">'+features+'</div></section>'+
    '<section><h2>'+esc(t.technicalHeading)+'</h2><p class="prose">'+esc(t.agentHelp)+'</p><ul class="links">'+api+'</ul></section>';
@@ -48,16 +48,25 @@ export function renderMarketingPage(locale,type='home'){
   '<meta property="og:type" content="website"><meta property="og:site_name" content="Luo Chat">'+
   '<meta property="og:title" content="'+esc(title)+'"><meta property="og:description" content="'+esc(description)+'">'+
   '<meta property="og:url" content="'+canonical+'"><meta property="og:locale" content="'+localeMap[locale]+'">'+
+  '<meta property="og:image" content="'+MARKETING_ORIGIN+'/icon-512.png"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512">'+
   '<meta name="twitter:card" content="summary"><meta name="twitter:title" content="'+esc(title)+'">'+
   '<link rel="stylesheet" href="/luo-marketing.css"><script type="application/ld+json">'+json+'</script></head><body>'+
   header+'<main class="wrap">'+body+'<aside class="note">'+esc(t.note)+'</aside></main>'+
   '<footer class="wrap end"><div class="endlinks"><a href="/about.html">About Luo Chat</a><a href="/privacy.html">Privacy (English)</a><a href="/help.html">Help</a><a href="/agents">Technical API guide (English)</a></div><p>© Luo Chat · Luo’s Creations</p></footer></body></html>';
 }
 export function marketingSitemap(){
- const paths=['/','/about.html','/privacy.html','/contact.html','/help.html','/connection.html','/agents'];
- for(const locale of MARKETING_LOCALES)for(const type of ['home','agents'])paths.push(route(locale,type));
- return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
-  paths.map(path=>'  <url><loc>'+MARKETING_ORIGIN+path+'</loc></url>').join('\n')+'\n</urlset>\n';
+ const pages=['/','/about.html','/privacy.html','/contact.html','/help.html','/connection.html','/agents'];
+ for(const locale of MARKETING_LOCALES)for(const type of ['home','agents'])pages.push(route(locale,type));
+ function alternate(path){
+  const match=/^\/(en|ar|de|fr|es)\/(agents\/)?$/.exec(path);
+  if(!match)return '';
+  const type=match[2]?'agents':'home';
+  return MARKETING_LOCALES.map(locale=>'<xhtml:link rel="alternate" hreflang="'+locale+'" href="'+MARKETING_ORIGIN+route(locale,type)+'"/>').join('')+
+  '<xhtml:link rel="alternate" hreflang="x-default" href="'+MARKETING_ORIGIN+route('en',type)+'"/>';
+ }
+ return '<?xml version="1.0" encoding="UTF-8"?>\n'+
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'+
+  pages.map(path=>'  <url><loc>'+MARKETING_ORIGIN+path+'</loc>'+alternate(path)+'</url>').join('\n')+'\n</urlset>\n';
 }
 export async function generateLocalizedMarketing(root=resolve('public')){
  for(const locale of MARKETING_LOCALES){
