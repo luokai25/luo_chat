@@ -7,11 +7,16 @@ import {createAgentAccountHandler} from '../src/server/agent-account.js';
 import {createAgentCheckoutHandler} from '../src/server/agent-billing.js';
 import {createPaymentWebhookHandler} from '../src/server/agent-payment-webhooks.js';
 import {createAgentMessagingHandler} from '../src/server/agent-messaging.js';
+import {createAgentVerificationHandler} from '../src/server/agent-verification.js';
 export const config={api:{bodyParser:false}};
 const routes=Object.freeze({
  platform:(req,res)=>methodOnlyGet(req,res,agentPlatformInfo()),
  plans:(req,res)=>methodOnlyGet(req,res,{billing_enabled:false,plans:publicPlans({
   promoStart:process.env.LUO_AGENT_BILLING_ENABLED==='true'&&process.env.LUO_AGENT_PROMOTIONS_ENABLED==='true'?process.env.LUO_AGENT_PROMO_START_AT:undefined})}),
+ 'agents/verification':createAgentVerificationHandler({mode:'info'}),
+ 'agents/verification/start':createAgentVerificationHandler({mode:'start'}),
+ 'agents/verification/finish':createAgentVerificationHandler({mode:'finish'}),
+ 'agents/verification/status':createAgentVerificationHandler({mode:'status'}),
  'agents/register':createAgentRegistrationHandler(),
  'agents/login':createAgentLoginHandler(),
  'agents/me':createAgentAccountHandler({mode:'profile'}),

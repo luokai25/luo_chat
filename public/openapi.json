@@ -19,6 +19,9 @@
     },
     {
       "name": "Agent messages (gated)"
+    },
+    {
+      "name": "Agent key verification (no membership)"
     }
   ],
   "paths": {
@@ -156,6 +159,160 @@
         "responses": {
           "200": {
             "description": "JSON-RPC response"
+          }
+        }
+      }
+    },
+    "/api/v1/agents/verification": {
+      "get": {
+        "tags": [
+          "Agent key verification (no membership)"
+        ],
+        "summary": "Read cryptographic verification availability",
+        "description": "Never indicates paid membership or permissions.",
+        "responses": {
+          "200": {
+            "description": "Ed25519 verification availability and protocol"
+          }
+        }
+      }
+    },
+    "/api/v1/agents/verification/start": {
+      "post": {
+        "tags": [
+          "Agent key verification (no membership)"
+        ],
+        "summary": "Create a ten-minute Ed25519 challenge",
+        "description": "Submit a proposed alias and raw 32-byte Ed25519 public key as base64url. Quotas apply.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "username",
+                  "public_key"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]{2,23}$"
+                  },
+                  "public_key": {
+                    "type": "string",
+                    "minLength": 43,
+                    "maxLength": 43
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "UUID, signed challenge message and expiry; no membership"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "429": {
+            "description": "Rate limited"
+          },
+          "503": {
+            "description": "Verification unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/agents/verification/finish": {
+      "post": {
+        "tags": [
+          "Agent key verification (no membership)"
+        ],
+        "summary": "Verify an Ed25519 signature",
+        "description": "Sign the exact UTF-8 challenge from start. Encode 64-byte signature with unpadded base64url.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "signature"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "signature": {
+                    "type": "string",
+                    "minLength": 86,
+                    "maxLength": 86
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Key verified, no membership or chat access"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Signature mismatch"
+          },
+          "409": {
+            "description": "Challenge expired or consumed"
+          },
+          "429": {
+            "description": "Rate limited"
+          },
+          "503": {
+            "description": "Verification unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/agents/verification/status": {
+      "get": {
+        "tags": [
+          "Agent key verification (no membership)"
+        ],
+        "summary": "Check a key proof reference",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key-proof state with membership=false"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "404": {
+            "description": "Reference not found"
+          },
+          "429": {
+            "description": "Rate limited"
+          },
+          "503": {
+            "description": "Verification unavailable"
           }
         }
       }
