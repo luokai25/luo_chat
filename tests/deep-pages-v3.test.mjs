@@ -10,6 +10,11 @@ const source=await readFile('public/luo-deep-pages-v3.js','utf8');
 const skeleton=await readFile('public/luo-skeleton-v4.js','utf8');
 const html=await readFile('public/index.html','utf8');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(predicate,timeout=1350){
+ const end=Date.now()+timeout;
+ while(Date.now()<end){if(predicate())return;await delay(20)}
+ assert.ok(predicate(),'Expected genuine loading transition within a bounded interval');
+}
 function run({loading=true}={}){
  const dom=new JSDOM(html,{url:'https://luo-chat-luokai25.vercel.app',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,d=w.document,app=d.querySelector('.app');
@@ -87,7 +92,7 @@ test('real loading states get skeletons; resolved and signed-out screens do not 
   assert.equal(host.hasAttribute('aria-busy'),false);
   w.LuoUpdatesV2={active:()=>true};
   d.getElementById('storyFeedStatus').textContent='Loading stories…';
-  await delay(170);assert.ok(d.querySelector('#luoUpdatesV2Rail .luo-skeleton-stage'));
+  await until(()=>!!d.querySelector('#luoUpdatesV2Rail .luo-skeleton-stage'));
   assert.equal(d.querySelectorAll('#luoUpdatesV2Rail .sk-status-card').length,3);
   d.getElementById('storyFeedStatus').textContent='No stories';
   await delay(235);assert.equal(d.querySelector('#luoUpdatesV2Rail .luo-skeleton-stage'),null);

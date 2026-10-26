@@ -188,7 +188,8 @@ test('shared media and global search have genuine request-shaped placeholders, n
   await until(()=>shared.querySelectorAll('.sk-shared-card').length===4);
   assert.equal(shared.querySelector('.luo-skeleton-stage')?.dataset.kind,'shared');
   shared.replaceChildren(Object.assign(x.d.createElement('div'),{className:'shared-item'}));
-  await until(()=>!shared.querySelector('.luo-skeleton-stage'));
+  await until(()=>!shared.hasAttribute('aria-busy'));
+  assert.equal(shared.querySelector('.luo-skeleton-stage'),null);
   assert.equal(shared.getAttribute('aria-busy'),null);
   const search=x.d.getElementById('globalSearchResults');
   search.textContent='Searching messages…';await until(()=>search.querySelectorAll('.sk-search-row').length===3);
@@ -212,5 +213,23 @@ test('loaders for secondary surfaces do not appear on idle, errors, or after sig
   await until(()=>search.querySelector('.sk-search-row'));
   x.app.dataset.screen='auth';
   await until(()=>!search.querySelector('.luo-skeleton-stage'));
+ }finally{x.close()}
+});
+
+test('secondary loaders stop after genuine network failures and do not inherit self-set busy',async()=>{
+ const x=ready();try{
+  const search=x.d.getElementById('globalSearchResults');
+  search.textContent='Searching messages…';
+  await until(()=>search.querySelector('.sk-search-row'));
+  search.textContent='Network unavailable. Try again.';
+  await until(()=>!search.hasAttribute('aria-busy'));
+  assert.equal(search.querySelector('.luo-skeleton-stage'),null);
+  const shared=x.d.getElementById('sharedList');
+  x.d.getElementById('sharedDialog').setAttribute('open','');
+  shared.textContent='Loading shared media…';
+  await until(()=>shared.querySelector('.sk-shared-card'));
+  shared.textContent='Permission denied.';
+  await until(()=>!shared.hasAttribute('aria-busy'));
+  assert.equal(shared.querySelector('.luo-skeleton-stage'),null);
  }finally{x.close()}
 });

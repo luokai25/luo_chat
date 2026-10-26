@@ -76,14 +76,14 @@
     busy:()=>Boolean($('#sharedDialog[open]'))&&!!$('#sharedList')&&
       !hasVisible($('#sharedList'),'img,video,audio,.shared-item,.shared-media-card')&&
       (loadingText('#sharedList',/^Loading (shared|media|files|attachments)/i)||
-       $('#sharedList')?.getAttribute('aria-busy')==='true')
+       $('#sharedList')?.dataset.luoLoadingToken!==undefined)
    };
    case 'search': return {
     host:$('#globalSearchResults'),kind:'search',count:3,
     busy:()=>app.dataset.screen==='home'&&
       !hasVisible($('#globalSearchResults'),'.global-result,.search-result,.chatrow')&&
       (loadingText('#globalSearchResults',/^(Searching|Loading results)/i)||
-       $('#globalSearchResults')?.getAttribute('aria-busy')==='true')
+       $('#globalSearchResults')?.dataset.luoLoadingToken!==undefined)
    };
    case 'comments': return {
     host:$('.luo-feed-comments[open] .luo-feed-comment-list'),kind:'comment',count:4,
