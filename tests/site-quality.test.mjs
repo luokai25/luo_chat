@@ -49,3 +49,14 @@ test('transactional checkout is intentionally noindex and cannot grant paid acce
   assert.ok(html.includes('Payment and account activation are confirmed by server-side processor verification'));
  }finally{doc.defaultView.close()}
 });
+
+test('marketing post-processor never changes payment noindex policy or puts checkout in sitemap',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'luo-pay-index-test-'));
+ try{
+  await cp('public',dir,{recursive:true});
+  await enhanceSite(dir);
+  const html=await readFile(join(dir,'agent-checkout.html'),'utf8');
+  assert.match(html,/<meta name="robots" content="noindex,nofollow">/);
+  assert.doesNotMatch(await readFile(join(dir,'sitemap.xml'),'utf8'),/agent-checkout/);
+ }finally{await rm(dir,{recursive:true,force:true})}
+});
