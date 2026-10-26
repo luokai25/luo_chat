@@ -55,7 +55,8 @@
   settingsObserver=new MutationObserver(()=>{
    // Reopening Settings starts at the category list on phones, not a stale child screen.
    if(!auth()||app.dataset.tab!=='profile'){if(settingsDepth)backSettings(false)}
-  }).observe(app,{attributes:true,attributeFilter:['data-screen','data-tab']});
+  });
+  settingsObserver.observe(app,{attributes:true,attributeFilter:['data-screen','data-tab']});
  }
  function winSmall(){return (window.innerWidth||1000)<=730}
  function backSettings(focus=true){
@@ -198,7 +199,7 @@
   });
   domObserver.observe(doc.body,{childList:true,subtree:true,characterData:true});
   app.addEventListener('click',e=>{
-   if(e.target.closest('[data-tab="profile"]')&&!winSmall())backSettings(false);
+   if(e.target.closest('.workspace-nav [data-tab="profile"]')&&!winSmall())backSettings(false);
   });
   doc.addEventListener('keydown',e=>{
    if(e.key!=='Escape'||!settingsDepth||!winSmall()||doc.querySelector('dialog[open]'))return;

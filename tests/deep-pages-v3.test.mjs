@@ -58,11 +58,11 @@ test('settings categories become real nested mobile views and preserve original 
   assert.equal(nav.querySelectorAll('[data-setting]').length,8);
   const privacy=nav.querySelector('[data-setting="privacy"]');
   app.dataset.tab='profile';profile.classList.remove('hidden');
-  let clicked=false,docSeen=false,navSeen=false;privacy.addEventListener('click',()=>clicked=true);d.addEventListener('click',()=>{docSeen=true},true);nav.addEventListener('click',()=>{navSeen=true},true);
+  let clicked=false;privacy.addEventListener('click',()=>clicked=true);
   assert.equal(privacy.disabled,false);
   privacy.dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true}));
   assert.equal(clicked,true,'Visible settings category should be clickable');
-  assert.equal(profile.dataset.luoSection,'privacy','Settings route diagnostics: '+JSON.stringify({clicked,docSeen,navSeen,attached:d.documentElement.contains(privacy),closest:!!privacy.closest('#settingsNav [data-setting]'),screen:app.dataset.screen,tab:app.dataset.tab,rootState:profile.dataset.luoDeepReady,hasApi:!!w.LuoDeepPagesV3,selected:privacy.dataset.setting,classes:profile.className}));
+  assert.equal(profile.dataset.luoSection,'privacy','Settings must enter the selected category');
   assert.ok(profile.classList.contains('luo-settings-deep'));
   assert.ok(d.getElementById('settings-privacy').contains(d.getElementById('savePrivacy')));
   d.getElementById('luoSettingsReturn').click();
