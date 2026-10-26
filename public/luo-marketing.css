@@ -12,3 +12,11 @@ a{color:inherit}a:focus-visible,button:focus-visible{outline:3px solid var(--gol
 .page-breadcrumb{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding-top:24px;font-size:12px;color:#cbbba1}
 .page-breadcrumb a{color:#e8c482;text-decoration:underline;text-underline-offset:3px}
 .page-breadcrumb [aria-current=page]{color:#f5e1bc}
+
+/* Preferred Sources promotion is a user action, never a verified ranking or certification. */
+.luo-preferred-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:19px;padding-bottom:2px}
+.luo-preferred-source-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid #c2a06b;background:#31251b;color:#f9e1ab;font-size:13px;font-weight:800;line-height:1.4;text-decoration:none;padding:10px 15px;border-radius:30px;box-shadow:0 5px 17px #0004}
+.luo-preferred-source-badge span:first-child{font-size:20px;line-height:1}
+.luo-preferred-source-badge:hover,.luo-preferred-source-badge:focus-visible{background:#543b25;border-color:#eed49b;outline:2px solid #f4d087;outline-offset:2px}
+.luo-preferred-wrap small{flex:1;min-width:min(240px,90vw);font-size:11px;color:#a99c8d;line-height:1.4}
+[dir=rtl] .luo-preferred-wrap{flex-direction:row-reverse;justify-content:flex-end}

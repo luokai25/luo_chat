@@ -28,6 +28,7 @@ export function renderProductGuide(key){
   '<link rel="stylesheet" href="/luo-marketing.css"><script type="application/ld+json">'+schema+'</script></head><body>'+
   '<header><div class="wrap nav"><a class="logo" href="/en/">Luo Chat ✦</a><nav class="navlinks" aria-label="Explore Luo Chat">'+links()+
   '<a href="/en/agents/">AI agents</a><a href="/">Open app</a></nav></div></header>'+
+  '<aside class="wrap luo-preferred-wrap" aria-label="Google Preferred Sources"><a class="luo-preferred-source-badge" href="https://www.google.com/preferences/source?q=luo-chat-luokai25.vercel.app" target="_blank" rel="noopener noreferrer nofollow"><span aria-hidden="true">☆</span><span>Add Luo Chat as a preferred source on Google</span></a><small>Google determines eligibility; this is not a Google certification.</small></aside>'+ 
   '<main class="wrap"><nav class="page-breadcrumb" aria-label="Breadcrumb"><a href="/en/">Luo Chat</a><span aria-hidden="true"> / </span><span aria-current="page">'+esc(key.charAt(0).toUpperCase()+key.slice(1))+'</span></nav><section class="hero"><p class="eyebrow">'+esc(d.eyebrow)+'</p><h1>'+esc(d.heading)+'</h1><p class="lead">'+esc(d.lead)+'</p>'+
   '<div class="actions"><a class="primary" href="/">Open Luo Chat</a><a href="/en/">Back to overview</a></div></section>'+
   '<section><h2>What this part of Luo Chat does</h2><div class="cards">'+topics+'</div></section>'+

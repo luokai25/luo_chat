@@ -60,6 +60,7 @@
  function compose(mode){
   if(!signedIn())return;
   if(typeof newStory.onclick==='function')void newStory.onclick();else newStory.click();
+  window.LuoDeepPagesV3?.storyMode?.(mode);
   if(mode==='text')$('storyBody')?.focus();
   if(mode==='media')$('storyMedia')?.click();
  }

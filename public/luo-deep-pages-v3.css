@@ -1,0 +1,128 @@
+/* Luo Chat V3. Responsive, consistent secondary screens. No fake backend content. */
+:root{--luo-deep-black:#08080b;--luo-deep-surface:#151217;--luo-deep-surface2:#242027;--luo-deep-gold:#e5bd72;--luo-deep-ink:#f6e9d7;--luo-deep-dim:#ada199;--luo-deep-border:#76593665}
+dialog[data-luo-surface-v3="true"]{color:var(--luo-deep-ink);background:linear-gradient(150deg,#211b20,#0c0b0e 63%);border:1px solid #87653c6b;border-radius:21px;box-shadow:0 28px 85px #000a}
+dialog[data-luo-surface-v3="true"]::backdrop{background:#030305d6;backdrop-filter:blur(8px)}
+dialog[data-luo-surface-v3="true"] .dialog-heading{display:flex;align-items:center;gap:12px;justify-content:space-between;position:sticky;top:0;z-index:9;padding:14px 8px 18px;background:#151117ef;backdrop-filter:blur(14px);border-bottom:1px solid #75604256}
+dialog[data-luo-surface-v3="true"] .dialog-heading h2{color:#fce5b4;font-size:clamp(20px,3vw,26px);font-weight:800;letter-spacing:-.035em;line-height:1.12;margin:0}
+dialog[data-luo-surface-v3="true"] :is(input.field,textarea.field,select.field,input:not([type="checkbox"]):not([type="radio"])):not([type="file"]){border:1px solid #6e563a;background:#252028;color:#f6e8d7;border-radius:13px;min-height:43px}
+dialog[data-luo-surface-v3="true"] :is(label,h3){color:#ecd7b1}
+dialog[data-luo-surface-v3="true"] :is(.primary,button[type="submit"]){min-height:45px;border-radius:13px}
+dialog[data-luo-surface-v3="true"] :is(button,a):focus-visible{outline:2px solid #ffd58b;outline-offset:3px}
+#pollDialog .field,#scheduleDialog .field,#personalizeDialog .field{margin:7px 0 12px}
+#pollDialog form,#scheduleDialog form,#personalizeDialog form{display:grid;gap:10px}
+#pollDialog form .dialog-heading,#scheduleDialog form .dialog-heading{grid-column:1 / -1}
+#sharedDialog #sharedList,#workspaceDialog #workspaceBody{display:grid;gap:12px;min-width:0}
+#mediaViewer[open]{width:min(98vw,1020px);max-height:96dvh;overflow:auto;background:#050507}
+#mediaViewer #mediaContent{display:grid;place-items:center;min-height:45dvh;background:#09080d;border-radius:17px;overflow:hidden}
+#mediaViewer #mediaContent :is(img,video){max-width:100%;max-height:75dvh;object-fit:contain}
+#personDialog[open]{width:min(96vw,490px);padding:18px;max-height:88dvh;overflow:auto}
+#personDialog #personStatus:not(:empty){display:block;color:#e7be79;margin:14px}
+#personDialog #personBody{display:grid;gap:12px}
+#personDialog .person-hero{display:grid;justify-items:center;gap:8px;text-align:center;padding:26px 12px 15px;background:radial-gradient(circle at 50% 0%,#84633266,transparent 65%);border-radius:19px}
+#personDialog .person-hero h3{margin:4px 0;color:#f9e6c3;font-size:22px}
+#personDialog .person-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#personDialog .person-actions button{border:1px solid #86673c;border-radius:12px;min-height:45px;background:#31241b;color:#f5d394}
+#personPhotoDialog[open],#avatarDialog[open]{width:min(96vw,700px);max-height:96dvh;overflow:auto;background:#08080b}
+#personPhotoDialog img,#avatarDialog img{display:block;width:auto;height:auto;max-height:72dvh;max-width:100%;object-fit:contain;margin:16px auto}
+.luo-feed-comments[open],.luo-dm-settings[open],#messageActionSheet[open]{color:#f8e7d0;background:linear-gradient(145deg,#242026,#111013);border:1px solid #6f5737;box-shadow:0 25px 80px #000b;overflow-y:auto}
+.luo-feed-comments .luo-feed-comment-list{display:grid;gap:10px;max-height:60dvh;overflow:auto}
+.luo-feed-comments .luo-feed-comment-form{position:sticky;bottom:0;background:#141117ed;backdrop-filter:blur(10px);padding:10px;border-radius:14px}
+#messageActionSheet .touch-reactions{display:flex;flex-wrap:wrap;justify-content:space-around;gap:4px}
+#messageActionSheet button{min-height:42px}
+#luoTools[open]{width:min(96vw,960px);max-height:92dvh;overflow:auto}
+#luoTools .dialog-heading{background:#151217ef}
+#luoTools :is(input,textarea,select){font-size:16px;max-width:100%}
+.worlds-modal[open],.luo-worlds-modal[open]{background:#151319;color:#f7e9d0;border:1px solid #826339;border-radius:21px;box-shadow:0 25px 75px #000b}
+.worlds-modal .field,.luo-worlds-modal .field{min-height:44px;border-radius:11px}
+#storyComposer.luo-story-composer-v3{background:#09090c!important;color:#f6e8d3!important;max-width:680px}
+#storyComposer.luo-story-composer-v3 #storyForm{max-width:680px;margin:auto;display:flex;flex-direction:column;gap:13px}
+#storyComposer.luo-story-composer-v3 .dialog-heading{background:#09090cee;border-color:#59452950}
+.luo-story-v3-hero{display:grid;grid-template-columns:64px 1fr;gap:6px 14px;align-items:center;padding:13px 4px 15px}
+.luo-story-v3-symbol{grid-row:1 / span 2;display:grid;place-items:center;border:2px solid #dfb46a;color:#ecd5ac;border-radius:50%;width:62px;height:62px;font-size:32px;background:linear-gradient(135deg,#694f2d,#22191a)}
+.luo-story-v3-heading{font-size:23px;color:#f9e9cd;font-weight:800;letter-spacing:-.5px}
+.luo-story-v3-description{font-size:13px;color:#b4a89a;margin:0;line-height:1.45}
+.luo-story-v3-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;background:#1a171b;padding:6px;border:1px solid #544126;border-radius:16px}
+.luo-story-v3-tab{border:0;min-height:43px;padding:10px 3px;color:#b5aaa0;background:transparent;border-radius:11px;font-size:13px;font-weight:750}
+.luo-story-v3-tab[aria-selected="true"]{background:linear-gradient(120deg,#987239,#5e462a);color:#fff5df;box-shadow:0 4px 14px #0004}
+.luo-story-v3-pane{min-height:245px;padding:17px 10px 20px;display:flex;flex-direction:column;gap:12px;border:1px solid #5d452d66;background:radial-gradient(circle at 50% 0,#5b402c23,transparent 70%),#151318;border-radius:17px}
+.luo-story-v3-pane[hidden]{display:none!important}
+.luo-story-v3-pane h3{margin:3px 0 0;font-size:20px;color:#f5ddae}
+.luo-story-v3-help{color:#afa29b;font-size:12px;line-height:1.5;margin:0 0 10px}
+.luo-story-v3-pane :is(label){font-size:12px;font-weight:750;color:#dec9a6}
+.luo-story-v3-pane :is(input.field,select.field,textarea.field){background:#201b21;border:1px solid #776044;color:#fcf1df;border-radius:12px;font-size:16px;padding:11px;max-width:100%}
+#storyComposer.luo-story-composer-v3 #storyBody{min-height:180px;resize:vertical;font-size:18px;line-height:1.55}
+#storyComposer.luo-story-composer-v3 #storyMedia{font-size:13px;padding:12px;border:1px dashed #9a7b50;background:#242026}
+#storyComposer.luo-story-composer-v3 #storyAudience{min-height:72px}
+#storyComposer.luo-story-composer-v3 #luoStoryUploadPreview{border:1px solid #6d5437;border-radius:13px;background:#211b22;max-width:100%}
+.luo-story-v3-audience-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 15px;border:1px solid #725633;border-radius:13px;background:#1f1b1b}
+.luo-story-v3-lock{color:#f2d398;font-size:22px}
+.luo-story-v3-audience-count{flex:1;min-width:90px;font-size:13px;color:#f2dbb6;font-weight:750}
+.luo-story-v3-audience-button{background:transparent;border:0;color:#eccb91;font-size:12px;min-height:34px;font-weight:750}
+#storyComposer.luo-story-composer-v3 #storyStatus{color:#e7c494}
+#storyComposer.luo-story-composer-v3 #publishStory{display:block;width:100%;min-height:54px;border-radius:14px;font-size:16px;font-weight:850;background:linear-gradient(125deg,#f0d49a,#c19b58);color:#17130e;border:0}
+#storyComposer.luo-story-composer-v3 #publishStory:disabled{opacity:.52;cursor:wait}
+#profile.luo-settings-v3 .luo-settings-v3-icon{width:35px;height:35px;min-width:35px;display:grid;place-items:center;border-radius:11px;border:1px solid #66503a;background:#2e261f;color:#e6c47d;font-size:18px;margin-inline-end:10px}
+#profile.luo-settings-v3 #settingsNav .settings-nav-item{display:flex;align-items:center;gap:3px}
+#profile.luo-settings-v3 #settingsNav .settings-nav-item strong{font-size:14px}
+#profile.luo-settings-v3 #settingsNav .settings-nav-item small{display:block!important;opacity:.68}
+#profile.luo-settings-v3 .settings-panel{animation:none}
+#profile.luo-settings-v3 .settings-panel > section{border-color:#644c3660;border-radius:12px}
+#profile.luo-settings-v3 .settings-panel .field{background:#211e25;border:1px solid #80603c;color:#f4e7d1;min-height:44px;border-radius:12px}
+#profile.luo-settings-v3 .settings-panel label{color:#e2caa1}
+#profile.luo-settings-v3 .settings-panel button{border-radius:11px;min-height:41px}
+#profile.luo-settings-v3 .luo-settings-v3-back{display:none;align-items:center;gap:8px;background:transparent;color:#e7c386;border:0;font-size:17px;min-height:48px;font-weight:800;padding:8px 4px;margin-bottom:10px}
+.luo-skeleton-stage{display:grid;grid-template-columns:1fr;gap:12px;padding:12px 6px;pointer-events:none;contain:layout;order:-1}
+.luo-skeleton-tile{display:flex;gap:14px;align-items:center;min-height:66px;padding:7px 11px;background:#25212899;border:1px solid #6d53332a;border-radius:14px}
+.luo-skeleton-avatar{display:block;flex:0 0 48px;width:48px;height:48px;border-radius:50%;background:linear-gradient(100deg,#342a26 16%,#68543f 50%,#342a26 84%);background-size:250% 100%;animation:luo-deep-shimmer 1.3s ease-in-out infinite}
+.luo-skeleton-lines{display:block;flex:1;height:36px;border-radius:7px;background:linear-gradient(100deg,#342a26 10%,#68543f 50%,#342a26 90%);background-size:250% 100%;animation:luo-deep-shimmer 1.3s ease-in-out infinite}
+.luo-skeleton-tile:nth-child(2n) .luo-skeleton-lines{max-width:80%}
+.luo-skeleton-tile:nth-child(3n) .luo-skeleton-lines{max-width:93%}
+.luo-skeleton-stage[data-kind="story"]{display:flex;gap:11px;padding:0 0 8px}
+.luo-skeleton-stage[data-kind="story"] .luo-skeleton-tile{flex:0 0 133px;height:210px;border-radius:16px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:45px}
+.luo-skeleton-stage[data-kind="story"] .luo-skeleton-lines{width:95%;height:24px;flex:0 0 24px}
+.luo-skeleton-stage[data-kind="post"]{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:16px}
+.luo-skeleton-stage[data-kind="post"] .luo-skeleton-tile{min-height:210px;display:flex;flex-direction:column;align-items:flex-start}
+.luo-skeleton-stage[data-kind="post"] .luo-skeleton-avatar{height:130px;width:100%;border-radius:14px;flex:auto}
+.luo-skeleton-stage[data-kind="world"]{grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))}
+.luo-skeleton-stage[data-kind="world"] .luo-skeleton-tile{min-height:142px}
+.luo-skeleton-stage[data-kind="profile"] .luo-skeleton-tile{min-height:200px;flex-direction:column;justify-content:center}
+.luo-skeleton-stage[data-kind="profile"] .luo-skeleton-avatar{width:88px;height:88px;flex:0 0 88px}
+.luo-skeleton-active .empty{opacity:.55}
+@keyframes luo-deep-shimmer{0%{background-position:120% 0}100%{background-position:-120% 0}}
+@media(max-width:730px){
+ dialog[data-luo-surface-v3="true"]:not(.luo-deep-photo):not(.luo-status-viewer):not(.luo-status-v2-viewer)[open]{inset:auto 0 0!important;position:fixed!important;width:100vw!important;max-width:100vw!important;max-height:94dvh!important;margin:0!important;border-radius:23px 23px 0 0!important;padding:calc(7px + env(safe-area-inset-top,0px)) 15px calc(15px + env(safe-area-inset-bottom,0px))!important;overflow-y:auto!important;border-inline:0!important;border-bottom:0!important}
+ dialog[data-luo-surface-v3="true"]:not(.luo-deep-photo) .dialog-heading{top:-8px;margin:0 0 15px}
+ #storyComposer.luo-story-composer-v3[open]{inset:0!important;width:100vw!important;max-width:100vw!important;max-height:100dvh!important;height:100dvh!important;margin:0!important;border-radius:0!important;padding:calc(8px + env(safe-area-inset-top,0px)) 14px calc(24px + env(safe-area-inset-bottom,0px))!important;overflow-y:auto!important}
+ #storyComposer.luo-story-composer-v3 .luo-story-v3-pane{min-height:270px}
+ .luo-feed-comments[open],.luo-dm-settings[open],#messageActionSheet[open]{position:fixed!important;inset:auto 0 0!important;max-height:89dvh!important;width:100vw!important;max-width:100vw!important;margin:0!important;border-radius:22px 22px 0 0!important;padding:14px!important;overflow-y:auto!important}
+ #profile.luo-settings-v3 .settings-layout{display:block!important}
+ #profile.luo-settings-v3:not(.luo-settings-deep) #settingsPanels{display:none!important}
+ #profile.luo-settings-v3:not(.luo-settings-deep) #settingsNav{display:grid!important;grid-template-columns:1fr;gap:4px}
+ #profile.luo-settings-v3:not(.luo-settings-deep) #settingsNav .settings-nav-item{min-height:70px;display:flex!important;border-bottom:1px solid #51402855}
+ #profile.luo-settings-v3.luo-settings-deep #settingsPanels{display:block!important;max-width:100%!important;width:100%!important}
+ #profile.luo-settings-v3.luo-settings-deep .settings-sidebar,#profile.luo-settings-v3.luo-settings-deep .settings-profile-card,#profile.luo-settings-v3.luo-settings-deep .page-heading{display:none!important}
+ #profile.luo-settings-v3.luo-settings-deep .luo-settings-v3-back{display:flex!important}
+ #profile.luo-settings-v3.luo-settings-deep #settingsPanels > .settings-panel:not(.hidden){padding:8px 5px!important;background:transparent;border:0}
+ #profile.luo-settings-v3 .settings-panel > section{padding:15px!important}
+ .luo-skeleton-stage[data-kind="post"]{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.luo-skeleton-avatar,.luo-skeleton-lines{animation:none!important;background:#483827!important}dialog[data-luo-surface-v3="true"] *{scroll-behavior:auto!important;transition:none!important}}
+
+/* Search-result visibility is controlled by the real settings controller. */
+#profile.luo-settings-v3 #settingsNav .settings-nav-item[hidden],#profile.luo-settings-v3:not(.luo-settings-deep) #settingsNav .settings-nav-item[hidden]{display:none!important}
+
+/* Worlds uses a form overlay, not a native dialog. Design both layers without
+   changing membership checks, server calls, or submit handlers. */
+.worlds-modal-backdrop{position:fixed!important;inset:0!important;z-index:900!important;display:grid!important;place-items:center!important;background:#020204d9!important;backdrop-filter:blur(8px);padding:14px;overscroll-behavior:contain}
+form.worlds-modal{width:min(100%,520px)!important;max-width:520px!important;max-height:calc(100dvh - 28px)!important;overflow:auto!important;display:flex!important;flex-direction:column!important;gap:12px!important;padding:25px!important;border-radius:24px!important;border:1px solid #8a6942!important;box-shadow:0 25px 80px #000b!important;background:linear-gradient(145deg,#251e23,#100e13)!important;color:#f7e7d0!important}
+form.worlds-modal h2{font-size:clamp(23px,4vw,30px);color:#f1d292;margin:0}
+form.worlds-modal > p{color:#bdb0a0;font-size:13px;line-height:1.6}
+form.worlds-modal .worlds-field{display:flex;flex-direction:column;gap:8px;color:#e9d2a6;font-size:13px;font-weight:750}
+form.worlds-modal .worlds-field :is(input,textarea,select){min-height:47px;width:100%;box-sizing:border-box;background:#211d23!important;color:#f8ebd8!important;border:1px solid #82623b!important;border-radius:13px!important;padding:10px 13px!important;font-size:16px}
+form.worlds-modal .worlds-field textarea{min-height:96px}
+form.worlds-modal .worlds-modal-buttons{display:flex;gap:10px;margin-top:12px}
+form.worlds-modal .worlds-modal-buttons button{flex:1;min-height:47px;border-radius:12px}
+form.worlds-modal :is(button,input,select,textarea):focus-visible{outline:2px solid #f3d28d;outline-offset:2px}
+.luo-capsule-dialog[open]{background:linear-gradient(160deg,#241b24,#09080e);color:#f8e4c9;border:1px solid #987446;border-radius:22px;box-shadow:0 25px 90px #000a;max-width:min(94vw,800px);max-height:94dvh;overflow:auto}
+.luo-capsule-dialog :is(button,input,textarea):focus-visible{outline:2px solid #f4d29c;outline-offset:3px}
+@media(max-width:730px){.worlds-modal-backdrop{padding:0!important;align-items:end!important}form.worlds-modal{width:100%!important;max-width:100%!important;max-height:93dvh!important;border-radius:23px 23px 0 0!important;border-bottom:0!important;padding:23px 17px calc(18px + env(safe-area-inset-bottom,0px))!important}.luo-capsule-dialog[open]{inset:auto 0 0!important;width:100vw;max-width:100vw;max-height:93dvh;margin:0;border-radius:22px 22px 0 0!important}}

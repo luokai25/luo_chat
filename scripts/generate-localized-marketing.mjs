@@ -41,6 +41,9 @@ export function renderMarketingPage(locale,type='home'){
    '<section><h2>'+esc(t.featureHeading)+'</h2><div class="cards">'+features+'</div></section>'+
    '<section><h2>'+esc(t.technicalHeading)+'</h2><p class="prose">'+esc(t.agentHelp)+'</p><ul class="links">'+api+'</ul></section>';
  }
+ const preferredLabels={en:'Add Luo Chat as a preferred source on Google',ar:'أضف Luo Chat إلى مصادرك المفضلة على Google',de:'Luo Chat als bevorzugte Quelle auf Google hinzufügen',fr:'Ajouter Luo Chat comme source préférée sur Google',es:'Añadir Luo Chat como fuente preferida en Google'};
+ const preferredNote={en:'Google decides which sites are eligible. This is a selection link, not a Google certification.',ar:'تحدد Google المواقع المؤهلة. هذا رابط للاختيار وليس شهادة اعتماد من Google.',de:'Google entscheidet über die Verfügbarkeit. Dies ist ein Auswahl-Link, keine Google-Zertifizierung.',fr:'Google détermine l’éligibilité. Ceci est un lien de sélection, pas une certification Google.',es:'Google decide qué sitios cumplen los requisitos. Es un enlace de selección, no una certificación de Google.'};
+ const sourceAction='<aside class="wrap luo-preferred-wrap" aria-label="Google Preferred Sources"><a class="luo-preferred-source-badge" href="https://www.google.com/preferences/source?q=luo-chat-luokai25.vercel.app" target="_blank" rel="noopener noreferrer nofollow" aria-label="'+esc(preferredLabels[locale])+'"><span aria-hidden="true">☆</span><span>'+esc(preferredLabels[locale])+'</span></a><small>'+esc(preferredNote[locale])+'</small></aside>';
  const json=JSON.stringify(schema(locale,type,t,canonical)).replace(/</g,'\\u003c');
  return '<!doctype html><html lang="'+locale+'"'+(locale==='ar'?' dir="rtl"':'')+'><head>'+
   '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0a090c">'+
@@ -52,7 +55,7 @@ export function renderMarketingPage(locale,type='home'){
   '<meta property="og:image" content="'+MARKETING_ORIGIN+'/icon-512.png"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512">'+
   '<meta name="twitter:card" content="summary"><meta name="twitter:title" content="'+esc(title)+'">'+
   '<link rel="stylesheet" href="/luo-marketing.css"><script type="application/ld+json">'+json+'</script></head><body>'+
-  header+'<main class="wrap">'+body+'<aside class="note">'+esc(t.note)+'</aside></main>'+
+  header+sourceAction+'<main class="wrap">'+body+'<aside class="note">'+esc(t.note)+'</aside></main>'+
   '<footer class="wrap end"><div class="endlinks"><a href="/about">About Luo Chat</a><a href="/privacy.html">Privacy (English)</a><a href="/help">Help</a><a href="/agents">Technical API guide (English)</a></div><p>© Luo Chat · Luo’s Creations</p></footer></body></html>';
 }
 export function marketingSitemap(){
