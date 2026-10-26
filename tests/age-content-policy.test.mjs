@@ -73,6 +73,7 @@ test('signup UI no longer exposes a pretend guardian approval code and explicitl
  assert.match(app,/signupAge==='under13'/);
  assert.match(app,/signupAge==='13-14'/);
  assert.match(app,/signupAge==='15-17'/);
- assert.match(app,/signupAge==='18\+'/);
+ assert.match(app,/age_band:signupAge/,'Adult self-declared age band remains part of signup request');
+ assert.doesNotMatch(app,/signupAge==='18\\+'\)return/,'Adult signup must not be blocked by a youth branch');
  assert.doesNotMatch(app,/guardian_approval:signupAge/);
 });
