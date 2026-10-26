@@ -36,8 +36,8 @@ test('Combined development update preserves live authentication, stories and con
   const form=dom.window.document.getElementById('auth');
   for(const id of ['signin','signup','email','password','username','signupConfirm','signupBirthDate','guardianApproval'])assert.ok(form.querySelector('#'+id),'Missing auth field '+id);
   assert.equal(form.querySelector('#signupBirthDate')?.getAttribute('type'),'date');
-  assert.ok(form.querySelector('#ageSignupHelp')?.textContent.includes('Minimum age: 12'));
-  assert.ok(form.querySelector('#guardianApproval')?.classList.contains('signup-only'));
+  assert.match(form.querySelector('#ageSignupHelp')?.textContent||'',/under 13|younger teens/i);
+  assert.equal(form.querySelector('#guardianApproval')?.getAttribute('type'),'hidden','No unusable guardian-code field should be exposed');
   assert.ok(form.querySelector('#authModeSignin')&&form.querySelector('#authModeSignup'));
  }finally{dom.window.close()}
 });

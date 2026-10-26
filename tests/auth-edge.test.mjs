@@ -20,7 +20,15 @@ test('guardian-code leftovers cannot bypass currently closed youth registration'
 });
 test('adult registration includes age band and still passes server validation',async()=>{
  const s=setup(),r=await s.handler(req({email:'adult@example.invalid',action:'signup',username:'adult',password:'test-password',age_band:'18+'}));
- assert.equal(r.status,200);assert.equal(s.calls.find(c=>c[0]==='signup')[2].options.data.registration_age_band,'18+');
+ assert.equal(r.status,200);assert.ok(s.calls.some(c=>c[0]==='signup'),'adult signup must remain active');assert.equal(s.calls.find(c=>c[0]==='signup')[2].options.data.registration_age_band,undefined,'unverified age is not stored as an authoritative entitlement');
+});
+test('existing sign-in capabilities and password recovery remain exposed',async()=>{
+ const s=setup(),result=await s.handler(req({action:'capabilities',email:'ignored@example.invalid'}));
+ assert.equal(result.status,200);
+ const data=await result.json();
+ assert.equal(data.username_signin,true);
+ assert.equal(data.username_signup,false);
+ assert.equal(s.calls.length,0);
 });
 const req=(body,extra={})=>new Request('https://fixture.invalid',{method:'POST',headers:{'content-type':'application/json',origin:'https://luo-chat-luokai25.vercel.app','x-real-ip':'192.0.2.1',...extra},body:JSON.stringify(body)});
 test('auth rejects untrusted origins and oversized bodies before rate-limit RPCs',async()=>{for(const request of [req({email:'test@example.invalid',action:'reset'},{origin:'https://evil.invalid'}),req({data:'x'.repeat(17000)})]){const s=setup();assert.ok([400,403].includes((await s.handler(request)).status));assert.equal(s.calls.length,0)}});
