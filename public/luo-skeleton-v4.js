@@ -74,7 +74,7 @@
    case 'shared': return {
     host:$('#sharedList'),kind:'shared',count:4,
     busy:()=>Boolean($('#sharedDialog[open]'))&&!!$('#sharedList')&&
-      !hasVisible($('#sharedList'),'img,video,audio,.shared-item,.shared-media-card')&&
+      !hasVisible($('#sharedList'),'img,video,audio,.media-card,.shared-item,.shared-media-card')&&
       (loadingText('#sharedList',/^Loading (shared|media|files|attachments)/i)||
        $('#sharedList')?.dataset.luoLoadingToken!==undefined)
    };
