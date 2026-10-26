@@ -107,7 +107,7 @@ export function createRecommendationHandler({mode='feed',env=process.env,clientF
      next[plan.key]={id:last.id,time:last.created_at};hasMore=true;
     }
    }
-   const {items,reasons,diagnostic}=rankLuoFeed({sources,context,limit:20});
+   const {items,reasons,diagnostic}=rankLuoFeed({sources,context:{...context,viewer_id:auth.data.user.id},limit:20});
    if(items.length){
     const saved=await client.rpc('luo_recommend_mark_served',{p_ids:items.map(i=>i.id)});
     if(saved.error?.code==='P0001')return failure(res,429,'RATE_LIMITED');

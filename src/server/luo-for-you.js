@@ -1,7 +1,8 @@
+import {extraCandidateAllowed,nearDuplicateKey,xStyleDiversificationPenalty} from './luo-ranker-stages.js';
 // Luo Chat "For You" candidate pipeline.
 // Architecture adapted from xai-org/x-algorithm (Apache-2.0); see docs/X_ALGORITHM_ADAPTATION.md.
 // No upstream Phoenix model weights/checkpoints are claimed or embedded.
-export const LUO_RANKER_VERSION='luo-for-you-1';
+export const LUO_RANKER_VERSION='luo-for-you-2';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CLAMP=(v,min=0,max=1)=>Math.max(min,Math.min(max,Number.isFinite(Number(v))?Number(v):min));
 const LIMIT=(v,max=100000)=>CLAMP(v,0,max);
@@ -52,7 +53,7 @@ export function normalizeSources(sources){
 }
 export function rankLuoFeed({sources,context={},limit=20,now=Date.now()}={}){
  const size=Number.isSafeInteger(limit)?Math.min(30,Math.max(1,limit)):20;
- const ctx={now,
+ const ctx={now,viewerId:context.viewer_id||null,mutedTerms:context.muted_terms||[],
   hiddenIds:new Set(context.hidden_ids||[]),servedIds:new Set(context.served_ids||[]),
   blockedAuthors:new Set(context.blocked_authors||[]),
   mutedAuthors:new Set(context.muted_authors||[]),
@@ -66,14 +67,26 @@ export function rankLuoFeed({sources,context={},limit=20,now=Date.now()}={}){
   const visible=item.published!==false&&item.locked!==true&&UUID.test(author||'')&&
    ['post','clip'].includes(item.kind)&&item.created_at&&ageHours(item,now)<24*30&&
    sourceOk&&item.audience!=='private'&&
-   !ctx.hiddenIds.has(item.id)&&!ctx.blockedAuthors.has(author)&&!ctx.mutedAuthors.has(author);
+   !ctx.hiddenIds.has(item.id)&&!ctx.blockedAuthors.has(author)&&!ctx.mutedAuthors.has(author)&&
+   extraCandidateAllowed(item,{source,viewerId:ctx.viewerId,now,mutedTerms:ctx.mutedTerms});
   if(!visible)diagnostic.removed++;return visible;
  });
  candidates=candidates.filter(({item})=>{const seen=ctx.servedIds.has(item.id);if(seen)diagnostic.served_removed++;return !seen});
+ // X-like nearly identical text filter (>=100 characters). Keep the
+ // authorized higher-trust in-network version when public also has a copy.
+ const templates=new Set();
+ candidates=candidates.sort((a,b)=>({friends:0,following:1,public:2}[a.source]-{friends:0,following:1,public:2}[b.source]))
+ .filter(({item})=>{
+  const key=nearDuplicateKey(item);
+  if(!key)return true;
+  if(templates.has(key)){diagnostic.removed++;return false}
+  templates.add(key);return true;
+ });
  diagnostic.visible=candidates.length;
  // Diversified greedy top-K selection: a repeated author pays a growing penalty;
  // two posts from any author is the page cap.
- const pool=candidates.map(({item,source})=>({item,source,score:score(item,ctx)+(source==='friends'?0.14:source==='following'?0.10:0)}));
+ const pool=candidates.map(({item,source})=>({item,source,score:score(item,ctx)+
+  (source==='friends'?0.36:source==='following'?0.23:-0.07)}));
  const selected=[],reasons={},counts=new Map();
  // Bounded out-of-network exploration: no less than one eligible public post in
  // each four slots, when both source families exist and the feed is big enough.
@@ -83,8 +96,8 @@ export function rankLuoFeed({sources,context={},limit=20,now=Date.now()}={}){
  let publicUsed=0;
  while(selected.length<size&&pool.length){
   pool.sort((a,b)=>{
-   const pa=a.score-(counts.get(authorId(a.item))||0)*0.31;
-   const pb=b.score-(counts.get(authorId(b.item))||0)*0.31;
+   const pa=a.score-(counts.get(authorId(a.item))||0)*0.31-xStyleDiversificationPenalty(a.item,selected);
+   const pb=b.score-(counts.get(authorId(b.item))||0)*0.31-xStyleDiversificationPenalty(b.item,selected);
    return pb-pa||String(b.item.created_at).localeCompare(String(a.item.created_at))||String(a.item.id).localeCompare(String(b.item.id));
   });
   const eligible=x=>(counts.get(authorId(x.item))||0)<2;
