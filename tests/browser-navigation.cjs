@@ -78,8 +78,17 @@ async function run(){
  await page.locator('#back').click();await page.locator('#luoApprovedNav button[data-target=updates]').click();
   const storyState=await page.evaluate(()=>{const e=document.getElementById('storiesDialog'),op=document.getElementById('openStories'),app=document.querySelector('.app');return{open:e?.open,display:e&&getComputedStyle(e).display,inline:e?.getAttribute('style'),handler:typeof op?.onclick,triggerDisabled:op?.disabled,appScreen:app?.dataset.screen,appTab:app?.dataset.tab,navActive:document.querySelector('#luoApprovedNav button[data-target=updates]')?.getAttribute('aria-current')}});
   console.log('UPDATES_STATE',JSON.stringify(storyState));
-  await page.locator('#storiesDialog').waitFor({state:'visible',timeout:5000});await page.locator('#newStory').click();await page.locator('#storyComposer').waitFor({state:'visible'});checks.push('single Updates tab navigation and story composer');
- await page.locator('#closeStoryComposer').click();await page.locator('#closeStories').click();await page.locator('#luoApprovedNav button[data-target=group]').click();await page.locator('#luoCreateGroupFromCommunity').click();await page.locator('#groupname').fill('QA Group');await page.locator('#luoAddUsername').fill('qa_friend');await page.locator('#luoGroupPicker').getByRole('button',{name:'Add',exact:true}).click();await page.locator('#createGroup').click();await page.waitForFunction(()=>document.querySelector('.app').dataset.screen==='room');assert.equal(await page.locator('#roomtitle').textContent(),'QA Group');checks.push('group member picker and creation');await page.locator('#back').click();
+  // Updates V2 is a native full-screen status page, not the legacy Stories dialog.
+  await page.locator('#luoUpdatesV2').waitFor({state:'visible',timeout:5000});
+  assert.equal(await page.locator('.app').evaluate(el=>el.classList.contains('luo-updates-v2-open')),true);
+  await page.getByRole('button',{name:'Create text status'}).click();
+  await page.locator('#storyComposer').waitFor({state:'visible'});
+  checks.push('single Updates tab navigation and status composer');
+ await page.locator('#closeStoryComposer').click();
+ assert.equal(await page.locator('#storyComposer').evaluate(el=>el.open),false);
+ await page.locator('#luoApprovedNav button[data-target=group]').click();
+ await page.locator('#luoUpdatesV2').waitFor({state:'hidden'});
+ await page.locator('#luoCreateGroupFromCommunity').click();await page.locator('#groupname').fill('QA Group');await page.locator('#luoAddUsername').fill('qa_friend');await page.locator('#luoGroupPicker').getByRole('button',{name:'Add',exact:true}).click();await page.locator('#createGroup').click();await page.waitForFunction(()=>document.querySelector('.app').dataset.screen==='room');assert.equal(await page.locator('#roomtitle').textContent(),'QA Group');checks.push('group member picker and creation');await page.locator('#back').click();
  for(const t of ['new','group','saved','scheduled','profile','chats']){await page.locator('.workspace-nav .tab[data-tab="'+t+'"]').dispatchEvent('click');assert.equal(await page.locator('.app').getAttribute('data-tab'),t)}
  checks.push('all six native tabs');assert.deepEqual(errors,[]);checks.push('no browser exceptions');
  console.log(JSON.stringify({checks,requestCount:requests.length}));await context.close();
