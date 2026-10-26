@@ -91,7 +91,7 @@ export function createAgentVerificationHandler({mode='info',env=process.env,clie
   if(!idRx.test(v.id)||!signature)return failed(res,400,'INVALID_SIGNATURE_OR_ID');
   try{
    const db=database(runtime,clientFactory);
-   const lookup=await db.rpc('luo_agent_verify_read',{p_id:v.id});
+   const lookup=await db.rpc('luo_agent_verify_attempt',{p_id:v.id});
    if(lookup.error)throw lookup.error;
    const row=lookup.data;
    if(!row||row.state!=='pending'||Date.parse(row.expires_at)<=Date.now())
