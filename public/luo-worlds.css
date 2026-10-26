@@ -61,7 +61,7 @@
 .worlds-member{background:#252025;border-radius:9px;padding:12px 9px;margin:8px 0}
 .worlds-member-note{font-size:11px;line-height:1.6;color:#9c9696}
 .worlds-moderation{font-size:12px}
-.worlds-modal-backdrop{position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:#000b;padding:18px;overflow:auto}
+.worlds-modal-backdrop{position:fixed;inset:0;z-index:30000;display:grid;place-items:center;background:#000b;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain}
 .worlds-modal{width:min(490px,100%);max-height:calc(100dvh - 50px);overflow:auto;background:#1b191d;color:#e9dfcc;padding:25px;border:1px solid #8a6b3d;border-radius:17px;box-shadow:0 20px 80px #0009}
 .worlds-modal h2{font-size:22px;margin:0}
 .worlds-modal p{font-size:12px;color:#aca398;line-height:1.5}

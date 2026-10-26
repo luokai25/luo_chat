@@ -43,3 +43,19 @@ test('Mobile Worlds navigation retains genuine app navigation and does not show 
  assert.match(html,/\/luonix-publisher\.css/);
  assert.match(html,/title="Worlds" aria-label="Worlds"/);
 });
+
+test('Worlds group creation is mounted above mobile navigation and removes its overlay on close',async()=>{
+ const {installWorlds}=await import('../src/worlds.js');
+ const {JSDOM}=await import('jsdom');
+ const dom=new JSDOM('<div class="app" data-screen="home" data-tab="group"><div id="group"></div><nav id="luoApprovedNav"></nav></div>',{url:'https://luo.example'});
+ const w=dom.window,d=w.document;
+ const api=installWorlds({win:w,db:{rpc:async()=>({data:[]})},$:id=>d.getElementById(id),getUser:()=>({id:'one'}),note:()=>{},openRoom:()=>{},refreshChats:async()=>{},getChats:()=>[]});
+ try{
+  api.onTab('group');await new Promise(ok=>setTimeout(ok,0));
+  d.querySelector('.worlds-group-create').click();
+  const overlay=d.querySelector('.worlds-modal-backdrop');
+  assert.ok(overlay);assert.equal(overlay.parentElement,d.body);
+  overlay.querySelector('button').click();
+  assert.equal(d.querySelector('.worlds-modal-backdrop'),null);
+ }finally{api.signedOut();w.close()}
+});
