@@ -18,7 +18,7 @@ const base={
 function output(){return{statusCode:200,headers:{},body:null,setHeader(k,v){this.headers[k]=v;return this},status(n){this.statusCode=n;return this},json(v){this.body=v;return this}}}
 function request(overrides={}){return {method:'POST',headers:{'content-type':'application/json',host:'luo-chat-luokai25-abcdef12-luokai25s-projects.vercel.app'},body:{username:'hello_agent',password:'this passphrase is long enough',plan:'starter',provider:'stripe'},...overrides}}
 const intent={intent_id:'77777777-7777-4777-8777-777777777777',agent_id:'11111111-1111-4111-8111-111111111111',plan:'starter',provider:'stripe',promo:true,regular_cents:1200,first_invoice_cents:300,existing_reference:null};
-function clients(log){return (_url,key)=>key===base.LUO_AGENT_STAGING_SERVICE_ROLE_KEY?{rpc:async(name,args)=>{log.push([name,args]);if(name==='luo_agent_reserve_checkout')return{data:intent};if(name==='luo_agent_attach_checkout')return{data:true};return{error:{message:'bad'}}}}:{auth:{signInWithPassword:async()=>({data:{user:{id:'12345678-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}}})}}}
+function clients(log){return (_url,key)=>key===base.LUO_AGENT_STAGING_SERVICE_ROLE_KEY?{rpc:async(name,args)=>{log.push([name,args]);if(name==='luo_agent_reserve_checkout')return{data:intent};if(name==='luo_agent_claim_checkout_once')return{data:{action:'create',claim_token:'88888888-8888-4888-8888-888888888888'}};if(name==='luo_agent_bind_checkout_once')return{data:true};return{error:{message:'bad'}}}}:{auth:{signInWithPassword:async()=>({data:{user:{id:'12345678-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}}})}}}
 test('checkout is off by default and cannot run with live Stripe key or production Vercel',()=>{
  assert.equal(checkoutReady({},'stripe'),false);assert.equal(checkoutReady(base,'stripe'),true);
  assert.equal(checkoutReady({...base,LUO_STRIPE_SECRET_KEY:'sk_live_anything'},'stripe'),false);
@@ -33,7 +33,7 @@ test('Stripe forms use server prices, promotion coupon and a single idempotent a
  const form=new URLSearchParams(events.find(x=>x[0]==='https://api.stripe.com/v1/checkout/sessions')[1].body);
  assert.equal(form.get('line_items[0][price]'),'price_123456789AAAA');assert.equal(form.get('discounts[0][coupon]'),'coupon_10day_starter');
  assert.equal(form.get('client_reference_id'),intent.intent_id);assert.equal(form.get('subscription_data[metadata][luo_agent]'),intent.agent_id);
- assert.deepEqual(events.filter(x=>x[0]==='luo_agent_attach_checkout')[0][1],{p_intent:intent.intent_id,p_reference:'cs_test_abcdefgh1234'});
+ assert.deepEqual(events.filter(x=>x[0]==='luo_agent_bind_checkout_once')[0][1],{p_intent:intent.intent_id,p_reference:'cs_test_abcdefgh1234',p_claim:'88888888-8888-4888-8888-888888888888'});
 });
 test('malicious request or cross-origin never contacts payment provider',async()=>{
  const events=[],handler=createAgentCheckoutHandler({env:base,clientFactory:clients(events),fetcher:async()=>{throw Error('should not fetch')}});
