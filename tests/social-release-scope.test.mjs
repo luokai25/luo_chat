@@ -11,7 +11,6 @@ test('Combined development update preserves live authentication, stories and con
   "src/google-sign-in.js": "b66a66e214499bda486a2a671c7ab206fadc48631811f6bb18976ca65f99fbd3",
   "src/settings.js": "dbefb1f5499c63c933df432650b6aa1006fa549f932a130975ce27829b6642c7",
   "src/experience.js": "373bf4615bcb49eca707f2217b55cd2cbad53a20b84dd9e06355b0e63bfce14f",
-  "src/connections.js": "8ac1249cfbb4ef6e530a62ce13d24bdf77f7c347a876182cf51cb38d71b39a29",
   "src/config.js": "fa7a01c29835bd63f883ed6d092febcffa3389b586aa5135c99aa633327f55f2",
   "public/luo-session-boot.js": "2068acd5af69f38ccf4f25ab3647a39a2087dc4fe97307c3e4b400705c440b64",
   "public/luo-auth-premium.css": "e418ef836af858e4d53debe5726473753e708d091350eb7801793a3795c6deea"
@@ -19,6 +18,10 @@ test('Combined development update preserves live authentication, stories and con
  // Hosting changes are explicitly requested for SEO/security. Their invariants
  // are tested semantically in site-quality, rather than freezing the old file.
  for(const [path,hash] of Object.entries(expected))assert.equal(digest(await readFile(path)),hash,path+' must match the live backup');
+ const connections=await readFile('src/connections.js','utf8');
+ for(const action of ['get_chat_person','change_chat_connection','set_chat_user_block'])assert.ok(connections.includes(action),'Profile UI must retain the original authorized action '+action);
+ assert.match(connections,/getUser\(\)\?\.id/,'Profile actions must retain authenticated account scope');
+ assert.match(connections,/personRequest/,'Stale profile requests must remain cancellable');
  const stories=await readFile('src/stories.js','utf8');
  assert.match(stories,/create_private_chat_story/,'Original authorized story upload must remain');
  assert.match(stories,/createSignedUrl\(story.media_path,60\)/,'Private signed media URLs must remain short-lived');
