@@ -110,6 +110,14 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
    const auth=clientFactory(runtime.url,runtime.publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
    const signed=await auth.auth.signInWithPassword({email:'agent+'+username+'@agents.luo.invalid',password:input.password});
    if(signed.error||!signed.data?.user?.id)return jsonError(res,401,'INVALID_CREDENTIALS');
+   // Never sell a seat which paid login would reject for missing key possession.
+   if(env.LUO_AGENT_REQUIRE_VERIFIED_KEY==='true'){
+    const eligibility=await db.rpc('luo_agent_verified_checkout_eligible',{
+     p_auth_user:signed.data.user.id,p_username:username,p_plan:input.plan
+    });
+    if(eligibility.error)throw Error('VERIFIED_KEY_ELIGIBILITY_UNAVAILABLE');
+    if(eligibility.data!==true)return jsonError(res,409,'VERIFIED_AGENT_IDENTITY_REQUIRED');
+   }
    const quote=quoteAgentPlan(input.plan,{now:now(),promoStart:env.LUO_AGENT_PROMOTIONS_ENABLED==='true'?env.LUO_AGENT_PROMO_START_AT:undefined});
    // A promo checkout is denied if its provider-specific first-invoice contract
    // has not been configured; never silently charge the normal price instead.
