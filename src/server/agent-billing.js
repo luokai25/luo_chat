@@ -130,12 +130,25 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
    }
    if(!intent.data||intent.data.first_invoice_cents!==quote.first_invoice_price*100||intent.data.regular_cents!==quote.monthly_price*100)throw Error('CHECKOUT_PRICE_MISMATCH');
    const i=intent.data;
+   // Durable create-once claim; do not start another payment while an earlier
+   // processor attempt is unresolved (even after provider deduplication expires).
+   const claim=await db.rpc('luo_agent_claim_checkout_once',{p_intent:i.intent_id});
+   if(claim.error||!claim.data?.action)throw Error('CHECKOUT_CLAIM_FAILED');
+   if(claim.data.action==='locked'){
+    res.setHeader('Retry-After','30');
+    return sendJson(res,202,{checkout_locked:true,state:claim.data.state||'creation_or_reconciliation_pending',
+     intent_id:i.intent_id,requires_status_check:true,message:'Existing checkout locked; no new payment was created.'});
+   }
+   if(!['reuse','create'].includes(claim.data.action))throw Error('INVALID_CHECKOUT_CLAIM');
+   const priorReference=claim.data.action==='reuse'?claim.data.reference:null;
+   const claimToken=claim.data.action==='create'?claim.data.claim_token:null;
+   if(priorReference&&i.existing_reference&&priorReference!==i.existing_reference)throw Error('CHECKOUT_REFERENCE_MISMATCH');
    let approval,external;
    if(input.provider==='stripe'){
-    if(i.existing_reference){
-     const session=await fetchJson(fetcher,'https://api.stripe.com/v1/checkout/sessions/'+encodeURIComponent(i.existing_reference),{headers:{Authorization:'Bearer '+env.LUO_STRIPE_SECRET_KEY}});
+    if(priorReference){
+     const session=await fetchJson(fetcher,'https://api.stripe.com/v1/checkout/sessions/'+encodeURIComponent(priorReference),{headers:{Authorization:'Bearer '+env.LUO_STRIPE_SECRET_KEY}});
      if(session.client_reference_id!==i.intent_id||session.status!=='open'||typeof session.url!=='string')throw Error('CHECKOUT_NOT_REUSABLE');
-     approval=session.url;external=i.existing_reference;
+     approval=session.url;external=priorReference;
     }else{
      const form=stripeSessionForm(i,env,expectedOrigin,now());
      const session=await fetchJson(fetcher,'https://api.stripe.com/v1/checkout/sessions',{
@@ -147,10 +160,10 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
     }
    }else{
     const accessToken=await paypalAccessToken(env,fetcher);
-    if(i.existing_reference){
-     const sub=await fetchJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions/'+encodeURIComponent(i.existing_reference),{headers:{Authorization:'Bearer '+accessToken}});
+    if(priorReference){
+     const sub=await fetchJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions/'+encodeURIComponent(priorReference),{headers:{Authorization:'Bearer '+accessToken}});
      if(sub.custom_id!==i.intent_id)throw Error('CHECKOUT_NOT_REUSABLE');
-     approval=sub.links?.find(v=>v.rel==='approve')?.href;external=i.existing_reference;
+     approval=sub.links?.find(v=>v.rel==='approve')?.href;external=priorReference;
     }else{
      const sub=await fetchJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions',{
       method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json','PayPal-Request-Id':i.intent_id},
@@ -161,9 +174,12 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
     }
     if(typeof external!=='string'||!/^I-[A-Za-z0-9]{8,}$/.test(external)||typeof approval!=='string'||!approval.startsWith(paypalMerchantSettings(env).approval))throw Error('PAYPAL_RESPONSE_INVALID');
    }
-   const bound=await db.rpc('luo_agent_attach_checkout',{p_intent:i.intent_id,p_reference:external});
-   if(bound.error||bound.data!==true)throw Error('CHECKOUT_BIND_FAILED');
-   return sendJson(res,201,{provider:input.provider,checkout_url:approval,intent_id:i.intent_id,
+   if(claimToken){
+    const bound=await db.rpc('luo_agent_bind_checkout_once',{
+     p_intent:i.intent_id,p_reference:external,p_claim:claimToken});
+    if(bound.error||bound.data!==true)throw Error('CHECKOUT_BIND_FAILED');
+   }
+   return sendJson(res,claimToken?201:200,{checkout_locked:true,provider:input.provider,checkout_url:approval,intent_id:i.intent_id,
     first_invoice_price_usd:quote.first_invoice_price,renews_monthly_usd:quote.renewal_monthly_price,
     currency:'USD',promotion:quote.offer_active?'first_invoice_only':'none',
     activation:'awaiting_verified_payment',no_success_url_activation:true});
