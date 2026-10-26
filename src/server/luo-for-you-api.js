@@ -90,31 +90,61 @@ export function createRecommendationHandler({mode='feed',env=process.env,clientF
    if(ctxResult.error){if(ctxResult.error.code==='P0001')return failure(res,429,'RATE_LIMITED');throw Error('CONTEXT_RPC_FAILED')}
    const context=ctxResult.data;
    if(!context||!Array.isArray(context.hidden_ids)||!Array.isArray(context.served_ids))throw Error('INVALID_CONTEXT');
-   const sources=[],next={};let hasMore=false;
+   // Cursor frontiers are advanced only after an entire retrieved window
+   // has no remaining eligible candidates. Moving a cursor past unshown
+   // candidates silently drops posts, especially when blending many sources.
    const kinds=kind==='mixed'?['post','clip']:[kind],modes=view==='friends'?['friends']:['friends','public'];
    const plans=kinds.flatMap(type=>modes.map(source=>({kind:type,source,key:type+':'+source})));
-   const responses=await Promise.all(plans.map(async plan=>{
-    const input={kind:plan.kind,mode:plan.source,...(current[plan.key]||{})};
-    const result=await client.rpc('luo_space',{action:'feed',input});
-    if(result.error||!Array.isArray(result.data))throw Error('AUTHORISED_SOCIAL_FEED_UNAVAILABLE');
-    return {plan,rows:result.data};
-   }));
-   for(const {plan,rows} of responses){
-    sources.push({source:plan.source,items:rows});
-    if(rows.length===20){
-     const last=rows.at(-1);
-     if(!UUID.test(last?.id||'')||!Number.isFinite(Date.parse(last?.created_at||'')))throw Error('INVALID_CURSOR_SOURCE');
-     next[plan.key]={id:last.id,time:last.created_at};hasMore=true;
+   let positions={...current},items=[],reasons={},diagnostic={retrieved:0,visible:0,selected:0};
+   let hasMore=false,passes=0;
+   for(;passes<3;passes++){
+    const responses=await Promise.all(plans.map(async plan=>{
+     const input={kind:plan.kind,mode:plan.source,...(positions[plan.key]||{})};
+     const result=await client.rpc('luo_space',{action:'feed',input});
+     if(result.error||!Array.isArray(result.data)||result.data.length>20)
+      throw Error('AUTHORISED_SOCIAL_FEED_UNAVAILABLE');
+     return {plan,rows:result.data};
+    }));
+    const sources=responses.map(({plan,rows})=>({source:plan.source,items:rows}));
+    const ranked=rankLuoFeed({sources,context:{...context,viewer_id:auth.data.user.id},limit:20});
+    ({items,reasons,diagnostic}=ranked);
+    const full=responses.some(({rows})=>rows.length===20);
+    if(items.length){
+     // Replay the SAME authorized source windows on the next request.
+     // Private served history hides only items already returned. Other
+     // candidates retain their chance to be ranked on subsequent pages.
+     hasMore=full||diagnostic.visible>items.length;
+     break;
     }
+    if(!full){hasMore=false;break}
+    // No candidates left in this window. Only now advance each nonempty
+    // source (including sparse sources) to avoid dropping unseen posts.
+    const next={...positions};let moved=false;
+    for(const {plan,rows} of responses){
+     if(!rows.length)continue;
+     const last=rows.at(-1);
+     if(!UUID.test(last?.id||'')||!Number.isFinite(Date.parse(last?.created_at||'')))
+      throw Error('INVALID_CURSOR_SOURCE');
+     const previous=positions[plan.key];
+     if(previous?.before===last.created_at&&previous?.before_id===last.id)
+      throw Error('NON_ADVANCING_FEED_SOURCE');
+     next[plan.key]={before:last.created_at,before_id:last.id};
+     moved=true;
+    }
+    if(!moved)throw Error('FEED_STALLED');
+    positions=next;
+    hasMore=true;
    }
-   const {items,reasons,diagnostic}=rankLuoFeed({sources,context:{...context,viewer_id:auth.data.user.id},limit:20});
+   // If three empty windows were exhausted, return a continuation cursor
+   // instead of spinning or making an unbounded number of RPC calls.
+   if(!items.length&&passes===3)hasMore=true;
    if(items.length){
     const saved=await client.rpc('luo_recommend_mark_served',{p_ids:items.map(i=>i.id)});
     if(saved.error?.code==='P0001')return failure(res,429,'RATE_LIMITED');
     if(saved.error)throw Error('MARK_SERVED_FAILED');
    }
    return sendJson(res,200,{items,why:reasons,has_more:hasMore,
-    cursor:hasMore?encodeCursor(next):null,
+    cursor:hasMore?encodeCursor(positions):null,
     algorithm:LUO_RANKER_VERSION,
     counts:{candidates:diagnostic.retrieved,eligible:diagnostic.visible,returned:items.length}});
   }catch{
