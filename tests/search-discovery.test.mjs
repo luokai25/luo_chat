@@ -20,7 +20,7 @@ test('every in-depth guide provides a distinct, crawlable public page with corre
   assert.ok(html.includes('<meta property="og:image" content="'+MARKETING_ORIGIN+'/icon-512.png">'));
   assert.ok(html.includes(d.heading));
   for(const [heading,copy] of d.topics){assert.ok(html.includes(heading));assert.ok(html.includes(copy));}
-  assert.ok(html.includes('href="/privacy.html"'));
+  assert.ok(html.includes('href="/privacy"'));
   assert.ok(html.includes('href="/en/agents/"'));
   assert.ok(html.includes('not yet activated'));
   assert.ok(!html.includes('<script src='));
@@ -73,4 +73,21 @@ test('IndexNow dry run requires the published ownership key and does not call an
  assert.equal(result.status,'dry-run');
  assert.ok(result.url_count>=20);
  assert.equal(outbound,0);
+});
+
+test('compiled production sitemap retains localized and guide URLs after site-quality enhancement',async()=>{
+ const output=await readFile('dist/sitemap.xml','utf8');
+ assert.match(output,/xmlns:xhtml="http:\/\/www.w3.org\/1999\/xhtml"/);
+ const site=MARKETING_ORIGIN;
+ for(const l of MARKETING_LOCALES){
+  for(const path of ['/'+l+'/','/'+l+'/agents/'])assert.ok(output.includes('<loc>'+site+path+'</loc>'),'Missing live locale '+path);
+ }
+ for(const path of PRODUCT_GUIDE_PATHS)assert.ok(output.includes('<loc>'+site+path+'</loc>'),'Missing product path '+path);
+ for(const path of ['/','/about','/privacy','/contact','/help','/agents','/terms','/cookies']){
+  assert.ok(output.includes('<loc>'+site+path+'</loc>'),'Missing current canonical '+path);
+ }
+ assert.ok(!output.includes('<loc>'+site+'/about.html</loc>'),'Do not index redirected .html canonical');
+ const urls=[...output.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x=>x[1]);
+ assert.equal(new Set(urls).size,urls.length,'Sitemap has duplicate canonical paths');
+ assert.ok(urls.length>=20);
 });

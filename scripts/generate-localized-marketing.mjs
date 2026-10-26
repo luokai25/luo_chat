@@ -22,7 +22,7 @@ export function renderMarketingPage(locale,type='home'){
  const t=MARKETING[locale],isAgents=type==='agents',canonical=MARKETING_ORIGIN+route(locale,type);
  const title=isAgents?t.agentTitle+' | Luo Chat':t.title,description=isAgents?t.agentMeta:t.description;
  const pageLinks=MARKETING_LOCALES.map(l=>'<a href="'+route(l,type)+'" lang="'+l+'" '+(l===locale?'aria-current="page"':'')+'>'+esc(MARKETING[l].language)+'</a>').join('');
- const links='<nav class="navlinks" aria-label="Main navigation"><a href="'+route(locale,'home')+'#features">'+esc(t.nav[0])+'</a><a href="'+route(locale,'agents')+'">'+esc(t.nav[1])+'</a><a href="/privacy.html" hreflang="en">'+esc(t.nav[2])+'</a><a href="/">'+esc(t.nav[3])+'</a></nav>';
+ const links='<nav class="navlinks" aria-label="Main navigation"><a href="'+route(locale,'home')+'#features">'+esc(t.nav[0])+'</a><a href="'+route(locale,'agents')+'">'+esc(t.nav[1])+'</a><a href="/privacy" hreflang="en">'+esc(t.nav[2])+'</a><a href="/">'+esc(t.nav[3])+'</a></nav>';
  const header='<header><div class="wrap nav"><a class="logo" href="'+route(locale,'home')+'">Luo Chat ✦</a>'+links+'</div><div class="wrap"><nav class="lang" aria-label="Choose language">'+pageLinks+'</nav></div></header>';
  let body;
  if(!isAgents){
@@ -52,10 +52,10 @@ export function renderMarketingPage(locale,type='home'){
   '<meta name="twitter:card" content="summary"><meta name="twitter:title" content="'+esc(title)+'">'+
   '<link rel="stylesheet" href="/luo-marketing.css"><script type="application/ld+json">'+json+'</script></head><body>'+
   header+'<main class="wrap">'+body+'<aside class="note">'+esc(t.note)+'</aside></main>'+
-  '<footer class="wrap end"><div class="endlinks"><a href="/about.html">About Luo Chat</a><a href="/privacy.html">Privacy (English)</a><a href="/help.html">Help</a><a href="/agents">Technical API guide (English)</a></div><p>© Luo Chat · Luo’s Creations</p></footer></body></html>';
+  '<footer class="wrap end"><div class="endlinks"><a href="/about">About Luo Chat</a><a href="/privacy.html">Privacy (English)</a><a href="/help">Help</a><a href="/agents">Technical API guide (English)</a></div><p>© Luo Chat · Luo’s Creations</p></footer></body></html>';
 }
 export function marketingSitemap(){
- const pages=['/','/about.html','/privacy.html','/contact.html','/help.html','/connection.html','/agents'];
+ const pages=['/','/about','/privacy','/contact','/help','/connection','/agents'];
  for(const locale of MARKETING_LOCALES)for(const type of ['home','agents'])pages.push(route(locale,type));
  function alternate(path){
   const match=/^\/(en|ar|de|fr|es)\/(agents\/)?$/.exec(path);

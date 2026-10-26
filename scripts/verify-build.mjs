@@ -37,3 +37,11 @@ await import('./check-web-budgets.mjs');
 const connectionChecks=await readFile('dist/connection-checks.js','utf8');
 for(const m of connectionChecks.matchAll(/\/(?:app-[A-Z0-9]+\.js|style-[a-f0-9]+\.css|icon-192-[a-f0-9]+\.png)/g))await access('dist'+m[0]);
 console.log('PASS: connection diagnostic asset URLs point to this build');
+
+const seoMap=await readFile('dist/sitemap.xml','utf8');
+for(const p of ['/en/','/ar/','/de/','/fr/','/es/','/en/chats/','/en/luonix/','/en/worlds/']){
+ assert.ok(seoMap.includes('<loc>https://luo-chat-luokai25.vercel.app'+p+'</loc>'),'Missing canonical URL from production sitemap: '+p);
+}
+assert.ok(seoMap.includes('xmlns:xhtml='),'Production sitemap lost multilingual hreflang mappings');
+assert.ok(!seoMap.includes('<loc>https://luo-chat-luokai25.vercel.app/about.html</loc>'),'Sitemap must avoid redirected URLs');
+console.log('PASS: production sitemap retains localized and product entry points');

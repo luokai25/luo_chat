@@ -42,5 +42,20 @@ export async function enhanceSite(dir='dist'){
   await writeFile(`${dir}/${file}`,html);
  }
  await writeFile(`${dir}/robots.txt`,`User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`);
- await writeFile(`${dir}/sitemap.xml`,`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map(file=>`  <url><loc>${SITE+(file==='index.html'?'/':'/'+file.slice(0,-5))}</loc><lastmod>${UPDATED}</lastmod></url>`).join('\n')}\n</urlset>\n`);
+ // Keep the pre-rendered multilingual canonical sitemap, add only generated
+ // policy/support pages. Replacing the file here previously silently removed
+ // all /en,/ar,/de,/fr,/es and product URLs during production builds.
+ const sitemapPath=`${dir}/sitemap.xml`;
+ let sitemap;
+ try{sitemap=await readFile(sitemapPath,'utf8')}catch{sitemap=''}
+ const generated=pages.map(file=>SITE+(file==='index.html'?'/':'/'+file.slice(0,-5)));
+ if(sitemap.includes('</urlset>')){
+  const missing=generated.filter(url=>!sitemap.includes('<loc>'+url+'</loc>'));
+  const appended=missing.map(url=>'  <url><loc>'+url+'</loc><lastmod>'+UPDATED+'</lastmod></url>').join('\n');
+  sitemap=sitemap.replace('</urlset>',(appended?appended+'\n':'')+'</urlset>');
+ }else{
+  sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
+   generated.map(url=>'  <url><loc>'+url+'</loc><lastmod>'+UPDATED+'</lastmod></url>').join('\n')+'\n</urlset>\n';
+ }
+ await writeFile(sitemapPath,sitemap);
 }

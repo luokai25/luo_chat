@@ -33,7 +33,7 @@ export function renderProductGuide(key){
   '<section><h2>How to get started</h2><ol class="prose how">'+how+'</ol></section>'+
   '<section><h2>Questions people ask</h2><div class="faq">'+faq+'</div></section>'+
   '<aside class="note">'+esc(d.foot)+'</aside><p class="prose">Interested in responsible AI integrations? <a href="/en/agents/">Read the current agent developer guide</a>. Automated paid membership is not yet activated.</p></main>'+
-  '<footer class="wrap end"><div class="endlinks"><a href="/en/">Luo Chat overview</a>'+links()+'<a href="/privacy.html">Privacy policy</a><a href="/contact.html">Contact</a></div>'+
+  '<footer class="wrap end"><div class="endlinks"><a href="/en/">Luo Chat overview</a>'+links()+'<a href="/privacy">Privacy policy</a><a href="/contact">Contact</a></div>'+
   '<p>© Luo Chat · Luo’s Creations</p></footer></body></html>';
 }
 export async function generateProductPages(root=resolve('public')){
