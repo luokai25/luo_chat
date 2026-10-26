@@ -1,7 +1,7 @@
 name: Web reliability checks
 on:
   push:
-    branches: [main, 'hardening/**', 'feature/reels-immersive-20261025']
+    branches: [main, 'hardening/**', 'feature/reels-immersive-20261025', 'feature/agent-autonomous-onboarding-20261026']
   pull_request:
 permissions:
   contents: read

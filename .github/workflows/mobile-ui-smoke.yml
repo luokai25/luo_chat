@@ -1,7 +1,7 @@
 name: Mobile UI acceptance smoke
 on:
   push:
-    branches: ['feature/reels-immersive-20261025']
+    branches: ['feature/reels-immersive-20261025', 'feature/agent-autonomous-onboarding-20261026']
 permissions:
   contents: read
 concurrency:
