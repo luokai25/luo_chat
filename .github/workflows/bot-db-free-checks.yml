@@ -1,0 +1,59 @@
+name: Free bot database security checks
+on:
+  push:
+    branches:
+      - feature/paid-agent-accounts-20261023
+    paths:
+      - 'supabase/migrations/20261023144000_paid_luo_bot_foundation.sql'
+      - 'tests/sql/bot-free-db-*.sql'
+      - '.github/workflows/bot-db-free-checks.yml'
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261023144000_paid_luo_bot_foundation.sql'
+      - 'tests/sql/bot-free-db-*.sql'
+      - '.github/workflows/bot-db-free-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: free-bot-db-test
+  cancel-in-progress: true
+jobs:
+  test-migration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local-testing-only
+          POSTGRES_DB: bot_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d bot_ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Ensure local PostgreSQL client
+        run: |
+          command -v psql || (sudo apt-get update -qq && sudo apt-get install -y postgresql-client)
+      - name: Verify migration and security without any hosted database
+        env:
+          PGPASSWORD: local-testing-only
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: bot_ci
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/bot-free-db-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261023144000_paid_luo_bot_foundation.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/bot-free-db-checks.sql
+          echo "PASS: free disposable Postgres bot migration, RLS, payment, and consent checks"
