@@ -21,6 +21,7 @@ function fakeDb({authBad=false,ctxError=null,socialError=null,age=null}={}){
   if(name==='luo_space')return socialError?{error:{code:socialError}}:{data:args.input.kind==='post'?[post]:[]};
   if(name==='luo_recommend_mark_served')return {data:args.p_ids.length};
   if(name==='luo_recommend_feedback')return {data:true};
+  if(name==='luo_recommend_update_mute')return {data:['cats','spoilers']};
   throw Error('Unexpected rpc '+name)}
  };
  return {db,calls};
@@ -149,4 +150,21 @@ test('empty completed source windows return no cursor instead of repeating place
  assert.deepEqual(out.body.items,[]);
  assert.equal(out.body.has_more,false);
  assert.equal(out.body.cursor,null);
+});
+
+test('muted keywords are viewer-owned and editable without claiming an age or enabling feed',async()=>{
+ const m=fakeDb({age:{age_tier:'unknown',enforced:false,content_filter_applied:false}});
+ const input=req();input.method='POST';input.headers['content-type']='application/json';
+ input.body={action:'add',term:'Spoilers'};
+ const out=res();
+ await createRecommendationHandler({mode:'preferences',env,clientFactory:()=>m.db})(input,out);
+ assert.equal(out.statusCode,200);
+ assert.deepEqual(out.body.muted_terms,['cats','spoilers']);
+ assert.deepEqual(m.calls.find(x=>x[0]==='luo_recommend_update_mute')[1],
+  {p_action:'add',p_term:'Spoilers'});
+ assert.equal(m.calls.some(x=>x[0]==='luo_my_age_safety'),false);
+ const invalid={...input,body:{action:'clear_all',term:'Spoilers'}};
+ const denied=res();
+ await createRecommendationHandler({mode:'preferences',env,clientFactory:()=>m.db})(invalid,denied);
+ assert.equal(denied.statusCode,400);
 });

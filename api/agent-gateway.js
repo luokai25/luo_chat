@@ -18,6 +18,7 @@ const routes=Object.freeze({
  platform:(req,res)=>methodOnlyGet(req,res,agentPlatformInfo()),
  'recommendations/feed':createRecommendationHandler({mode:'feed'}),
  'recommendations/feedback':createRecommendationHandler({mode:'feedback'}),
+ 'recommendations/preferences':createRecommendationHandler({mode:'preferences'}),
  'agents/onboarding':createAgentOnboardingHandler(),
  'agents/services':createAgentServicesHandler(),
  plans:(req,res)=>methodOnlyGet(req,res,{billing_enabled:checkoutReady(process.env,'paypal')||checkoutReady(process.env,'stripe'),plans:publicPlans({

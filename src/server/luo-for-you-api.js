@@ -44,7 +44,7 @@ function safeOrigin(req){
  origin==='https://'+req.headers.host;
 }
 export function createRecommendationHandler({mode='feed',env=process.env,clientFactory=createClient,logger=console}={}){
- if(!['feed','feedback'].includes(mode))throw Error('Unsupported recommendation handler');
+ if(!['feed','feedback','preferences'].includes(mode))throw Error('Unsupported recommendation handler');
  return async(req,res)=>{
   res.setHeader('Cache-Control','no-store');res.setHeader('Vary','Authorization');
   res.setHeader('X-Content-Type-Options','nosniff');
@@ -63,6 +63,24 @@ export function createRecommendationHandler({mode='feed',env=process.env,clientF
    // Verify JWT with Supabase Auth; never trust a browser-provided user id.
    const auth=await client.auth.getUser(token);
    if(auth.error||!UUID.test(auth.data?.user?.id||''))return failure(res,401,'AUTH_REQUIRED');
+   if(mode==='preferences'){
+    // Muted terms belong to this account only. This setting never acts as an
+    // age assertion or overrides backend content visibility restrictions.
+    const body=req.body;
+    if(req.headers?.['content-type']?.split(';')[0]?.trim()!=='application/json'||
+       !body||typeof body!=='object'||Array.isArray(body)||
+       Object.keys(body).sort().join(',')!=='action,term'||
+       !['add','remove'].includes(body.action)||
+       typeof body.term!=='string'||body.term.trim().length<3||body.term.length>80)
+       return failure(res,400,'INVALID_PREFERENCE');
+    const result=await client.rpc('luo_recommend_update_mute',{
+      p_action:body.action,p_term:body.term
+    });
+    if(result.error?.code==='P0001')return failure(res,429,'PREFERENCE_RATE_OR_CAP_REACHED');
+    if(result.error?.code==='22023')return failure(res,400,'INVALID_PREFERENCE');
+    if(result.error||!Array.isArray(result.data))throw Error('PREFERENCE_UPDATE_UNAVAILABLE');
+    return sendJson(res,200,{muted_terms:result.data,updated:true});
+   }
    if(mode==='feedback'){
     const body=req.body;
     if(req.headers?.['content-type']?.split(';')[0]?.trim()!=='application/json'||
