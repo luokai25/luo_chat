@@ -9,6 +9,15 @@
  const safeFocus=el=>{try{el?.focus({preventScroll:true})}catch{el?.focus?.()}};
  const auth=()=>app.dataset.screen==='home'||app.dataset.screen==='room';
  let settingsDepth=false,domObserver=null,settingsObserver=null;
+ // Install the category router before hydration. Native settings may bind its
+ // own onclick later; capture never replaces its validation or save handlers.
+ doc.addEventListener('click',event=>{
+  const item=event.target.closest?.('#settingsNav [data-setting]');
+  if(!item||app.dataset.screen==='auth')return;
+  const root=$('profile');if(!root)return;
+  settingsDepth=true;root.classList.add('luo-settings-v3','luo-settings-deep');
+  root.dataset.luoSection=item.dataset.setting;
+ },true);
  function settings(){
   const root=$('profile'),panels=$('settingsPanels'),nav=$('settingsNav'),search=$('settingsSearch');
   if(!root||!panels||!nav||root.dataset.luoDeepReady)return;
