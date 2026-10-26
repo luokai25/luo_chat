@@ -165,15 +165,13 @@ test('Interactive question reveals a decorated safe answer only after server con
 });
 
 
-test('non-owner can browse community rooms without touching owner-only moderation state',async()=>{
- const h=harness({'feed':[{kind:'community',id:'community-1',owner_id:'different-owner',title:'Dragon Library',body:'Books and dragons'}],'community.rooms':[{id:'room-1',title:'Fantasy readers'}]});
+test('Social Worlds shortcut routes to dedicated Worlds without duplicating community controls',async()=>{
+ const h=harness({'feed':[]});
  h.doc.querySelector('[data-tab="social"]').click();await h.flush();
- [...h.doc.querySelectorAll('.luo-social-chip')].find(b=>b.textContent==='Communities').click();await h.flush();
- const browse=[...h.doc.querySelectorAll('#social button')].find(b=>b.textContent==='Browse rooms');assert.ok(browse);
- browse.click();await h.flush();
- assert.match(h.doc.getElementById('social').textContent,/Fantasy readers/);
- assert.equal(h.doc.querySelector('.luo-community-mod'),null,'owner moderation must not render for visitors');
- assert.equal(h.messages.length,0);
+ const shortcut=[...h.doc.querySelectorAll('.luo-social-chip')].find(b=>b.textContent==='Worlds');assert.ok(shortcut);
+ shortcut.click();await h.flush();
+ assert.equal(h.doc.querySelector('.app').dataset.tab,'group');
+ assert.equal(h.doc.querySelector('.luo-community-mod'),null);
  h.window.close();
 });
 

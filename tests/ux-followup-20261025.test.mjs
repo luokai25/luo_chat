@@ -9,7 +9,7 @@ test('Social entry opens Clips immediately, never defaults to legacy Friends pag
  const s=await readFile('src/social-spaces.js','utf8');
  assert.match(s,/let section='clips'/);
  assert.match(s,/const socialTab=btn\('Social',\(\)=>\{section='clips'/);
- assert.match(s,/feedMode='public'/);
+ assert.match(s,/feedMode='mixed'/);
  const feed=await readFile('src/social-feed.js','utf8');
  assert.match(feed,/\['explore','Explore'\]/);
  assert.match(feed,/\['public','Public'\]/);
