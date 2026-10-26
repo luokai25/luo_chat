@@ -7,6 +7,11 @@ const html=await readFile('public/index.html','utf8');
 const controller=await readFile('public/luo-skeleton-v4.js','utf8');
 const css=await readFile('public/luo-skeleton-v4.css','utf8');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(check,timeout=1200){
+ const end=Date.now()+timeout;
+ while(Date.now()<end){if(check())return;await sleep(20);}
+ assert.ok(check(),'Expected skeleton transition did not appear within the bounded timeout');
+}
 function ready(){
  const dom=new JSDOM(html,{url:'https://luo-chat-luokai25.vercel.app',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,d=w.document,app=d.querySelector('.app');
@@ -40,13 +45,13 @@ test('real request events are versioned, stale completions cannot dismiss a newe
  const x=ready();try{
   const host=x.d.getElementById('chatlist');host.replaceChildren();
   const event=(id,pending)=>x.w.dispatchEvent(new x.w.CustomEvent('luo:loading-state',{detail:{key:'inbox',id,pending}}));
-  event(1,true);await sleep(150);
+  event(1,true);await until(()=>host.querySelector('.sk-chat-row'));
   assert.ok(host.querySelector('.sk-chat-row'));
   event(2,true);event(1,false);
   await sleep(60);
   assert.equal(host.getAttribute('aria-busy'),'true');
   assert.ok(host.querySelector('.sk-chat-row'));
-  event(2,false);await sleep(210);
+  event(2,false);await until(()=>!host.querySelector('.luo-skeleton-stage'));
   assert.equal(host.querySelector('.luo-skeleton-stage'),null);
   assert.equal(host.hasAttribute('aria-busy'),false);
  }finally{x.close()}
