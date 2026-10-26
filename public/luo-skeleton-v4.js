@@ -41,7 +41,8 @@
    };
    case 'profile': return {
     host:$('#personBody'),kind:'profile',count:1,
-    busy:()=>Boolean($('#personDialog[open]'))&&loadingText('#personStatus',/^Loading profile/i)&&!$('#personBody')?.children.length
+    busy:()=>Boolean($('#personDialog[open]'))&&loadingText('#personStatus',/^Loading profile/i)&&
+      !hasVisible($('#personBody'),':scope > :not(.luo-skeleton-stage):not(.luo-skeleton-slow-message)')
    };
    case 'contacts': return {
     host:$('#connectionList'),kind:'chat',count:3,

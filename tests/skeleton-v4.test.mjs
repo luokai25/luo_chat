@@ -233,3 +233,19 @@ test('secondary loaders stop after genuine network failures and do not inherit s
   assert.equal(shared.querySelector('.luo-skeleton-stage'),null);
  }finally{x.close()}
 });
+
+test('profile skeleton does not dismiss itself while the real profile is still loading',async()=>{
+ const x=ready();try{
+  const dialog=add(x.d,'dialog');dialog.id='personDialog';dialog.setAttribute('open','');
+  const status=x.d.createElement('p');status.id='personStatus';status.textContent='Loading profile…';
+  const body=x.d.createElement('div');body.id='personBody';
+  dialog.append(status,body);
+  await until(()=>!!body.querySelector('.sk-profile-card'));
+  await sleep(310);
+  assert.ok(body.querySelector('.sk-profile-card'),'placeholder must not count as real profile data');
+  body.prepend(Object.assign(x.d.createElement('article'),{className:'person-hero'}));
+  status.textContent='';
+  await until(()=>!body.querySelector('.luo-skeleton-stage'));
+  assert.equal(body.hasAttribute('aria-busy'),false);
+ }finally{x.close()}
+});
