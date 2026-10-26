@@ -80,7 +80,7 @@
 .luo-skeleton-v4 .sk-channel-row:nth-child(2) .sk-channel-title{width:55%}
 .luo-skeleton-v4[data-kind="profile"]{padding:0 6px;gap:0}
 .luo-skeleton-v4 .sk-profile-card{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px!important;gap:12px;padding:23px 18px!important;border:1px solid #64503450!important;border-radius:16px!important;background:#1d1920!important}
-.luo-skeleton-v4 .sk-profile-avatar{width:88px;height:88px;flex:0 0 88px}
+.luo-skeleton-v4 .sk-profile-avatar{width:99px;height:99px;flex:0 0 99px}
 .luo-skeleton-v4 .sk-profile-name{height:18px;width:42%}
 .luo-skeleton-v4 .sk-profile-username{height:11px;width:34%;opacity:.55}
 .luo-skeleton-v4 .sk-profile-bio{height:11px;width:77%;margin:7px 0}
@@ -128,7 +128,6 @@
 .luo-skeleton-v4 .sk-search-row:nth-child(2) .sk-primary{width:58%}
 .luo-skeleton-v4 .sk-search-row:nth-child(3) .sk-secondary{width:64%}
 .luo-skeleton-v4[data-kind="profile"] .sk-profile-card{padding-top:23px;min-height:300px}
-.luo-skeleton-v4 .sk-profile-avatar{width:99px;height:99px;flex:0 0 99px}
 .luo-skeleton-v4[data-kind="profile"] .sk-profile-card::before{content:"";position:absolute;inset:0 0 auto;height:145px;background:linear-gradient(140deg,#3f2e2a,#1b1520);opacity:.72;border-radius:16px 16px 0 0;pointer-events:none}
 .luo-skeleton-v4[data-kind="profile"] .sk-profile-card>*{position:relative;z-index:1}
 @media(max-width:350px){

@@ -170,7 +170,7 @@ test('measured CSS matches production rows, cards, media frames and accessibilit
   [/\.sk-post-media\{[^}]*aspect-ratio:4\/5/,'4:5 feed media'],
   [/\.sk-channel-row\{[^}]*min-height:43px/,'43px channel'],
   [/\.sk-world-avatar\{[^}]*width:45px/,'45px Worlds icon'],
-  [/\.sk-profile-avatar\{[^}]*width:88px/,'88px profile avatar'],
+  [/\.sk-profile-avatar\{[^}]*width:99px/,'99px profile avatar'],
   [/\.sk-reel-card\{[^}]*min-height:clamp\(360px,calc\(100dvh - 210px\),760px\)/,'full reel'],
   [/@media\(prefers-reduced-motion:reduce\)/,'reduced motion'],
   [/\.luo-skeleton-stage\.luo-skeleton-v4\[data-kind="status"\]\{order:1/,'my status remains first']
@@ -178,4 +178,39 @@ test('measured CSS matches production rows, cards, media frames and accessibilit
  for(const [regex,label] of checks)assert.match(css,regex,label);
  assert.ok(html.includes('/luo-skeleton-v4.js'));
  assert.ok(html.includes('/luo-skeleton-v4.css'));
+});
+
+test('shared media and global search have genuine request-shaped placeholders, not fake results',async()=>{
+ const x=ready();try{
+  const dialog=x.d.getElementById('sharedDialog');
+  const shared=x.d.getElementById('sharedList');
+  dialog.setAttribute('open','');shared.innerHTML='<div class="empty">Loading shared media…</div>';
+  await until(()=>shared.querySelectorAll('.sk-shared-card').length===4);
+  assert.equal(shared.querySelector('.luo-skeleton-stage')?.dataset.kind,'shared');
+  shared.replaceChildren(Object.assign(x.d.createElement('div'),{className:'shared-item'}));
+  await until(()=>!shared.querySelector('.luo-skeleton-stage'));
+  assert.equal(shared.getAttribute('aria-busy'),null);
+  const search=x.d.getElementById('globalSearchResults');
+  search.textContent='Searching messages…';await until(()=>search.querySelectorAll('.sk-search-row').length===3);
+  assert.equal(search.querySelector('.luo-skeleton-stage')?.dataset.kind,'search');
+  search.replaceChildren(Object.assign(x.d.createElement('article'),{className:'search-result'}));
+  await until(()=>!search.querySelector('.luo-skeleton-stage'));
+  assert.equal(search.querySelectorAll('.search-result').length,1);
+ }finally{x.close()}
+});
+test('loaders for secondary surfaces do not appear on idle, errors, or after signout',async()=>{
+ const x=ready();try{
+  const dialog=x.d.getElementById('sharedDialog');
+  const shared=x.d.getElementById('sharedList');
+  dialog.setAttribute('open','');shared.textContent='No media yet.';
+  const search=x.d.getElementById('globalSearchResults');
+  search.textContent='Nothing found.';
+  await sleep(180);
+  assert.equal(shared.querySelector('.luo-skeleton-stage'),null);
+  assert.equal(search.querySelector('.luo-skeleton-stage'),null);
+  search.textContent='Searching messages…';
+  await until(()=>search.querySelector('.sk-search-row'));
+  x.app.dataset.screen='auth';
+  await until(()=>!search.querySelector('.luo-skeleton-stage'));
+ }finally{x.close()}
 });
