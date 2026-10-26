@@ -17,6 +17,8 @@ function run({loading=true}={}){
  w.HTMLDialogElement.prototype.close=function(){this.open=false};
  w.HTMLMediaElement.prototype.pause=function(){};w.HTMLMediaElement.prototype.load=function(){};
  if(loading)d.getElementById('chatlist').innerHTML='<div class="empty">Loading conversations…</div>';
+ // Updates V2 owns this rail; the fixture supplies its already-mounted destination.
+ const statusRail=d.createElement('div');statusRail.id='luoUpdatesV2Rail';d.getElementById('chats').append(statusRail);
  w.eval(source);
  d.dispatchEvent(new w.Event('DOMContentLoaded'));
  return {dom,w,d,app,close(){w.dispatchEvent(new w.Event('pagehide'));w.close()}};

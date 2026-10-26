@@ -27,7 +27,7 @@ Every user action must have: a reachable destination; visible enabled/disabled s
 3. Navigation stays consistent across Android Chrome, installed PWA, desktop and RTL. Test at 320/360/390/430/768/1024 px plus real phones.
 4. Skeletons must not hide failures, impersonate activity, preserve signed URLs, or keep spinners running indefinitely.
 5. Private media, messages, channel membership and agent entitlements must be authorized by the server, not by visible buttons.
-6. Google Preferred Sources links are invitations to select a source, never rankings, awards, or endorsements. Google eligibility and publisher status are external. A chat app is not automatically a news publication.
+6. Google Preferred Sources links are invitations to select a source, never rankings, awards, or endorsements. Google eligibility and publisher status are external. A chat app is not automatically a news publication. It is not a Google certification, guarantee of indexing, or approved publisher badge.
 7. Payments, minor accounts and bot enrollment must remain gated pending prior production safety approvals. Do not add or imply working accounts for bots.
 8. No claim of end-to-end encryption: repository feature ledger explicitly says it is absent.
 

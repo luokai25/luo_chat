@@ -31,6 +31,14 @@
     if(winSmall())setTimeout(()=>safeFocus(returnBtn),0);
    });
   }
+  // Capture delegated category activation even when future native settings code
+  // replaces individual category buttons during a rerender.
+  nav.addEventListener('click',event=>{
+   const btn=event.target.closest?.('[data-setting]');if(!btn||!nav.contains(btn))return;
+   settingsDepth=true;root.classList.add('luo-settings-deep');
+   root.dataset.luoSection=btn.dataset.setting;
+   returnBtn.dataset.section=btn.querySelector('strong')?.textContent||btn.textContent.trim();
+  },true);
   search.addEventListener('input',()=>{if(search.value.trim())backSettings(false)});
   const edit=$('editProfileShortcut');edit?.addEventListener('click',()=>{
    root.classList.add('luo-settings-deep');root.dataset.luoSection='profile';settingsDepth=true;
@@ -92,6 +100,8 @@
    who.textContent=names.length===0?'Only you':names.length===1?'1 selected account':names.length+' selected accounts';
   }
   $('storyAudience')?.addEventListener('input',updateAudience);
+  form.addEventListener('input',event=>{if(event.target.id==='storyAudience')updateAudience()});
+  form.addEventListener('change',event=>{if(event.target.id==='storyAudience')updateAudience()});
   $('storyCircle')?.addEventListener('change',updateAudience);
   $('storyUseContacts')?.addEventListener('click',()=>{setTimeout(updateAudience,200);setTimeout(updateAudience,900)});
   const publish=$('publishStory'),feedback=$('storyStatus');
