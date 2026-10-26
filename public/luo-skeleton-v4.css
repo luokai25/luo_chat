@@ -111,3 +111,30 @@
  .luo-skeleton-v4[data-kind="world"]{max-width:100%}
  .luo-skeleton-v4[data-kind="post"]{max-width:600px}
 }
+
+/* Skeleton micro-polish: match real secondary surface proportions.
+   No layout changes to actual loaded user content. */
+.luo-skeleton-stage.luo-skeleton-v4{min-inline-size:0;inline-size:min(100%,var(--sk-host-width,100%))}
+.luo-skeleton-v4[data-kind="shared"]{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:10px;align-content:start;padding:2px 0 12px}
+.luo-skeleton-v4 .sk-shared-card{min-width:0;display:grid;gap:8px;align-content:start;overflow:hidden;padding:0 0 11px;border:1px solid #4b3929;border-radius:13px;background:#1c191d}
+.luo-skeleton-v4 .sk-shared-thumb{display:grid;place-items:center;aspect-ratio:4/3;width:100%;background:#292229}
+.luo-skeleton-v4 .sk-shared-glyph{width:32px;height:27px;opacity:.46}
+.luo-skeleton-v4 .sk-shared-title{height:12px;width:76%;margin-inline:11px}
+.luo-skeleton-v4 .sk-shared-caption{height:9px;width:42%;margin-inline:11px;opacity:.48}
+.luo-skeleton-v4[data-kind="search"]{display:grid;gap:0;align-content:start}
+.luo-skeleton-v4 .sk-search-row{min-height:72px;display:flex;align-items:center;gap:12px;padding:12px 9px;border-bottom:1px solid #70533134}
+.luo-skeleton-v4 .sk-search-avatar{width:40px;height:40px;flex:0 0 40px}
+.luo-skeleton-v4 .sk-search-time{width:38px;height:9px;opacity:.42}
+.luo-skeleton-v4 .sk-search-row:nth-child(2) .sk-primary{width:58%}
+.luo-skeleton-v4 .sk-search-row:nth-child(3) .sk-secondary{width:64%}
+.luo-skeleton-v4[data-kind="profile"] .sk-profile-card{padding-top:23px;min-height:300px}
+.luo-skeleton-v4 .sk-profile-avatar{width:99px;height:99px;flex:0 0 99px}
+.luo-skeleton-v4[data-kind="profile"] .sk-profile-card::before{content:"";position:absolute;inset:0 0 auto;height:145px;background:linear-gradient(140deg,#3f2e2a,#1b1520);opacity:.72;border-radius:16px 16px 0 0;pointer-events:none}
+.luo-skeleton-v4[data-kind="profile"] .sk-profile-card>*{position:relative;z-index:1}
+@media(max-width:350px){
+ .luo-skeleton-v4 .sk-chat-row{gap:10px;padding-inline:8px}
+ .luo-skeleton-v4 .sk-chat-row .sk-avatar{width:48px;height:48px;flex-basis:48px}
+ .luo-skeleton-v4 .sk-chat-row .sk-meta{flex-basis:31px}
+ .luo-skeleton-v4 .sk-world-action{width:57px;flex-basis:57px}
+}
+@media(prefers-reduced-motion:reduce){.luo-skeleton-v4 .sk-shared-thumb{animation:none!important}}

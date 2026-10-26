@@ -71,6 +71,20 @@
     busy:()=>app.dataset.tab==='social'&&loadingText('.luo-social-content .luo-social-empty',/^Loading/i)&&
       !hasVisible($('.luo-social-content'),'.luo-social-card')
    };
+   case 'shared': return {
+    host:$('#sharedList'),kind:'shared',count:4,
+    busy:()=>Boolean($('#sharedDialog[open]'))&&!!$('#sharedList')&&
+      !hasVisible($('#sharedList'),'img,video,audio,.shared-item,.shared-media-card')&&
+      (loadingText('#sharedList',/^Loading (shared|media|files|attachments)/i)||
+       $('#sharedList')?.getAttribute('aria-busy')==='true')
+   };
+   case 'search': return {
+    host:$('#globalSearchResults'),kind:'search',count:3,
+    busy:()=>app.dataset.screen==='home'&&
+      !hasVisible($('#globalSearchResults'),'.global-result,.search-result,.chatrow')&&
+      (loadingText('#globalSearchResults',/^(Searching|Loading results)/i)||
+       $('#globalSearchResults')?.getAttribute('aria-busy')==='true')
+   };
    case 'comments': return {
     host:$('.luo-feed-comments[open] .luo-feed-comment-list'),kind:'comment',count:4,
     busy:()=>Boolean($('.luo-feed-comments[open]'))&&
@@ -80,7 +94,7 @@
   }
   return null;
  }
- const keys=['inbox','messages','statuses','status-media','profile','contacts','worlds','channels','feed','social','comments'];
+ const keys=['inbox','messages','statuses','status-media','profile','contacts','worlds','channels','feed','social','comments','shared','search'];
  function chatRow(i){
   const b=make('span','sk-lines',[bar('sk-bar sk-primary'),bar('sk-bar sk-secondary')]);
   const time=make('span','sk-meta',[bar('sk-bar sk-time')]);
@@ -121,6 +135,20 @@
  function profileCard(){
   return make('span','luo-skeleton-tile sk-profile-card',[avatar('sk-avatar sk-profile-avatar'),bar('sk-bar sk-profile-name'),bar('sk-bar sk-profile-username'),bar('sk-bar sk-profile-bio'),make('span','sk-profile-actions',[bar('sk-bar'),bar('sk-bar')])]);
  }
+ function sharedCard(i){
+  return make('span','luo-skeleton-tile sk-shared-card',[
+   make('span','sk-shared-thumb',[bar('sk-bar sk-shared-glyph')]),
+   bar('sk-bar sk-shared-title'),
+   bar('sk-bar sk-shared-caption')
+  ]);
+ }
+ function searchCard(i){
+  return make('span','luo-skeleton-tile sk-search-row',[
+   avatar('sk-avatar sk-search-avatar'),
+   make('span','sk-lines',[bar('sk-bar sk-primary'),bar('sk-bar sk-secondary')]),
+   bar('sk-bar sk-search-time')
+  ]);
+ }
  function commentCard(i){
   return make('span','luo-skeleton-tile sk-comment-row',[avatar('sk-avatar sk-comment-avatar'),make('span','sk-lines',[bar('sk-bar sk-primary'),bar('sk-bar sk-secondary')])]);
  }
@@ -137,6 +165,8 @@
     rule.kind==='channel'?channelCard(i):
     rule.kind==='profile'?profileCard(i):
     rule.kind==='comment'?commentCard(i):
+    rule.kind==='shared'?sharedCard(i):
+    rule.kind==='search'?searchCard(i):
     make('span','luo-skeleton-tile sk-media-placeholder',[bar('sk-bar sk-media-glyph')]);
    stage.append(tile);
   }
@@ -182,7 +212,12 @@
   if(entry.openTimer)return;
   const begin=()=>{entry.openTimer=null;if(stopped||controllers.get(key)!==entry||!loggedIn())return;
    const current=spec(key);if(!current||current.host!==host||!current.busy())return;
-   entry.stage=createStage(key,current);host.append(entry.stage);host.classList.add('luo-skeleton-active');
+   entry.stage=createStage(key,current);
+   // Reserve the measured viewport width, not a guessed phone size.
+   // Avoids horizontal skeleton overflow on compact Android windows.
+   const width=host.getBoundingClientRect?.().width||host.clientWidth||0;
+   if(width>0)entry.stage.style.setProperty('--sk-host-width',Math.round(width)+'px');
+   host.append(entry.stage);host.classList.add('luo-skeleton-active');
    entry.visibleSince=Date.now();
    if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||navigator.connection?.saveData)entry.stage.classList.add('sk-static');
    entry.slowTimer=setTimeout(()=>{
