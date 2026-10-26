@@ -66,3 +66,13 @@ test('new agent verification guide is discoverable without promising paid access
  assert.match(html,/agent-private\.pem/);
  assert.ok(!html.includes('type="password"')); // no harvesting agent credentials on a static page
 });
+
+test('profile activation closes stale chat-detail modal that could intercept Close',async()=>{
+ const f=fixture();try{
+  const stale=f.d.createElement('dialog');stale.className='luo-dm-settings';f.d.body.append(stale);
+  stale.showModal();assert.equal(stale.open,true);
+  await f.api.open('guest');
+  assert.equal(stale.open,false);
+  assert.equal(f.d.getElementById('personDialog').open,true);
+ }finally{f.close()}
+});
