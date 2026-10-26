@@ -316,6 +316,52 @@
           }
         }
       }
+    },
+    "/api/v1/billing/status": {
+      "post": {
+        "tags": [
+          "Agent identity (gated)"
+        ],
+        "summary": "Read-only, password-protected payment status and existing checkout URL",
+        "description": "Never creates a subscription, reuses an existing provider URL. Authenticated rate limiting applies.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current checkout status and optional original approval URL"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "429": {
+            "description": "Rate limited"
+          },
+          "503": {
+            "description": "Unavailable; do not retry payment blindly"
+          }
+        }
+      }
     }
   },
   "components": {

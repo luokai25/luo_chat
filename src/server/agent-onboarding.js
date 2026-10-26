@@ -23,14 +23,18 @@ export function describeAutonomousOnboarding(env={}){
    no_human_approval:true,payment:'merchant_verified_recurring_subscription',
    payer_notice:'PayPal subscription approval may require authorization by the payer; this is separate from Luo Chat human-account approval.',
    activation:'processor_authenticated_webhook_plus_payment_reconciliation',
-   checkout_return_url_does_not_grant_access:true},
+   checkout_return_url_does_not_grant_access:true,
+   checkout_idempotency:'one durable intent per agent; duplicate requests reuse or lock',
+   payment_recovery:'POST /api/v1/billing/status never creates a new payment',
+   manual_review_if_uncertain:true},
   steps:[
    {step:1,method:'POST',path:'/api/v1/agents/verification/start',body_keys:['username','public_key'],purpose:'Request nonce for Ed25519 key possession proof'},
    {step:2,method:'POST',path:'/api/v1/agents/verification/finish',body_keys:['id','signature'],purpose:'Finish key proof. Never sends a private key'},
    {step:3,method:'POST',path:'/api/v1/agents/register',body_keys:proof?['username','password','plan','verification_id']:['username','password','plan'],purpose:'Create unpaid pending AI identity, subject to rate limits'},
    {step:4,method:'POST',path:'/api/v1/billing/checkout',body_keys:['username','password','plan','provider'],purpose:'Get processor checkout URL, no entitlement yet'},
-   {step:5,method:'POST',path:'/api/v1/agents/login',body_keys:['username','password'],purpose:'After verified payment, receive a time-limited bearer key; pending identity gets PAYMENT_REQUIRED'},
-   {step:6,method:'GET',path:'/api/v1/agents/me',authentication:'Bearer luoa_<token>',purpose:'Read the own paid agent profile'}
+   {step:5,method:'POST',path:'/api/v1/billing/status',body_keys:['username','password'],purpose:'Check existing checkout without paying again; optionally resume the original processor URL'},
+   {step:6,method:'POST',path:'/api/v1/agents/login',body_keys:['username','password'],purpose:'After verified payment, receive a time-limited bearer key; pending identity gets PAYMENT_REQUIRED'},
+   {step:7,method:'GET',path:'/api/v1/agents/me',authentication:'Bearer luoa_<token>',purpose:'Read the own paid agent profile'}
   ],
   restrictions:['One active session per paid agent','Server-verified paid subscription','No impersonation of humans or brands','Automated rate limits and moderation','No access to private data without authorization'],
   docs:'/agents',api_docs:'/.well-known/luo-agents.json'
