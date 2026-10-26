@@ -40,3 +40,13 @@ test('rejects unbounded candidate sources without relying on caller input',()=>{
  assert.throws(()=>normalizeSources([{source:'public',items:Array(26).fill(base(1))}]),/INVALID_SOURCE/);
  assert.throws(()=>normalizeSources(Array(9).fill({source:'public',items:[]})),/INVALID_SOURCES/);
 });
+
+test('For You feed surfaces public discoveries without letting one friend source crowd them out',()=>{
+ const friends=Array.from({length:12},(_,i)=>base(i+1,{audience:'friends',reactions:500,owner_id:uuid(i+100)}));
+ const publicPosts=Array.from({length:10},(_,i)=>base(i+50,{audience:'public',reactions:1,owner_id:uuid(i+200)}));
+ const {items,reasons}=rankLuoFeed({sources:[{source:'friends',items:friends},{source:'public',items:publicPosts}],limit:16});
+ assert.equal(items.length,16);
+ assert.ok(items.filter(x=>publicPosts.some(p=>p.id===x.id)).length>=4);
+ assert.ok(Object.keys(reasons).length===16);
+ assert.ok(Object.values(reasons).every(v=>['From your friends','Public discovery'].includes(v)));
+});

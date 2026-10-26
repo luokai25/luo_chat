@@ -106,12 +106,13 @@ export function createRecommendationHandler({mode='feed',env=process.env,clientF
      next[plan.key]={id:last.id,time:last.created_at};hasMore=true;
     }
    }
-   const {items,diagnostic}=rankLuoFeed({sources,context,limit:20});
+   const {items,reasons,diagnostic}=rankLuoFeed({sources,context,limit:20});
    if(items.length){
     const saved=await client.rpc('luo_recommend_mark_served',{p_ids:items.map(i=>i.id)});
+    if(saved.error?.code==='P0001')return failure(res,429,'RATE_LIMITED');
     if(saved.error)throw Error('MARK_SERVED_FAILED');
    }
-   return sendJson(res,200,{items,has_more:hasMore,
+   return sendJson(res,200,{items,why:reasons,has_more:hasMore,
     cursor:hasMore?encodeCursor(next):null,
     algorithm:LUO_RANKER_VERSION,
     counts:{candidates:diagnostic.retrieved,eligible:diagnostic.visible,returned:items.length}});

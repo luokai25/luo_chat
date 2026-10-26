@@ -74,18 +74,32 @@ export function rankLuoFeed({sources,context={},limit=20,now=Date.now()}={}){
  // Diversified greedy top-K selection: a repeated author pays a growing penalty;
  // two posts from any author is the page cap.
  const pool=candidates.map(({item,source})=>({item,source,score:score(item,ctx)+(source==='friends'?0.14:source==='following'?0.10:0)}));
- const selected=[],counts=new Map();
+ const selected=[],reasons={},counts=new Map();
+ // Bounded out-of-network exploration: no less than one eligible public post in
+ // each four slots, when both source families exist and the feed is big enough.
+ const eligiblePublic=pool.filter(x=>x.source==='public').length;
+ const eligibleFriends=pool.some(x=>x.source==='friends'||x.source==='following');
+ const publicTarget=eligibleFriends&&size>=4?Math.min(eligiblePublic,Math.floor(size/4)):0;
+ let publicUsed=0;
  while(selected.length<size&&pool.length){
   pool.sort((a,b)=>{
    const pa=a.score-(counts.get(authorId(a.item))||0)*0.31;
    const pb=b.score-(counts.get(authorId(b.item))||0)*0.31;
    return pb-pa||String(b.item.created_at).localeCompare(String(a.item.created_at))||String(a.item.id).localeCompare(String(b.item.id));
   });
-  const i=pool.findIndex(x=>(counts.get(authorId(x.item))||0)<2);
+  const eligible=x=>(counts.get(authorId(x.item))||0)<2;
+  const slotsLeft=size-selected.length,needPublic=publicTarget-publicUsed;
+  const due=needPublic>0&&(selected.length+1)%4===0;
+  let i=due||slotsLeft<=needPublic?pool.findIndex(x=>x.source==='public'&&eligible(x)):-1;
+  if(i<0)i=pool.findIndex(eligible);
   if(i<0)break;
   const [best]=pool.splice(i,1),author=authorId(best.item);
+  if(best.source==='public')publicUsed++;
   counts.set(author,(counts.get(author)||0)+1);selected.push(best.item);
+  reasons[best.item.id]=best.source==='friends'?'From your friends':
+   best.source==='following'?'From a creator you follow':
+   'Public discovery';
  }
  diagnostic.selected=selected.length;
- return {items:selected,diagnostic,version:LUO_RANKER_VERSION};
+ return {items:selected,reasons,diagnostic,version:LUO_RANKER_VERSION};
 }
