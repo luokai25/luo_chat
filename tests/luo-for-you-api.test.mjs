@@ -92,3 +92,10 @@ test('personalized feed fails closed when verified age/label filtering has not b
   assert.equal(m.calls.some(x=>x[0]==='luo_space'),false);
  }
 });
+
+test('under-18 feed requires backend-confirmed guardian approval in addition to content labels',async()=>{
+ const out=res(),m=fakeDb({age:{age_tier:'15-17',enforced:true,content_filter_applied:true,guardian_approved:false}});
+ await createRecommendationHandler({env,clientFactory:()=>m.db})(req(),out);
+ assert.equal(out.statusCode,503);assert.equal(out.body.error.code,'AGE_SAFETY_NOT_READY');
+ assert.equal(m.calls.some(x=>x[0]==='luo_space'),false);
+});

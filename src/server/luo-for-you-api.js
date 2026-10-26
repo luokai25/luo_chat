@@ -79,7 +79,8 @@ export function createRecommendationHandler({mode='feed',env=process.env,clientF
    // candidate by the authorization layer before we enable personalized feeds.
    const safety=await client.rpc('luo_my_age_safety');
    if(safety.error||safety.data?.enforced!==true||safety.data?.content_filter_applied!==true||
-    !['12','13-14','15-17','18+'].includes(safety.data?.age_tier))
+    !['12','13-14','15-17','18+'].includes(safety.data?.age_tier)||
+    (safety.data?.age_tier!=='18+'&&safety.data?.guardian_approved!==true))
     return failure(res,503,'AGE_SAFETY_NOT_READY');
    const view=req.query?.view??'for_you',kind=req.query?.kind??'mixed';
    if(!['for_you','friends'].includes(view)||!['mixed','post','clip'].includes(kind))return failure(res,400,'INVALID_FEED_QUERY');
