@@ -88,3 +88,10 @@
 .worlds-thread-compose textarea{width:100%;min-width:0;flex:1;resize:vertical;max-height:160px;min-height:46px;border:1px solid #745935;border-radius:9px;background:#141216;color:#f4eadb;padding:10px;font:inherit}
 .worlds-thread-compose button{align-self:end}
 @media(max-width:540px){.worlds-thread-toolbar{flex-wrap:wrap}.worlds-thread-compose{flex-wrap:wrap}.worlds-thread-compose button{width:100%}.worlds-thread-history{padding:8px}}
+
+/* Ordinary group conversations live in Worlds, outside the direct-message inbox. */
+.worlds-groups{flex:none;border-bottom:1px solid #5a462c52;padding-bottom:12px;display:grid;gap:5px;max-height:210px;overflow:auto}
+.worlds-group-chat,.worlds-group-create{font-size:12px;border:0;border-radius:8px;color:#d9bd84;text-align:left;padding:9px;background:#30271e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:42px}
+.worlds-group-create{border:1px dashed #a58351;background:#201c1b}
+.worlds-group-chat:hover{background:#43311f}
+@media(max-width:680px){.worlds-groups{max-height:148px}.worlds-group-chat{font-size:10px}}

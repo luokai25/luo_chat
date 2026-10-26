@@ -63,8 +63,9 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
   const comment=button('Comments',()=>openComments(item,()=>{comments++;updateCount(comment,comments,'Comments')}),'luo-feed-icon','comment');updateCount(comment,comments,'Comments');
   const save=button('Save',async b=>{const next=!saved;await rpc('response',{id:item.id,kind:'save',body:next?'saved':'',operation:win.crypto.randomUUID()});if(!valid())return;saved=next;b.setAttribute('aria-pressed',String(saved));b.setAttribute('aria-label',saved?'Unsave':'Save');b.title=saved?'Unsave':'Save'},'luo-feed-icon','save');save.setAttribute('aria-pressed',String(saved));
   actions.append(love,comment,save);
+  const share=button(item.kind==='clip'?'Share Luonix':'Share post',()=>openShare(item),'luo-feed-icon','arrow');share.querySelector('path').setAttribute('d','m22 2-7 20-4-9-9-4 20-7Zm0 0L11 13');actions.append(share);
   if(item.kind==='clip'){
-   const share=button('Share clip',()=>openShare(item),'luo-feed-icon','arrow');share.querySelector('path').setAttribute('d','m22 2-7 20-4-9-9-4 20-7Zm0 0L11 13');actions.append(share,button('More options',()=>openOptions(item),'luo-feed-icon','more'));
+   actions.append(button('More options',()=>openOptions(item),'luo-feed-icon','more'));
    content.append(el('p','luo-reels-audio','♫ Original audio · @'+(author.username||'creator')));
   }
   footer.append(actions,content);
@@ -132,9 +133,23 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  }
  function clipLink(item){const url=new URL(win.location.href);url.search='';url.hash='luo-clip='+encodeURIComponent(item.id);return url.href}
  async function openShare(item){
-  if(extras&&await extras.ready())return extras.share(item);
-  openSheet('Share clip');const explanation=el('p','luo-feed-feedback','The recipient still needs permission to view this clip. Signed media URLs are never shared.');
+  if(item.kind==='clip'&&extras&&await extras.ready())return extras.share(item);
+  openSheet(item.kind==='clip'?'Share Luonix':'Share post');const explanation=el('p','luo-feed-feedback','Only recipients authorized to view this post can open it. Private signed media URLs are never shared.');
   sheet.append(explanation,button('Copy link',async()=>{await win.navigator.clipboard.writeText(clipLink(item));if(valid()&&sheet.open)explanation.textContent='Link copied.'},'luo-sheet-action'));
+  const recipients=el('div','luo-reel-recipient-list');
+  for(const c of (getChats()||[]).filter(c=>c.kind==='direct').slice(0,100)){
+   const label=c.person?.display_name||c.person?.username||'Direct message',row=el('div','luo-reel-recipient');let operation=null;
+   row.append(el('span','',label),button('Send',async b=>{
+    operation??=win.crypto.randomUUID();
+    if(item.audience==='private')throw Error('Only you can see this post. Change its audience before sharing.');
+    const message=(item.kind==='clip'?'Luo Clip':'Luo Post')+'\n'+item.id;
+    const r=await db.rpc('send_chat_message_idempotent',{target_conversation_id:c.id,operation_id:operation,message_body:message,message_kind:'text',reply_to_message_id:null});
+    if(r.error)throw Error(r.error.message);
+    if(valid()&&sheet.open){b.disabled=true;b.textContent='Sent';explanation.textContent='Sent. Each recipient must still have permission to view the original post.'}
+   },'luo-reel-send'));recipients.append(row);
+  }
+  if(recipients.children.length)sheet.append(recipients);
+
   if(win.navigator.share)sheet.append(button('Share with another app',async()=>{try{await win.navigator.share({title:'Luo Clip',url:clipLink(item)})}catch(e){if(e.name!=='AbortError')throw e}},'luo-sheet-action'));
   sheet.showModal();
  }

@@ -2,7 +2,7 @@ import {mountCommunityModeration} from './community-moderation.js';
 
 // Worlds is a presentation over existing authorization-aware luo_space actions.
 // It deliberately does not invent roles, presence, voice transport or server counts.
-export function installWorlds({win,db,$,getUser,note,openRoom,refreshChats}) {
+export function installWorlds({win,db,$,getUser,note,openRoom,refreshChats,getChats=()=>[]}) {
  const doc=win.document,host=$('group');
  if(!host)return {onTab(){},signedOut(){}};
  const old=[...host.children],legacy=doc.createElement('div');legacy.hidden=true;legacy.setAttribute('aria-hidden','true');legacy.className='worlds-legacy-group-creation';
@@ -15,11 +15,11 @@ export function installWorlds({win,db,$,getUser,note,openRoom,refreshChats}) {
  const create=btn('＋ Create world',()=>openCreate(),'worlds-create');
  const refresh=btn('↻','', 'worlds-refresh');refresh.onclick=()=>reload();
  const search=make('input','worlds-search');search.type='search';search.placeholder='Find a world';search.setAttribute('aria-label','Search worlds');
- const servers=make('div','worlds-servers'),channelHeading=make('div','worlds-channel-heading'),channels=make('div','worlds-channels');
+ const servers=make('div','worlds-servers'),groupShelf=make('div','worlds-groups'),channelHeading=make('div','worlds-channel-heading'),channels=make('div','worlds-channels');
  const content=make('div','worlds-content'),status=make('p','worlds-status');status.setAttribute('role','status');
  const explorer=make('div','worlds-explorer'),members=make('aside','worlds-members');
  const nav=make('div','worlds-head-actions');nav.append(create,refresh);
- sidebar.append(header,nav,search,servers,channelHeading,channels);
+ sidebar.append(header,nav,search,groupShelf,servers,channelHeading,channels);
  const titleBar=make('header','worlds-titlebar');titleBar.append(make('span','worlds-title-icon','✦'),make('strong','','Discover Worlds'),make('small','','Secure shared spaces'));
  main.append(titleBar,status,content);
  const banner=make('div','worlds-rail-logo','W');banner.setAttribute('aria-label','Worlds home');banner.tabIndex=0;
@@ -36,6 +36,12 @@ export function installWorlds({win,db,$,getUser,note,openRoom,refreshChats}) {
  function initials(w){return label(w).trim().slice(0,2).toUpperCase()}
  function empty(text){return make('p','worlds-empty',text)}
  function setViewTitle(title,detail=''){titleBar.replaceChildren(make('span','worlds-title-icon','#'),make('strong','',title),make('small','',detail))}
+ function renderGroups(){
+  groupShelf.replaceChildren(make('div','worlds-category','GROUP MESSAGES'));
+  const groupChats=(getChats()||[]).filter(x=>x.kind==='group');
+  for(const chat of groupChats){const title=chat.title||'Group chat',item=btn('▦ '+title,()=>openRoom?.(chat.id),'worlds-group-chat');item.title='Open '+title+' in Worlds';groupShelf.append(item)}
+  groupShelf.append(btn('＋ New group',openGroupCreate,'worlds-group-create'));
+ }
  function worldButtons(){
   explorer.replaceChildren();
   for(const w of worlds){const item=btn(initials(w),()=>selectWorld(w.id),'worlds-rail-item');item.title=label(w);item.setAttribute('aria-label','Open '+label(w));item.setAttribute('aria-pressed',String(selected===w.id));explorer.append(item)}
@@ -52,7 +58,7 @@ export function installWorlds({win,db,$,getUser,note,openRoom,refreshChats}) {
   if(!servers.children.length)servers.append(empty(q?'No matching worlds.':'No worlds available yet.'));
  }
  function render(){
-  worldButtons();renderList();
+  renderGroups();worldButtons();renderList();
   const world=current();channels.replaceChildren();content.replaceChildren();members.replaceChildren();
   if(!world){
    channelHeading.textContent='EXPLORE';
@@ -153,6 +159,17 @@ export function installWorlds({win,db,$,getUser,note,openRoom,refreshChats}) {
   shade.addEventListener('click',e=>{if(e.target===shade)closeModal()});const first=Object.values(values)[0];first?.focus();
  }
  function openCreate(){dialog('Create a World','A shared universe with separate channels and approval controls. Human and agent members follow the same server-side rules.',[{key:'title',title:'World name',required:true,max:160,placeholder:'Golden Library'},{key:'description',title:'Description',kind:'textarea',max:2000,placeholder:'What is this world for?'},{key:'audience',title:'Visibility',kind:'select',options:[['public','Discoverable'],['friends','Private / friends']]}],'Create World',async v=>{if(!v.title)throw Error('Name your world.');const id=win.crypto.randomUUID();await call('entry.create',{id,kind:'community',title:v.title,body:v.description,audience:v.audience});await call('entry.publish',{id,media:[]});selected=id;})}
+ function openGroupCreate(){
+  dialog('New group conversation','Group messages are now organized under Worlds instead of cluttering your direct-message inbox.',[{key:'title',title:'Group name',max:100,required:true,placeholder:'The Explorers'},{key:'members',title:'Member usernames',kind:'textarea',max:1500,placeholder:'friend_one, friend_two'}],'Create group',async v=>{
+   const usernames=[...new Set(v.members.split(/[\\n,;]+/).map(x=>x.trim().replace(/^@/,'').toLowerCase()).filter(Boolean))];
+   if(!v.title||v.title.length>100)throw Error('A group name up to 100 characters is required.');
+   if(usernames.some(name=>!/^[a-z0-9_]{3,24}$/.test(name)))throw Error('Member usernames must contain 3–24 lowercase letters, numbers or underscores.');
+   const r=await db.rpc('create_group_chat',{group_title:v.title,member_usernames:usernames});if(r.error)throw Error(r.error.message);
+   await refreshChats?.();
+   const created=typeof r.data==='string'?r.data:r.data?.id||r.data?.conversation_id;
+   if(created)await openRoom?.(created);
+  });
+ }
  function openChannelCreate(){const world=current();if(!world||world.owner_id!==getUser()?.id)return;dialog('Create a text channel','A real membership-controlled discussion channel, backed by Luo Chat rooms.',[{key:'title',title:'Channel name',required:true,max:100,placeholder:'general'}],'Create channel',async v=>{if(!v.title)throw Error('Name your channel.');await call('community.room.create',{id:world.id,title:v.title});selected=world.id;})}
  search.addEventListener('input',renderList);
  doc.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal)closeModal()});
