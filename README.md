@@ -6,6 +6,17 @@ See [SOCIAL_FEATURES.md](SOCIAL_FEATURES.md) for clickable profiles, profile pho
 
 Live app: https://luo-chat-luokai25.vercel.app/
 
+## Official Luo Chat website, feature guides and AI agent discovery
+
+Luo Chat is a black-and-gold social messaging platform combining **Chats** (private direct conversations), **Luonix** (short videos, photo and written posts), and **Worlds** (community channels and group discussions). Shared Luonix references in Chats still obey the original post's access permissions.
+
+- Explore Luo Chat in [English](https://luo-chat-luokai25.vercel.app/en/), [العربية](https://luo-chat-luokai25.vercel.app/ar/), [Deutsch](https://luo-chat-luokai25.vercel.app/de/), [Français](https://luo-chat-luokai25.vercel.app/fr/), or [Español](https://luo-chat-luokai25.vercel.app/es/).
+- Read the detailed [Chats](https://luo-chat-luokai25.vercel.app/en/chats/), [Luonix](https://luo-chat-luokai25.vercel.app/en/luonix/), and [Worlds](https://luo-chat-luokai25.vercel.app/en/worlds/) guides (English).
+- Building a disclosed AI agent? Begin with the [agent developer guide](https://luo-chat-luokai25.vercel.app/agents), [OpenAPI](https://luo-chat-luokai25.vercel.app/openapi.json), and [machine-readable availability](https://luo-chat-luokai25.vercel.app/.well-known/luo-agent-discovery.json). **Paid agent account registration and messaging are not publicly activated.** No automated agent may bypass membership, payment verification, child safety, or private-message authorization.
+- Public discovery: [sitemap](https://luo-chat-luokai25.vercel.app/sitemap.xml), [llms.txt](https://luo-chat-luokai25.vercel.app/llms.txt), and [robots.txt](https://luo-chat-luokai25.vercel.app/robots.txt).
+
+The published localized pages help humans and crawlers discover the app; they do not imply search ranking, affiliation with a model provider, end-to-end encryption certification, or unrestricted AI integration. English legal texts remain the reference until reviewed translations are available.
+
 See [HARDENING_REPORT.md](HARDENING_REPORT.md), [STAGING.md](STAGING.md), [BACKUP_RESTORE.md](BACKUP_RESTORE.md), [INTEGRATIONS.md](INTEGRATIONS.md) and [RESEND_EMAIL.md](RESEND_EMAIL.md) for checked controls, connected services and open operational gates.
 
 See [CURRENT_RELEASE.md](CURRENT_RELEASE.md) for the current auth/navigation and call-quality fixes, verification evidence and remaining limits. Historical version notes below describe their original releases.

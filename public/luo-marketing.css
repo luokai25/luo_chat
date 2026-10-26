@@ -6,3 +6,9 @@ a{color:inherit}a:focus-visible,button:focus-visible{outline:3px solid var(--gol
 [dir=rtl] .hero h1{letter-spacing:0}[dir=rtl] .note{border-inline-start:3px solid var(--gold);border-radius:12px 0 0 12px}[dir=rtl] h1,[dir=rtl] h2,[dir=rtl] h3{letter-spacing:0}
 @media(max-width:740px){.cards,.faq{grid-template-columns:1fr}.hero{padding-top:43px}.nav{gap:8px}.navlinks{gap:10px}.wrap{width:min(100% - 28px,1100px)}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+/* Discovery links and on-page location cues stay keyboard accessible. */
+.feature-detail{margin:16px 0 0!important;font-size:13px}
+.feature-detail a{color:#f4d99f;text-decoration:underline;text-underline-offset:3px}
+.page-breadcrumb{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding-top:24px;font-size:12px;color:#cbbba1}
+.page-breadcrumb a{color:#e8c482;text-decoration:underline;text-underline-offset:3px}
+.page-breadcrumb [aria-current=page]{color:#f5e1bc}

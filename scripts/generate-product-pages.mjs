@@ -15,7 +15,8 @@ export function renderProductGuide(key){
  const how=d.how.map(x=>'<li>'+esc(x)+'</li>').join('');
  const schema=JSON.stringify({'@context':'https://schema.org','@graph':[
   {'@type':'WebPage',url:uri,name:d.title,description:d.description,inLanguage:'en',isPartOf:{'@id':MARKETING_ORIGIN+'/#website'}},
-  {'@type':'SoftwareApplication',name:'Luo Chat',applicationCategory:'CommunicationApplication',operatingSystem:'Web',url:MARKETING_ORIGIN+'/'}
+  {'@type':'SoftwareApplication',name:'Luo Chat',applicationCategory:'CommunicationApplication',operatingSystem:'Web',url:MARKETING_ORIGIN+'/'},
+  {'@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Luo Chat',item:MARKETING_ORIGIN+'/en/'},{'@type':'ListItem',position:2,name:d.title,item:uri}]}
  ]}).replace(/</g,'\\u003c');
  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
   '<meta name="theme-color" content="#0a090c"><meta name="robots" content="index,follow,max-image-preview:large"><title>'+esc(d.title)+'</title>'+
@@ -23,11 +24,11 @@ export function renderProductGuide(key){
   '<meta property="og:type" content="website"><meta property="og:site_name" content="Luo Chat"><meta property="og:title" content="'+esc(d.title)+'">'+
   '<meta property="og:description" content="'+esc(d.description)+'"><meta property="og:url" content="'+uri+'">'+
   '<meta property="og:image" content="'+MARKETING_ORIGIN+'/icon-512.png"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512">'+
-  '<meta name="twitter:card" content="summary"><meta name="twitter:title" content="'+esc(d.title)+'">'+
+  '<meta name="twitter:card" content="summary"><meta name="twitter:title" content="'+esc(d.title)+'"><meta name="twitter:description" content="'+esc(d.description)+'">'+
   '<link rel="stylesheet" href="/luo-marketing.css"><script type="application/ld+json">'+schema+'</script></head><body>'+
   '<header><div class="wrap nav"><a class="logo" href="/en/">Luo Chat ✦</a><nav class="navlinks" aria-label="Explore Luo Chat">'+links()+
   '<a href="/en/agents/">AI agents</a><a href="/">Open app</a></nav></div></header>'+
-  '<main class="wrap"><section class="hero"><p class="eyebrow">'+esc(d.eyebrow)+'</p><h1>'+esc(d.heading)+'</h1><p class="lead">'+esc(d.lead)+'</p>'+
+  '<main class="wrap"><nav class="page-breadcrumb" aria-label="Breadcrumb"><a href="/en/">Luo Chat</a><span aria-hidden="true"> / </span><span aria-current="page">'+esc(key.charAt(0).toUpperCase()+key.slice(1))+'</span></nav><section class="hero"><p class="eyebrow">'+esc(d.eyebrow)+'</p><h1>'+esc(d.heading)+'</h1><p class="lead">'+esc(d.lead)+'</p>'+
   '<div class="actions"><a class="primary" href="/">Open Luo Chat</a><a href="/en/">Back to overview</a></div></section>'+
   '<section><h2>What this part of Luo Chat does</h2><div class="cards">'+topics+'</div></section>'+
   '<section><h2>How to get started</h2><ol class="prose how">'+how+'</ol></section>'+

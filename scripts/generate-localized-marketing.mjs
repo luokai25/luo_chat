@@ -26,7 +26,8 @@ export function renderMarketingPage(locale,type='home'){
  const header='<header><div class="wrap nav"><a class="logo" href="'+route(locale,'home')+'">Luo Chat ✦</a>'+links+'</div><div class="wrap"><nav class="lang" aria-label="Choose language">'+pageLinks+'</nav></div></header>';
  let body;
  if(!isAgents){
-  const features=t.features.map(([name,copy],i)=>'<article class="card"><h3>'+esc(name)+'</h3><p>'+esc(copy)+'</p>'+(locale==='en'?'<p><a href="/en/'+['chats','luonix','worlds'][i]+'/">Read the detailed guide</a></p>':'')+'</article>').join('');
+  const featureLinkLabel={en:'Read the detailed guide',ar:'اقرأ الدليل المفصل (بالإنجليزية)',de:'Ausführlicher Leitfaden (Englisch)',fr:'Guide détaillé (en anglais)',es:'Guía detallada (en inglés)'};
+  const features=t.features.map(([name,copy],i)=>'<article class="card"><h3>'+esc(name)+'</h3><p>'+esc(copy)+'</p><p class="feature-detail"><a href="/en/'+['chats','luonix','worlds'][i]+'/" hreflang="en">'+esc(featureLinkLabel[locale])+'</a></p></article>').join('');
   const questions=t.faqs.map(([q,a])=>'<article><h3>'+esc(q)+'</h3><p>'+esc(a)+'</p></article>').join('');
   body='<section class="hero"><p class="eyebrow">'+esc(t.eyebrow)+'</p><h1>'+esc(t.heading)+'</h1><p class="lead">'+esc(t.lead)+'</p><div class="actions"><a class="primary" href="/">'+esc(t.actions[0])+'</a><a href="'+route(locale,'agents')+'">'+esc(t.actions[1])+'</a></div></section>'+
    '<section id="features"><h2>'+esc(t.featureHeading)+'</h2><div class="cards">'+features+'</div></section>'+
