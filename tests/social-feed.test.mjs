@@ -104,7 +104,7 @@ test('comment pagination uses server UUID cursor and deduplicates repeated rows'
 });
 test('share links contain only the entry ID, never signed media URLs',async()=>{
  let copied;const h=setup({clipsOnly:true,rpc:async()=>({data:clipRows(1)})});Object.defineProperty(h.w.navigator,'clipboard',{value:{writeText:async x=>{copied=x}}});
- try{await tick();find(h,'Share clip').click();await tick();find(h,'Copy link').click();await tick();assert.equal(copied,'https://luo.example/#luo-clip=clip-0');assert.doesNotMatch(copied,/token|storage/)}finally{h.close()}
+ try{await tick();find(h,'Share Luonix').click();await tick();find(h,'Copy link').click();await tick();assert.equal(copied,'https://luo.example/#luo-clip=clip-0');assert.doesNotMatch(copied,/token|storage/)}finally{h.close()}
 });
 test('report is persisted only after a valid reason, with no fabricated success',async()=>{
  const h=setup({clipsOnly:true,rpc:async a=>a.action==='feed'?{data:clipRows(1)}:{error:{message:'Report denied'}}});try{await tick();find(h,'More options').click();await tick();find(h,'Submit report').click();await tick();assert.equal(h.calls.filter(a=>a.action==='response').length,0);h.d.querySelector('.luo-report-reason').value='Harmful content';find(h,'Submit report').click();await tick();assert.equal(h.calls.at(-1).input.kind,'report');assert.match(h.notes.at(-1),/Report denied/);assert.doesNotMatch(h.d.querySelector('dialog').textContent,/Report submitted/)}finally{h.close()}

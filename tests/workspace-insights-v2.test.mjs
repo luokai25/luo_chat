@@ -5,9 +5,9 @@ import {transform} from 'esbuild';
 const content=file=>readFile(new URL('../workspace/'+file,import.meta.url),'utf8');
 test('Luo Workspace v2 only adds pages and preserves six original dashboard views',async()=>{
  const html=await content('index.html');
- for(const p of ['overview','users','activity','engineering','billing','integrations','growth','finance','connectors'])
+ for(const p of ['overview','users','activity','product','engineering','billing','integrations','growth','finance','connectors'])
   assert.match(html,new RegExp('data-page="'+p+'"'));
- assert.equal((html.match(/data-page="/g)||[]).length,9);
+ assert.equal((html.match(/data-page="/g)||[]).length,10);
  assert.match(html,/src="\/insights\.js"/);
  assert.match(html,/Luo Chat owner email/);
 });
