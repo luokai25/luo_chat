@@ -57,8 +57,12 @@ test('settings categories become real nested mobile views and preserve original 
   assert.ok(profile.classList.contains('luo-settings-v3'));
   assert.equal(nav.querySelectorAll('[data-setting]').length,8);
   const privacy=nav.querySelector('[data-setting="privacy"]');
-  app.dataset.tab='profile';privacy.click();
-  assert.equal(profile.dataset.luoSection,'privacy');
+  app.dataset.tab='profile';profile.classList.remove('hidden');
+  let clicked=false;privacy.addEventListener('click',()=>clicked=true);
+  assert.equal(privacy.disabled,false);
+  privacy.dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true}));
+  assert.equal(clicked,true,'Visible settings category should be clickable');
+  assert.equal(profile.dataset.luoSection,'privacy','Settings must enter the selected category');
   assert.ok(profile.classList.contains('luo-settings-deep'));
   assert.ok(d.getElementById('settings-privacy').contains(d.getElementById('savePrivacy')));
   d.getElementById('luoSettingsReturn').click();
