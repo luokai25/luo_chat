@@ -11,11 +11,12 @@ function req(kind='mixed',more={}){return {method:'GET',headers:{authorization:'
  query:{kind,view:'for_you'},...more}}
 const post={id:'10000000-0000-4000-8000-000000000001',owner_id:'10000000-0000-4000-8000-000000000002',
  kind:'post',audience:'public',published:true,created_at:'2026-10-26T17:00:00Z',body:'Hello Luo',reactions:10,comments:4};
-function fakeDb({authBad=false,ctxError=null,socialError=null}={}){
+function fakeDb({authBad=false,ctxError=null,socialError=null,age=null}={}){
  const calls=[];
  const db={auth:{getUser:async t=>{calls.push(['getUser',t]);return authBad?{error:{message:'invalid'}}:{data:{user:{id:userId}}}}},
  rpc:async(name,args)=>{
   calls.push([name,args]);
+  if(name==='luo_my_age_safety')return {data:age??{age_tier:'18+',enforced:true,content_filter_applied:true}};
   if(name==='luo_recommend_context')return ctxError?{error:{code:ctxError}}:{data:{hidden_ids:[],served_ids:[]}};
   if(name==='luo_space')return socialError?{error:{code:socialError}}:{data:args.input.kind==='post'?[post]:[]};
   if(name==='luo_recommend_mark_served')return {data:args.p_ids.length};
@@ -77,6 +78,17 @@ test('authorization failure and exceeded quotas never return a ranked feed',asyn
   const m=fakeDb(config),out=res();
   await createRecommendationHandler({env,clientFactory:()=>m.db})(req(),out);
   assert.equal(out.statusCode,expected);
+  assert.equal(m.calls.some(x=>x[0]==='luo_space'),false);
+ }
+});
+
+test('personalized feed fails closed when verified age/label filtering has not been installed',async()=>{
+ for(const age of [{age_tier:'unknown',enforced:false,content_filter_applied:false},
+ {age_tier:'13-14',enforced:true,content_filter_applied:false},
+ {age_tier:'18+',enforced:false,content_filter_applied:true}]){
+  const m=fakeDb({age}),out=res();
+  await createRecommendationHandler({env,clientFactory:()=>m.db})(req(),out);
+  assert.equal(out.statusCode,503);assert.equal(out.body.error.code,'AGE_SAFETY_NOT_READY');
   assert.equal(m.calls.some(x=>x[0]==='luo_space'),false);
  }
 });

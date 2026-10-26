@@ -22,3 +22,6 @@ Phoenix transformer inference, SimClusters learned embeddings, Thunder memory in
 Do not copy X's visibility decisions or age rules blindly: Luo Chat's own authorization, moderation and child safety rules apply first.
 No performance/engagement uplift has been measured. No production rollout without age-safety audit, A/B experiment and monitored canary.
 Staging currently lacks `luo_space`, so the new endpoint cannot be considered integrated end to end until staging has an authorized social-service migration and tests.
+
+## Critical release gate: minor protection
+The verified viewer-age RPC `public.luo_my_age_safety` is currently absent from production and staging. The ranked feed returns 503 until the server asserts `enforced=true`, `content_filter_applied=true`, and an authoritative age tier. These booleans must reflect *actual* safety filtering on the candidate set, not a client field. Adults still remain subject to legal content and authorization rules. A user who has not completed the applicable guardian-consent process must not enter this feed. No age bypass, no reliance on author-supplied content labels.
