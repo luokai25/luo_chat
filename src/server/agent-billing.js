@@ -1,6 +1,8 @@
 // Hosted recurring checkout adapters. Production must not use staging credentials.
 // Both processors are disabled until real merchant credentials and prices are configured.
 import {createClient} from '@supabase/supabase-js';
+import {createHmac} from 'node:crypto';
+import {isIP} from 'node:net';
 import {normalizeAgentUsername,sendJson} from './agent-platform.js';
 import {quoteAgentPlan,approvedStripePriceId,approvedStripeCouponId} from './agent-pricing.js';
 import {agentRuntime,agentCheckoutOrigin,paypalMerchantSettings} from './agent-environment.js';
@@ -82,6 +84,22 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
   const runtime=agentRuntime(env);
   const db=clientFactory(runtime.url,runtime.serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
   try{
+   // Autonomous verified-key checkout must also defend against password sprays.
+   // Reuse the atomic server-side login cap, before calling external payment APIs.
+   if(runtime.mode==='live'||env.LUO_AGENT_REQUIRE_VERIFIED_KEY==='true'){
+    const secret=env.LUO_AGENT_SIGNUP_HASH_KEY;
+    const ip=env.VERCEL==='1'?req.headers?.['x-vercel-forwarded-for']:req.socket?.remoteAddress;
+    if(typeof secret!=='string'||secret.length<32||typeof ip!=='string'||ip.length>64||ip.includes(',')||!isIP(ip))
+     return jsonError(res,503,'CHECKOUT_RATE_LIMIT_UNAVAILABLE');
+    const digest=value=>createHmac('sha256',secret).update(value).digest('hex');
+    const quota=await db.rpc('luo_agent_reserve_login',{
+     p_ip_digest:digest('checkout-network:'+ip),p_username_digest:digest('checkout-identity:'+username)
+    });
+    if(quota.error?.code==='P0001'){
+     res.setHeader('Retry-After','86400');return jsonError(res,429,'CHECKOUT_RATE_LIMITED');
+    }
+    if(quota.error||quota.data!==true)return jsonError(res,503,'CHECKOUT_RATE_LIMIT_UNAVAILABLE');
+   }
    // Check the merchant's actual Live plan prices and same-app webhook
    // before reserving a checkout or contacting the processor to charge.
    if(runtime.mode==='live'){
