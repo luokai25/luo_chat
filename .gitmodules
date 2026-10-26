@@ -1,0 +1,4 @@
+[submodule "vendor/x-algorithm-upstream"]
+	path = vendor/x-algorithm-upstream
+	url = https://github.com/xai-org/x-algorithm.git
+	update = none

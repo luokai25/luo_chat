@@ -31,6 +31,23 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  const sources=clipsOnly&&mode==='mixed'?['public','friends']:[mode];
  const streams=new Map(sources.flatMap(sourceMode=>kinds.map(kind=>[sourceMode+':'+kind,{kind,sourceMode,before:null,before_id:null,more:true}])));
  const seen=new Set(),media=new Map();
+ const useRanker=new URL(win.location.href).searchParams.get('luo_ranker')==='1';
+ async function rankedFeed(kind,sourceMode,cursor){
+  const session=(await db.auth.getSession())?.data?.session;
+  if(!session?.access_token||typeof win.fetch!=='function')throw Error('Recommendation session unavailable');
+  const abort=new win.AbortController(),timeout=win.setTimeout(()=>abort.abort(),11000);
+  try{
+   const response=await win.fetch('/api/recommendations',{
+    method:'POST',credentials:'same-origin',cache:'no-store',signal:abort.signal,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+    body:JSON.stringify({kind,mode:sourceMode,...cursor})
+   });
+   if(!response.ok)throw Error('Optional ranking service unavailable');
+   const result=await response.json();
+   if(!Array.isArray(result?.items)||result.items.length>20)throw Error('Unexpected ranking response');
+   return result;
+  }finally{win.clearTimeout(timeout)}
+ }
  const reduced=!!win.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
  const saver=!!win.navigator.connection?.saveData;
  let observer;
@@ -216,14 +233,20 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
   let errors=0,added=0;const batch=[];
   await Promise.all([...streams.values()].map(async stream=>{
    const {kind,sourceMode}=stream;if(!stream.more)return;
-   try{const cursor=stream.before?{before:stream.before,before_id:stream.before_id}:{};let data;if(['following','saved'].includes(sourceMode)){if(!extras||!await extras.ready())throw Error('This feed requires the Reels backend upgrade.');data=await extras.call('feed',{mode:sourceMode,...cursor})}else data=await rpc('feed',{kind,mode:sourceMode,...cursor});if(!valid())return;
-    const rows=Array.isArray(data)?data:[];stream.more=rows.length===20;
-    const last=rows.at(-1);if(last?.created_at&&last?.id){if(stream.before===last.created_at&&stream.before_id===last.id)stream.more=false;stream.before=last.created_at;stream.before_id=last.id}else if(rows.length)stream.more=false;
+   try{const cursor=stream.before?{before:stream.before,before_id:stream.before_id}:{};let data,rankedInfo=null;
+    if(['following','saved'].includes(sourceMode)){if(!extras||!await extras.ready())throw Error('This feed requires the Reels backend upgrade.');data=await extras.call('feed',{mode:sourceMode,...cursor})}
+    else if(useRanker&&['public','friends'].includes(sourceMode)){
+     try{rankedInfo=await rankedFeed(kind,sourceMode,cursor);data=rankedInfo.items}
+     catch{data=await rpc('feed',{kind,mode:sourceMode,...cursor})}
+    }else data=await rpc('feed',{kind,mode:sourceMode,...cursor});
+    if(!valid())return;
+    const rows=Array.isArray(data)?data:[];stream.more=rankedInfo?Boolean(rankedInfo.more):rows.length===20;
+    const last=rankedInfo?.cursor?{created_at:rankedInfo.cursor.before,id:rankedInfo.cursor.before_id}:rows.at(-1);if(last?.created_at&&last?.id){if(stream.before===last.created_at&&stream.before_id===last.id)stream.more=false;stream.before=last.created_at;stream.before_id=last.id}else if(rows.length)stream.more=false;
     // Both the SQL visibility predicate and this extra public-only filter apply.
     for(const item of rows){if(!item?.id||seen.has(item.id)||item.kind!==kind||item.published===false||sourceMode==='public'&&item.audience!=='public')continue;seen.add(item.id);batch.push(item);added++}
    }catch(e){if(valid()){errors++;feedback.textContent=e.message||'Feed unavailable. Try again.'}}
   }));
-  if(!valid())return;batch.sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))||String(b.id).localeCompare(String(a.id)));for(const item of batch)card(item);loading=false;more.disabled=false;more.hidden=![...streams.values()].some(s=>s.more);
+  if(!valid())return;batch.sort((a,b)=>(useRanker?Number(b._luo_rank_score||0)-Number(a._luo_rank_score||0):0)||String(b.created_at||'').localeCompare(String(a.created_at||''))||String(b.id).localeCompare(String(a.id)));for(const item of batch)card(item);loading=false;more.disabled=false;more.hidden=![...streams.values()].some(s=>s.more);
   if(!errors)feedback.textContent=!seen.size?(mode==='public'?'No public moments yet. Be the first to share one.':'No Luonix yet. Share a video, photo or written moment.'):(more.hidden?'You’re all caught up.':added?'':'No matching moments on this page. Keep exploring.');
   more.querySelector('span').textContent=errors?'Try again':'Load more';
  }
