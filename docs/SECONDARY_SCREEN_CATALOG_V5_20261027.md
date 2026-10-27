@@ -75,3 +75,13 @@ These four screens are UI enhancements to already-functional native flows.
 They do not create new backends, publish content, change age policy or count
 as a recreation of all remaining ~220 interface states. Preview/release builds
 must pass the existing browser and mobile workflows before production.
+
+
+## Wave four: four native secondary-list interactions (V8, GitHub feature branch only)
+
+15. **Memory Vault filters:** live result count of authorized, currently rendered vault items, a clear-filters action that forwards the original query and collection change events, and no second database client or duplicate private record fetch.
+16. **Scheduled message history:** local status/text filters over the **100 most recently loaded server-authorized schedules**, counts, clear action and a no-match state; existing send/cancel/open-chat handlers remain the sole source of truth. The account-bound asynchronous history loader now discards stale replies and stale errors after rapid refreshes or sign-out.
+17. **People contact list:** native contact-search clearing and loaded-list feedback, without modifying or guessing server-side contact authorization.
+18. **Shared media filters:** a one-tap reset for filename/type filters that invokes the original handlers and retains authorization and pagination.
+
+All four surfaces are enhancements to the existing app shell, not standalone URLs or a claim of completing the originally proposed ~234 dialogs/states. CSS and JS are included in the current app's index; no production merge or deploy has been performed. V8 regression fixtures and scheduled-history request-order tests were committed but need execution in a build-capable environment before release.
