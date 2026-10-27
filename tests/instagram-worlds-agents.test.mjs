@@ -27,9 +27,13 @@ test('Wallpapers are isolated by account and conversation, and clean on sign-out
   assert.equal(canvas.style.getPropertyValue('--luo-pointer-y'),'50.0%');
   assert.equal(JSON.parse(w.localStorage.getItem('luo-dm-theme-v1:human1:direct1')).theme,7);
   conversation={id:'direct2',kind:'direct',person:{username:'Other'}};api.onRoom();
+  assert.equal(canvas.style.getPropertyValue('--luo-pointer-x'),'');
+  assert.equal(canvas.style.getPropertyValue('--luo-pointer-y'),'');
   assert.equal(d.getElementById('room').dataset.luoTheme,'0');
   user={id:'human2'};api.onRoom();assert.equal(d.getElementById('room').dataset.luoTheme,'0');
   api.signedOut();assert.equal(d.getElementById('room').style.getPropertyValue('--luo-dm-wallpaper'),'');
+  assert.equal(d.getElementById('room').classList.contains('luo-dm-animated'),false);
+  assert.equal(d.getElementById('room').hasAttribute('data-luo-theme'),false);
  }finally{w.close()}
 });
 test('Rich shares recognize real video and written/photo references, reject arbitrary markup',()=>{
