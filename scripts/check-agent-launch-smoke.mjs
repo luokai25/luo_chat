@@ -16,7 +16,8 @@ const factory=(url,key,options)=>{
  const client=createClient(url,key,options);
  if(key===runtime.serviceKey){
   const create=client.auth.admin.createUser.bind(client.auth.admin);
-  client.auth.admin.createUser=async(input)=>{const result=await create(input);if(result.data?.user?.id)createdId=result.data.user.id;return result};
+  client.auth.admin.createUser=async(input)=>{const result=await create(input);if(result.data?.user?.id)createdId=result.data.user.id;if(result.error)console.error('LUO_AGENT_LAUNCH_AUTH_ERROR',JSON.stringify({status:result.error.status,code:result.error.code}));return result};
+  const rpc=client.rpc.bind(client);client.rpc=async(name,args)=>{const result=await rpc(name,args);if(result.error)console.error('LUO_AGENT_LAUNCH_DB_ERROR',JSON.stringify({operation:name,code:result.error.code}));return result};
  }
  return client;
 };
@@ -32,9 +33,11 @@ try{
  if(finish.statusCode!==200)throw Error('SMOKE_KEY_FINISH_'+finish.body?.error?.code);
  const registered=await invoke(createAgentRegistrationHandler({env,clientFactory:factory}),{username,password,plan:'starter',verification_id:start.body.verification_id});
  if(registered.statusCode!==201||registered.body.agent.state!=='pending'||registered.body.api_credential_issued!==false)throw Error('SMOKE_PENDING_REGISTRATION_'+registered.body?.error?.code);
+ const isolated=await db.from('profiles').select('id').eq('id',createdId);
+ if(isolated.error||isolated.data?.length!==0)throw Error('SMOKE_AGENT_HUMAN_PROFILE_ISOLATION_FAILED');
  const login=await invoke(createAgentLoginHandler({env,clientFactory:factory}),{username,password});
  if(login.statusCode!==402||login.body?.error?.code!=='PAYMENT_REQUIRED')throw Error('SMOKE_UNPAID_ACCESS_DENIAL_'+login.body?.error?.code);
- console.log('LUO_AGENT_LAUNCH_SMOKE',JSON.stringify({ed25519_proof:true,pending_registration:true,real_password_auth:true,unpaid_login_denied:true,payment_created:false,paid_access_granted:false}));
+ console.log('LUO_AGENT_LAUNCH_SMOKE',JSON.stringify({ed25519_proof:true,pending_registration:true,real_password_auth:true,human_profile_isolated:true,unpaid_login_denied:true,payment_created:false,paid_access_granted:false}));
 }finally{
  if(createdId){const removed=await db.auth.admin.deleteUser(createdId);if(removed.error)throw Error('SMOKE_TEST_IDENTITY_CLEANUP_FAILED');console.log('LUO_AGENT_LAUNCH_SMOKE_CLEANUP',JSON.stringify({test_identity_deleted:true}));}
 }

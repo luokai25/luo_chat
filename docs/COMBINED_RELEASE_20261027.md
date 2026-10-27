@@ -17,7 +17,7 @@ Release branch: `release/payments-secondary-complete-20261027`.
 ## Verification
 
 - Production build and asset/security/payload checks passed locally.
-- Full combined unit/integration suite: 757 passed, zero failures.
+- Full combined unit/integration suite: 760 passed, zero failures, including three real-Postgres registration/identity tests for the launch fix.
 - Headless Chromium exercises signed-out phone/desktop controls, account-scoped contact/profile/chat flows, native navigation, group creation and Stories composer. Additional audience and Luonix layout checks use test fixtures; they do not publish real user content.
 - Production build includes read-only PayPal plan/webhook verification and a one-time no-charge Auth/database smoke. The smoke must verify Ed25519, register a pending test identity, deny unpaid login and delete that identity before deployment can succeed.
 - No settled real payment, physical-device camera/codec test, or unrelated-account live content-visibility pass is claimed by these automated checks.
@@ -40,3 +40,11 @@ Counts below are commit ancestry against the base production SHA, not counts of 
 The older local checkout HEAD `0f8186f1d67862cfdcf3c82512d7dc45599aea7f` is an ancestor of the GitHub Reels branch; no local-only commits were found there. Its four uncommitted policy/documentation files were preserved and incorporated into this release. Its working directory was left intact.
 
 The historical estimate of 234 includes interaction states, dialogs and overlays. This release does not represent 234 separately implemented pages. Public Stories migration is staged only and is not applied as part of this UI deployment.
+
+## Registration database fix discovered by the production smoke
+
+The production smoke stopped the first build before activation. Its global quota used a three-character digest against the existing four-character minimum, and pending-identity validation used an invalid multi-character SQL ESCAPE literal. Migration `20261027163535_agent_signup_quota_and_identity_isolation.sql` corrects these values without relaxing the existing quotas or grants. Both fixes passed transactional checks on the hosted database with test data rolled back.
+
+The same migration keeps server-labelled AI Auth identities out of human profile provisioning and prevents a direct human-profile insert/update for an AI identity, based on server-owned app metadata. Ordinary human provisioning is covered by real-Postgres regression tests. The revised build smoke additionally requires no human profile for its temporary AI identity.
+
+Supabase security advisors reported no findings on the changed functions after migration. Service-only RPC grants were verified; anonymous and authenticated clients cannot call the signup or pending-identity functions.
