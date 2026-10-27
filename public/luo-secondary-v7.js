@@ -131,7 +131,15 @@ function statusViewer(){
  status.setAttribute('aria-live','polite');
  box.append(make('strong','','Reply to this status'),status);
  reply.before(box);
- const draw=()=>{const limit=input.maxLength;status.textContent=limit>0?input.value.length.toLocaleString()+' / '+limit.toLocaleString()+' characters':input.value.length.toLocaleString()+' characters';};
+ const draw=()=>{
+  const limit=input.maxLength,length=input.value.length;
+  const remaining=limit>0?Math.max(0,limit-length):null;
+  status.textContent=limit>0
+   ?length.toLocaleString()+' / '+limit.toLocaleString()+' characters'+(remaining<=100?' · '+remaining.toLocaleString()+' remaining':'')
+   :length.toLocaleString()+' characters';
+  status.dataset.nearLimit=String(remaining!==null&&remaining<=100);
+  status.dataset.atLimit=String(remaining===0);
+ };
  input.addEventListener('input',draw);
  viewer.addEventListener('close',()=>{
   input.value='';draw();
