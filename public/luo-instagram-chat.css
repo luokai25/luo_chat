@@ -59,3 +59,16 @@
 #room .luo-share-rich .luo-share-title{font-size:15px;padding:0 13px;color:#f9eddf}
 #room .luo-share-rich .luo-share-caption{font-size:12px;color:#b8b0ad;padding:0 13px 4px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 #room .mine .luo-share-rich{background:#1d1717}
+
+/* Redesigned interactive chat appearance gallery, ten curated local scenes. */
+.luo-dm-wallpapers{padding:17px;border:1px solid #775833;border-radius:20px;background:linear-gradient(150deg,#241b20,#121116);margin:12px 0 24px}
+.luo-dm-wallpaper-intro{font-size:13px;line-height:1.55;color:#cbb99d;margin:0 0 15px}
+.luo-dm-wallpaper-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.luo-dm-wallpaper{border-radius:17px;padding:9px;min-height:205px;background:#16131a;transition:transform .17s ease,border-color .17s ease}
+.luo-dm-wallpaper:hover{transform:translateY(-3px);border-color:#d1a76d}
+.luo-dm-wallpaper-art{aspect-ratio:4/3;border-radius:12px}
+.luo-dm-wallpaper-name{font-size:14px;font-weight:760;text-align:left;padding:10px 3px 2px}
+.luo-dm-wallpaper-caption{display:block;color:#bca98e;font-size:11px;line-height:1.4;text-align:left;padding:0 3px 6px}
+#room.luo-dm-animated #messages{background-image:radial-gradient(circle 100px at var(--luo-pointer-x,50%) var(--luo-pointer-y,35%),#efc77814,transparent 100%),var(--luo-dm-wallpaper)!important}
+@media(max-width:520px){.luo-dm-wallpaper-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.luo-dm-wallpapers{padding:12px}.luo-dm-wallpaper{min-height:185px}}
+@media(prefers-reduced-motion:reduce){.luo-dm-wallpaper{transition:none!important}.luo-dm-wallpaper:hover{transform:none!important}#room #messages{background-image:var(--luo-dm-wallpaper)!important}}
