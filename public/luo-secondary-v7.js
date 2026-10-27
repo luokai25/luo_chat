@@ -101,14 +101,17 @@ function worldsCreatePanel(panel){
   const users=members?[...new Set(members.value.split(/[\n,;]+/).map(x=>x.trim().replace(/^@/,'').toLowerCase()).filter(Boolean))]:[];
   const invalid=users.filter(x=>!/^[a-z0-9_]{3,24}$/.test(x));
   detail.textContent=label.slice(0,100)+(desc?.value.trim()?' · '+desc.value.trim().slice(0,120):'');
-  if(members)warnings.textContent=invalid.length
+  const privacy=visibility?(visibility.value==='public'
+    ?'Discoverable World. Membership and visibility remain server-enforced.'
+    :'Private World. Audience permissions remain server-enforced.'):'';
+  const invitees=members?(invalid.length
     ?invalid.length+' username'+(invalid.length===1?'':'s')+' need 3–24 letters, numbers or underscores.'
-    :users.length+' unique invitee'+(users.length===1?'':'s')+'. Creation still requires server approval.';
-  else if(visibility)warnings.textContent=visibility.value==='public'
-    ?'Discoverable World. Membership and visibility are still enforced by the server.'
-    :'Private World. Your server-side audience permissions remain authoritative.';
-  else warnings.textContent='Your permissions will be checked when you create this channel.';
-  feedback.dataset.valid=String(!invalid.length&&!!name?.value.trim());
+    :users.length+' unique invitee'+(users.length===1?'':'s')+'.'):'';
+  const ready=!!name?.value.trim()&&!invalid.length;
+  warnings.textContent=[privacy,invitees,ready
+    ?'Ready to request creation. The server must still approve it.'
+    :'Complete the name and correct invalid invitees before creation.'].filter(Boolean).join(' ');
+  feedback.dataset.valid=String(ready);
   if(members){
    if(invalid.length){members.setAttribute('aria-invalid','true');}
    else members.removeAttribute('aria-invalid');
