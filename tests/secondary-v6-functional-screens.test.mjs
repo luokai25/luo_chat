@@ -78,6 +78,23 @@ test('Story media composer previews real video and audio and clears the previous
   assert.match(box.textContent,/Share a photo/);
  }finally{x.close()}
 });
+test('Story preview reflects Public and Close Friends audiences rather than falsely claiming Only me',()=>{
+ const x=create();try{
+  const d=x.d,dialog=d.getElementById('storyComposer'),audience=d.getElementById('storyAudience'),label=d.querySelector('.luo-v6-story-privacy');
+  dialog.dataset.storyAudienceMode='public';
+  dialog.dispatchEvent(new x.w.CustomEvent('luo:story-audience-changed'));
+  assert.match(label.textContent,/Public on Luo Chat/);
+  assert.doesNotMatch(label.textContent,/Only you/);
+  audience.value='alex_friend, maria_k';
+  dialog.dataset.storyAudienceMode='close';
+  dialog.dispatchEvent(new x.w.CustomEvent('luo:story-audience-changed'));
+  assert.match(label.textContent,/Close friends.*2 accounts/);
+  dialog.dataset.storyAudienceMode='onlyMe';
+  audience.value='';
+  dialog.dispatchEvent(new x.w.CustomEvent('luo:story-audience-changed'));
+  assert.match(label.textContent,/Only you/);
+ }finally{x.close()}
+});
 test('message action review renders real edit fields and never submits changes automatically',async()=>{
  const x=create();try{
   const d=x.d,fields=d.getElementById('messageActionFields');
