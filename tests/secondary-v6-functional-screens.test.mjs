@@ -36,6 +36,23 @@ test('story composer explains private audience, selected attachment and real 24h
   assert.equal(body.value,'Hello private circle');
  }finally{x.close()}
 });
+test('story preview keeps the same selected image URL when only the story text changes',()=>{
+ const x=create();try{
+  const d=x.d,media=d.getElementById('storyMedia'),body=d.getElementById('storyBody');
+  let created=0,revoked=0;
+  x.w.URL.createObjectURL=()=>{created++;return 'blob:luo-preview-'+created};
+  x.w.URL.revokeObjectURL=()=>{revoked++};
+  const file=new x.w.File(['image'],'preview.png',{type:'image/png'});
+  Object.defineProperty(media,'files',{configurable:true,value:[file]});
+  media.dispatchEvent(new x.w.Event('change',{bubbles:true}));
+  assert.equal(created,1);
+  body.value='Updated caption';body.dispatchEvent(new x.w.Event('input',{bubbles:true}));
+  assert.equal(created,1,'caption changes must not allocate new media previews');
+  assert.equal(revoked,0);
+  x.d.querySelector('.luo-v6-story').dispatchEvent(new x.w.Event('close'));
+  assert.equal(revoked,1,'closing story preview frees object URL');
+ }finally{x.close()}
+});
 test('message action review renders real edit fields and never submits changes automatically',async()=>{
  const x=create();try{
   const d=x.d,fields=d.getElementById('messageActionFields');
