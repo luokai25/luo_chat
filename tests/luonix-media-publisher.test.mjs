@@ -109,6 +109,28 @@ test('single-video Luonix rejects unreadable and over-90-second durations before
   assert.match(h.d.querySelector('.luonix-v10-message').textContent,/90 seconds or less/);
  }finally{h.done()}
 });
+test('text-only posts remain available after replacing the old composer',async()=>{
+ const h=harness();try{
+  h.click('.luonix-v10-text-post');
+  assert.equal(h.composer.getState().stage,'preview');
+  h.click('.luonix-v10-next');
+  assert.equal(h.composer.getState().stage,'preview','blank text-only posts must not advance');
+  assert.match(h.d.querySelector('.luonix-v10-message').textContent,/Write some text/);
+  const field=h.d.querySelector('.luonix-v10-caption');
+  field.value='A message without an attachment';field.dispatchEvent(new h.win.Event('input'));
+  h.click('.luonix-v10-next');
+  assert.equal(h.composer.getState().stage,'audience');
+  h.click('.luonix-v10-next');await tick();
+  const create=h.calls.find(c=>c.action==='entry.create');
+  const publish=h.calls.find(c=>c.action==='entry.publish');
+  assert.equal(create.input.kind,'post');
+  assert.equal(create.input.body,'A message without an attachment');
+  assert.deepEqual(publish.input.media,[]);
+  assert.equal(h.uploads.length,0);
+  assert.ok(h.actions.includes('published'));
+ }finally{h.done()}
+});
+
 test('only one click publishes; interrupted media keeps the same entry and skips already-uploaded files on retry',async()=>{
  const h=harness({deferUpload:true});try{
   const a=new h.win.File(['a'],'a.jpg',{type:'image/jpeg'}),b=new h.win.File(['b'],'b.jpg',{type:'image/jpeg'});
