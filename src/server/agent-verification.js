@@ -13,7 +13,7 @@ export function verificationRuntime(e={}){
  if(e.LUO_AGENT_VERIFICATION_ENABLED!=='true')return null;
  if(e.VERCEL_ENV==='production'&&e.SUPABASE_URL===PROD&&typeof e.SUPABASE_SERVICE_ROLE_KEY==='string'&&e.SUPABASE_SERVICE_ROLE_KEY.length>=32)
   return {mode:'production',url:PROD,key:e.SUPABASE_SERVICE_ROLE_KEY};
- if(e.VERCEL_ENV==='preview'&&e.VERCEL_GIT_COMMIT_REF==='feature/reels-immersive-20261025'
+ if(e.VERCEL_ENV==='preview'&&['feature/reels-immersive-20261025','feature/agent-autonomous-onboarding-20261026'].includes(e.VERCEL_GIT_COMMIT_REF)
  &&e.LUO_AGENT_STAGING_URL===STAGE&&typeof e.LUO_AGENT_STAGING_SERVICE_ROLE_KEY==='string'&&e.LUO_AGENT_STAGING_SERVICE_ROLE_KEY.length>=32)
   return {mode:'staging',url:STAGE,key:e.LUO_AGENT_STAGING_SERVICE_ROLE_KEY};
  return null;
@@ -91,7 +91,7 @@ export function createAgentVerificationHandler({mode='info',env=process.env,clie
   if(!idRx.test(v.id)||!signature)return failed(res,400,'INVALID_SIGNATURE_OR_ID');
   try{
    const db=database(runtime,clientFactory);
-   const lookup=await db.rpc('luo_agent_verify_read',{p_id:v.id});
+   const lookup=await db.rpc('luo_agent_verify_attempt',{p_id:v.id});
    if(lookup.error)throw lookup.error;
    const row=lookup.data;
    if(!row||row.state!=='pending'||Date.parse(row.expires_at)<=Date.now())

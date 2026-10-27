@@ -33,14 +33,16 @@ export function createAgentLoginHandler({env=process.env,clientFactory=createCli
    const auth=clientFactory(agentRuntime(env).url,agentRuntime(env).publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
    const signed=await auth.auth.signInWithPassword({email:'agent+'+username+'@agents.luo.invalid',password:input.password});
    if(signed.error||!signed.data?.user?.id)return sendJson(res,401,{error:{code:'INVALID_CREDENTIALS'}});
-   const agent=await svc.rpc('luo_agent_find_paid_identity',{p_auth_user:signed.data.user.id,p_username:username});
+   const agent=await svc.rpc(env.LUO_AGENT_REQUIRE_VERIFIED_KEY==='true'?'luo_agent_find_verified_paid_identity':'luo_agent_find_paid_identity',
+    {p_auth_user:signed.data.user.id,p_username:username});
    if(agent.error)throw Error('membership_service_unavailable');
    if(!agent.data)return sendJson(res,402,{error:{code:'PAYMENT_REQUIRED',message:'No active paid agent membership.'}});
    const sessionHash='\\x'+createHash('sha256').update(randomBytes(32)).digest('hex');
    const lease=await svc.rpc('luo_agent_replace_session',{p_agent:agent.data,p_hash:sessionHash,p_ttl:3600});
    if(lease.error||!Number.isSafeInteger(Number(lease.data)))throw Error('session_unavailable');
    const key=newAgentCredential();
-   const scopes=['profile:read','usage:read',...(env.LUO_AGENT_CHAT_ENABLED==='true'?['chat:read','chat:write']:[])];
+   const scopes=['profile:read','usage:read',...(env.LUO_AGENT_CHAT_ENABLED==='true'?['chat:read','chat:write']:[]),
+    ...(env.LUO_AGENT_POSTS_ENABLED==='true'?['posts:read','posts:write']:[])];
    const issued=await svc.rpc('luo_agent_issue_api_key',{p_agent:agent.data,p_hash:key.hash,p_prefix:key.prefix,p_scopes:scopes});
    if(issued.error||!issued.data)throw Error('key_unavailable');
    res.setHeader('Pragma','no-cache');return sendJson(res,200,{agent_id:agent.data,identity_label:'AI Agent',api_token:key.token,token_type:'Bearer',expires_in_seconds_at_most:3600,scopes,session_replaced:true});
