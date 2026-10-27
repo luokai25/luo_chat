@@ -147,6 +147,80 @@ test('Story contacts are removed from the document after navigating back and sig
  }finally{x.done()}
 });
 
+test('Back or Escape returns from audience screens without discarding unfinished story text',async()=>{
+ const x=create();try{
+  const d=x.doc,body=d.getElementById('storyBody');
+  body.value='Keep this draft intact';
+  d.querySelector('.luo-story-audience-button').click();
+  assert.equal(d.querySelector('.luo-story-secondary').dataset.page,'audience');
+  const cancel=new x.win.Event('cancel',{cancelable:true});
+  d.getElementById('storyComposer').dispatchEvent(cancel);
+  assert.equal(cancel.defaultPrevented,true);
+  assert.equal(d.querySelector('.luo-story-editor').hidden,false);
+  assert.equal(body.value,'Keep this draft intact');
+ }finally{x.done()}
+});
+
+test('Story closure is guarded during upload and requires confirmation before discarding drafts',()=>{
+ const x=create();try{
+  const d=x.doc,send=d.getElementById('publishStory'),body=d.getElementById('storyBody');
+  body.value='An unfinished photo story';
+  let prompts=0;
+  x.win.confirm=()=>{prompts++;return false};
+  assert.equal(x.flow.requestClose(),false);
+  assert.equal(prompts,1);
+  send.disabled=true;
+  assert.equal(x.flow.requestClose(),false);
+  assert.equal(prompts,1,'Publishing must not prompt users to discard an in-flight story');
+  assert.match(d.getElementById('storyStatus').textContent,/being published/);
+  send.disabled=false;
+  x.win.confirm=()=>true;
+  assert.equal(x.flow.requestClose(),true);
+ }finally{x.done()}
+});
+
+test('existing Close friends circle is restored for the contact audience picker',async()=>{
+ const x=create();try{
+  const d=x.doc;
+  x.flow.onCirclesLoaded([{id:'friend-circle',name:'Close friends',usernames:['maria_k']}]);
+  d.querySelector('.luo-story-audience-button').click();await settle();
+  x.click('Close friends');
+  assert.match(d.querySelector('.luo-story-secondary').textContent,/1 friend selected/);
+  assert.equal(d.querySelector('.luo-story-secondary').dataset.page,'close');
+  x.click('Choose close friends');
+  const row=[...d.querySelectorAll('.luo-story-contact-row')].find(n=>n.textContent.includes('maria_k'));
+  assert.equal(row.querySelector('input').checked,true);
+ }finally{x.done()}
+});
+
+test('saved private circles populate real recipients and preserve audience labels',()=>{
+ const x=create();try{
+  const d=x.doc;
+  x.flow.useSavedCircle({name:'Close friends',usernames:['alex_friend','maria_k']});
+  assert.equal(d.getElementById('storyAudience').value,'alex_friend, maria_k');
+  assert.equal(x.flow.audienceMode(),'close');
+  assert.match(d.querySelector('.luo-story-audience-button').textContent,/Close friends.*2/);
+  x.flow.useSavedCircle({name:'Neighbors',usernames:['sam_123']});
+  assert.equal(d.getElementById('storyAudience').value,'sam_123');
+  assert.equal(x.flow.audienceMode(),'selected');
+ }finally{x.done()}
+});
+
+test('cancelling excluded-contact edits does not silently commit the exclusion next time',async()=>{
+ const x=create();try{
+  const d=x.doc;
+  d.querySelector('.luo-story-audience-button').click();await settle();
+  x.click('My contacts except');
+  d.querySelectorAll('.luo-story-contact-row')[1].querySelector('input').click();
+  d.querySelector('.luo-story-back').click();
+  d.querySelector('.luo-story-back').click();
+  d.querySelector('.luo-story-audience-button').click();await settle();
+  x.click('My contacts except');
+  const person=[...d.querySelectorAll('.luo-story-contact-row')].find(n=>n.textContent.includes('maria_k'));
+  assert.equal(person.querySelector('input').checked,false);
+ }finally{x.done()}
+});
+
 test('contact-search Enter does not accidentally submit a Story',async()=>{
  const x=create();try{
   const d=x.doc;d.querySelector('.luo-story-audience-button').click();await settle();x.click('Only share with');
