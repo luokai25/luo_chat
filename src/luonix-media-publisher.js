@@ -6,7 +6,7 @@ export function validateLuonixMedia(files){
  let total=0;
  for(const file of list){
   const video=file.type?.startsWith('video/');
-  if(!Object.hasOwn(rule.types,file.type)||!Number.isFinite(file.size)||file.size<1||file.size>(video?rule.maxVideoBytes:rule.maxImageBytes))
+  if(!Object.prototype.hasOwnProperty.call(rule.types,file.type)||!Number.isFinite(file.size)||file.size<1||file.size>(video?rule.maxVideoBytes:rule.maxImageBytes))
    throw Error('Use JPG, PNG, WebP, MP4 or WebM. Images: 8 MB each; videos: 20 MB each.');
   total+=file.size;
  }
@@ -131,7 +131,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  async function forward(){
   if(stage==='gallery')return picker.click();
   if(stage==='preview')return navigate('audience');
-  if(stage==='audience')return publish();
+  if(stage==='audience'||stage==='upload')return publish();
  }
  function leave(){
   if(publishing){setInfo('Publishing is in progress. Please keep this screen open.');return}
@@ -196,7 +196,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   }catch(e){if(current()){setInfo(e.message||'Could not publish. Retry without losing your selection.');uploadLabel.textContent='Upload interrupted · safe to retry'}}
   finally{
    publishing=false;
-   if(current()&&root.isConnected){exit.disabled=false;back.disabled=false;next.disabled=false;next.textContent='Retry publishing';next.onclick=()=>publish()}
+   if(current()&&root.isConnected){exit.disabled=false;back.disabled=false;next.disabled=false;next.textContent='Retry publishing'}
   }
  }
  renderAudience();renderSelected();navigate('gallery');
