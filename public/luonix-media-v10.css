@@ -75,3 +75,20 @@
 .luonix-v10-media-controls{flex-wrap:wrap}
 .luonix-v10-media-controls .luonix-v10-add{border-color:#dbb37b;color:#ffe3a8}
 .luonix-v10-progress:indeterminate{background:#463421;accent-color:#e3be80}
+
+/* Honest WhatsApp-inspired upload stages: no fictional percentage counters. */
+.luonix-v10-upload-phases{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);width:100%;gap:8px;margin:5px 0;padding:0}
+.luonix-v10-upload-phases li{position:relative;min-height:46px;display:grid;place-items:center;padding:7px 5px;box-sizing:border-box;font-size:11px;
+ border:1px solid #6a553c;border-radius:12px;color:#bdae96;background:#201b21}
+.luonix-v10-upload-phases li[data-state="complete"]{color:#f6dfb0;background:#3a3023;border-color:#a88653}
+.luonix-v10-upload-phases li[data-state="current"]{color:#1b120b;background:#e7c286;border-color:#ebc98f;font-weight:800}
+.luonix-v10-loading[data-phase="uploading"] .luonix-v10-upload-label::before,
+.luonix-v10-loading[data-phase="preparing"] .luonix-v10-upload-label::before,
+.luonix-v10-loading[data-phase="finalizing"] .luonix-v10-upload-label::before{
+ content:"";display:inline-block;margin-right:10px;width:13px;height:13px;border:2px solid #fff5d5;border-top-color:transparent;
+ border-radius:50%;vertical-align:-2px;animation:luonix-v10-spin .85s linear infinite
+}
+.luonix-v10-loading[data-phase="error"]{border-color:#d58f75}
+.luonix-v10-loading[data-phase="error"] .luonix-v10-upload-label{color:#ffc9ad}
+@keyframes luonix-v10-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.luonix-v10-loading .luonix-v10-upload-label::before{animation:none!important}}
