@@ -4,9 +4,9 @@
 
 ## Actual working paths
 
-- **Create Luonix / Create post:** same four-stage full-screen media flow on phones: gallery/camera, photo/video preview with playable video and media strip, audience, then upload.
+- **Create Luonix / Create post:** same four-stage full-screen flow on phones: gallery/camera or text-only entry, photo/video preview with playable video and media strip, audience, then upload.
 - **Media support:** JPG, PNG, WebP, MP4, WebM. Up to 6 media items; max 8 MB per photo and 20 MB per video, 20 MB combined. This is an intentionally conservative client limit; server enforces ownership and supported MIME types.
-- **Single video:** published as `clip` after native video metadata confirms duration is 0–90 seconds. Advanced existing Luonix studio remains available for recording and trimming; it keeps its original code.
+- **Text-only:** preserved from the previous post composer. Requires nonempty text; publishes no attachments.\n- **Single video:** published as `clip` after native video metadata confirms duration is 0–90 seconds. Advanced existing Luonix studio remains available for recording and trimming; it keeps its original code.
 - **Multiple videos/photos:** published as `post` with mixed `media` paths and rendered as a signed-image/video carousel inside Luonix and Friends/Public feeds.
 - **Privacy screen:** Friends (server-approved connections), Public (server-public posts) or Only me. Confirmation required for Public.
 - **Progress states:** Preparing, Uploading, Finalizing and Retry. UI displays *completed file count*, not invented byte percentages. When one file is uploading, the animation is indeterminate.
