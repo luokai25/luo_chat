@@ -21,6 +21,9 @@ test('keyboard shortcut panel filters actual provided shortcuts, preserving orig
   assert.ok(count>=5);search.value='Escape';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   const visible=[...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden);
   assert.equal(visible.length,1);assert.match(visible[0].textContent,/Esc/);
+  search.dispatchEvent(new x.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  assert.equal(search.value,'');
+  assert.equal([...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden).length,count);
   search.value='';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   assert.equal([...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden).length,count);
  }finally{x.close()}
