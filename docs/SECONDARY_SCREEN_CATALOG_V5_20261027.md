@@ -39,3 +39,19 @@ No claim of completed 234 surfaces is made by this six-screen release.
 V5 is only on GitHub feature development. Review accessibility and active-user
 workflow tests before making a separate release from the currently live build.
 Do not merge unrelated paid-agent or unsafe age-policy flags into this release.
+
+## Wave two: four more functional secondary screens (GitHub V6 only)
+
+7. **24-hour private story composer:** actual text and optional selected-file
+   preview, accurate distinct audience count, privacy warning when nobody is
+   listed, expiry details. Original authenticated publish remains unchanged.
+8. **Message action editor:** previews the real editable message field,
+   character length and current action, without submitting anything.
+9. **Conversation tools:** working local search indexes existing current
+   action buttons and directly calls their original click handlers; it never
+   creates fictional modules or grants additional permissions.
+10. **Avatar photo viewer:** actual on-device zoom and reset on close.
+
+Wave two is not a claim of 234 finished screens or full social-network parity.
+It is tested separately, and production promotion requires successful release
+regression and a remaining Vercel free-tier deployment allowance.
