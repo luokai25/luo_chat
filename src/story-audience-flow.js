@@ -32,13 +32,14 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  top.append(back,title);
  const help=el('p','luo-story-help');
  const body=el('div','luo-story-page-body');
- secondary.append(top,help,body);
+ const secondaryNotice=el('p','luo-story-status');secondaryNotice.setAttribute('role','status');secondaryNotice.setAttribute('aria-live','polite');
+ secondary.append(top,help,secondaryNotice,body);
  form.append(editor,secondary);
  let page='editor',cameFrom='audience';
  const previous=()=>page==='contacts'||page==='close'?'audience':'editor';
  const setAudience=names=>{audience.value=normalize(names).slice(0,100).join(', ');audience.dispatchEvent(new win.Event('input',{bubbles:true}))};
  const current=()=>getUser()?.id===actor&&actor!==null;
- const notice=message=>{const status=$('storyStatus');if(status)status.textContent=message};
+ const notice=message=>{const status=$('storyStatus');if(status)status.textContent=message;secondaryNotice.textContent=message};
  const sync=(force=false)=>{
   if(!force&&page==='contacts')return;
   const list=parse();
@@ -57,11 +58,12 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if((mode==='contacts'||mode==='except')&&!loaded){notice('Load your contacts before choosing this audience.');return false}
   const names=effective();
   if(names.length>100){notice('Stories support up to 100 recipients. Use Selected friends to narrow your audience.');return false}
+  if(mode==='contacts'&&!names.length){notice('No saved contacts found. Choose Only me or select friends.');return false}
   if(mode==='selected'&&!names.length){notice('Choose friends, or select Only me to save a private story.');return false}
   if(mode==='close'&&!names.length){notice('Choose close friends before sharing.');return false}
   setAudience(names);sync(true);return true;
  };
- function go(name){page=name;editor.hidden=name!=='editor';secondary.hidden=name==='editor';secondary.dataset.page=name;back.textContent=name==='audience'?'‹ Story editor':'‹ Audience';if(name!=='editor')render()}
+ function go(name){page=name;secondaryNotice.textContent='';editor.hidden=name!=='editor';secondary.hidden=name==='editor';secondary.dataset.page=name;back.textContent=name==='audience'?'‹ Story editor':'‹ Audience';if(name!=='editor')render()}
  async function ensureContacts(){
   if(loaded||loading)return;
   const request=++generation,who=getUser()?.id;
@@ -149,7 +151,9 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
    }));
    if(!matches.length)rows.append(el('p','luo-story-inline-note',term?'No contacts match this search.':'No saved contacts yet. Add friends under People.'));
   }
-  search.addEventListener('input',draw);draw();
+  search.addEventListener('input',draw);
+  search.addEventListener('keydown',event=>{if(event.key==='Enter')event.preventDefault()});
+  draw();
  }
  function closeFriendsView(){
   help.textContent='Save a Close friends circle privately. You can edit it before every Story.';
