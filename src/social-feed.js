@@ -99,18 +99,38 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
    stage.append(el('span','luo-reels-fast-label','2× playback'));
    media.set(article,state);observer?.observe(article);extras?.mount({article,item,head,actions,isActive:()=>activeCard===article,onCommentCount:count=>{comments=count;updateCount(comment,comments,'Comments')}});
   }else if(item.media?.length){
-   let index=0,image=null,photoRun=0;
-   const photos=item.media.filter(file=>/\.(jpe?g|png|webp|gif)$/i.test(file.path||''));
-   const load=button('View photo',()=>showPhoto(index),'luo-feed-play','play');stage.append(load);
-   const carousel=el('div','luo-feed-carousel');
-   async function showPhoto(next){
-    const ticket=++photoRun,url=await signed(photos[next]?.path,item);if(!valid()||!article.isConnected||ticket!==photoRun)return;
-    const img=el('img');img.alt=(item.title||'Post photo')+' · '+(next+1)+' of '+photos.length;img.src=url;
-    img.onerror=()=>{if(!valid())return;img.remove();load.hidden=false;note('This photo could not load. Try again.')};
-    image?.remove();image=img;stage.prepend(img);index=next;load.hidden=true;count.textContent=(index+1)+' / '+photos.length;
-   }
-   const count=el('span','','1 / '+photos.length);
-   if(photos.length>1){carousel.append(button('Previous photo',()=>showPhoto((index+photos.length-1)%photos.length),'luo-feed-photo-nav'),count,button('Next photo',()=>showPhoto((index+1)%photos.length),'luo-feed-photo-nav'));stage.append(carousel)}
+   let index=0,active=null,mediaRun=0;
+   const attachments=item.media.filter(file=>/\.(jpe?g|png|webp|gif|mp4|webm)$/i.test(file.path||''));
+   if(attachments.length){
+    const load=button('View media',()=>showMedia(index),'luo-feed-play','play');stage.append(load);
+    const carousel=el('div','luo-feed-carousel'),count=el('span','','1 / '+attachments.length);
+    async function showMedia(next){
+     const ticket=++mediaRun,path=attachments[next]?.path;
+     if(!path)return;
+     load.disabled=true;load.querySelector('span').textContent='Loading media…';
+     try{
+      const url=await signed(path,item);
+      if(!valid()||!article.isConnected||ticket!==mediaRun)return;
+      const video=/\.(mp4|webm)$/i.test(path);
+      const element=el(video?'video':'img');
+      if(video){
+       element.controls=true;element.playsInline=true;element.preload='metadata';
+       element.setAttribute('aria-label',(item.title||'Luonix video')+' · '+(next+1)+' of '+attachments.length);
+      }else element.alt=(item.title||'Luonix photo')+' · '+(next+1)+' of '+attachments.length;
+      element.src=url;element.className='luo-feed-post-media';
+      element.onerror=()=>{if(!valid()||ticket!==mediaRun)return;element.remove();load.hidden=false;load.querySelector('span').textContent='Retry media';note('Media could not play or load on this device.')};
+      active?.pause?.();active?.remove();active=element;stage.prepend(element);
+      index=next;load.hidden=true;count.textContent=(index+1)+' / '+attachments.length;
+     }catch(err){if(valid()&&ticket===mediaRun){load.hidden=false;load.querySelector('span').textContent='Retry media';note(err.message||'Media unavailable.')}}
+     finally{if(valid()&&ticket===mediaRun)load.disabled=false}
+    }
+    if(attachments.length>1){
+     carousel.append(button('Previous media',()=>showMedia((index+attachments.length-1)%attachments.length),'luo-feed-photo-nav'),
+      count,button('Next media',()=>showMedia((index+1)%attachments.length),'luo-feed-photo-nav'));
+     stage.append(carousel)
+    }
+   }else stage.append(el('p','luo-feed-feedback','The attached media type is unavailable.'));
+
   }
  }
 
