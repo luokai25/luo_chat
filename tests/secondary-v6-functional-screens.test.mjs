@@ -34,6 +34,8 @@ test('story composer explains private audience, selected attachment and real 24h
   audience.value='';audience.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   assert.match(d.querySelector('.luo-v6-story-privacy').textContent,/Only you/);
   assert.equal(body.value,'Hello private circle');
+  body.value='x'.repeat(1200);body.dispatchEvent(new x.w.Event('input',{bubbles:true}));
+  assert.equal(d.querySelector('.luo-v6-story-text').textContent.length,1200);
  }finally{x.close()}
 });
 test('story preview keeps the same selected image URL when only the story text changes',()=>{
