@@ -75,7 +75,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(mode==='close'&&!names.length){notice('Choose close friends before sharing.');return false}
   setAudience(names);sync(true);return true;
  };
- function go(name){page=name;secondaryNotice.textContent='';editor.hidden=name!=='editor';secondary.hidden=name==='editor';secondary.dataset.page=name;back.textContent=name==='audience'?'‹ Story editor':'‹ Audience';if(name!=='editor')render()}
+ function go(name){page=name;secondaryNotice.textContent='';editor.hidden=name!=='editor';secondary.hidden=name==='editor';secondary.dataset.page=name;back.textContent=name==='audience'?'‹ Story editor':'‹ Audience';if(name==='editor')body.replaceChildren();else render()}
  async function ensureContacts(){
   if(loaded||loading)return;
   const request=++generation,who=getUser()?.id;
