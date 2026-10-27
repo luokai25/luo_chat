@@ -18,10 +18,10 @@ function storyComposer(){
  const attachment=make('small','luo-v6-story-file');const privacy=make('p','luo-v6-story-privacy');
  const counter=make('p','luo-v6-story-counter');counter.setAttribute('aria-live','polite');
  preview.append(head,mediaBox,text,attachment,privacy,counter);body.before(preview);
- let imageUrl=null;
+ let imageUrl=null,lastFile=null;
  function imageCleanup(){
   if(imageUrl&&typeof URL.revokeObjectURL==='function')URL.revokeObjectURL(imageUrl);
-  imageUrl=null;
+  imageUrl=null;lastFile=null;
  }
  const render=()=>{
   text.textContent=body.value.trim().slice(0,500)||'Your story text appears here';
@@ -30,7 +30,8 @@ function storyComposer(){
   counter.textContent=body.value.length.toLocaleString()+' / 2,000 characters'+(music.value.trim()?' · Music link provided':'');
   const file=media.files?.[0];
   attachment.textContent=file?'Selected file: '+file.name.slice(0,120)+' · '+(file.size/1048576).toFixed(1)+' MB':'No media selected';
-  imageCleanup();mediaBox.replaceChildren();
+  if(file===lastFile)return;
+  imageCleanup();lastFile=file||null;mediaBox.replaceChildren();
   if(file&&file.type.startsWith('image/')&&typeof URL.createObjectURL==='function'){
    try{imageUrl=URL.createObjectURL(file);const pic=make('img','');pic.alt='Local preview of selected image';pic.src=imageUrl;mediaBox.append(pic);}
    catch{mediaBox.append(make('p','','Image chosen. Preview unavailable on this device.'));}
