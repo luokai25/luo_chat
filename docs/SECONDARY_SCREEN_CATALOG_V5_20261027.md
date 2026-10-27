@@ -55,3 +55,23 @@ Do not merge unrelated paid-agent or unsafe age-policy flags into this release.
 Wave two is not a claim of 234 finished screens or full social-network parity.
 It is tested separately, and production promotion requires successful release
 regression and a remaining Vercel free-tier deployment allowance.
+
+## Wave three: four more functional surfaces (V7, GitHub staging only)
+
+11. **Keyboard shortcuts:** working filter over the real keyboard commands,
+    accessible result counts and strong mobile typography; no invented shortcuts.
+12. **Direct-chat attachment picker:** large labeled action targets that invoke
+    the current photo/video, camera, document, poll and schedule handlers;
+    selected-file details and Escape handling, with the original upload
+    authorization untouched.
+13. **Worlds and group creation:** preview from the *actual* form fields,
+    public/private audience explanation, distinct invitee counts, and username
+    formatting errors; real server-side membership checks stay authoritative.
+14. **Updates status viewer:** author reply composer counts characters,
+    explicitly labeled previous/next actions, and close cleanup without
+    interfering with the existing story timer, signed-media or reactions logic.
+
+These four screens are UI enhancements to already-functional native flows.
+They do not create new backends, publish content, change age policy or count
+as a recreation of all remaining ~220 interface states. Preview/release builds
+must pass the existing browser and mobile workflows before production.
