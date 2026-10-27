@@ -20,11 +20,11 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  const btn=(text,fn,cls='')=>{const n=el('button',cls,text);n.type='button';n.addEventListener('click',fn);return n};
  const root=el('section','luonix-v10'),top=el('header','luonix-v10-head'),heading=el('h2','','New Luonix'),exit=btn('×',leave,'luonix-v10-close');
  exit.setAttribute('aria-label','Close Luonix composer');
- top.append(btn('‹',()=>navigate(stage==='audience'?'preview':stage==='preview'?'gallery':'exit'),'luonix-v10-back'),heading,exit);
+ top.append(btn('‹',()=>navigate(stage==='upload'?'audience':stage==='audience'?'preview':stage==='preview'?'gallery':'exit'),'luonix-v10-back'),heading,exit);
  const state=el('p','luonix-v10-hint'),screens=el('div','luonix-v10-screens');
  const gallery=el('section','luonix-v10-screen luonix-v10-gallery'),preview=el('section','luonix-v10-screen luonix-v10-preview'),audiencePage=el('section','luonix-v10-screen luonix-v10-audience'),uploadPage=el('section','luonix-v10-screen luonix-v10-upload');
  screens.append(gallery,preview,audiencePage,uploadPage);
- const footer=el('footer','luonix-v10-footer'),back=btn('Back',()=>navigate(stage==='audience'?'preview':'gallery')),next=btn('Next',forward,'luonix-v10-next');
+ const footer=el('footer','luonix-v10-footer'),back=btn('Back',()=>navigate(stage==='upload'?'audience':stage==='audience'?'preview':'gallery')),next=btn('Next',forward,'luonix-v10-next');
  const message=el('p','luonix-v10-message');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
  footer.append(back,message,next);root.append(top,state,screens,footer);output.append(root);
  let addMode=false;
@@ -125,7 +125,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   state.textContent=stage==='gallery'?'Choose photos, videos, or both.':
    stage==='preview'?'Swipe through each selected item. Tap a video to play.':
    stage==='audience'?'Choose who can see the finished post.':'Keep this screen open while media uploads.';
-  back.hidden=stage==='gallery'||stage==='upload';next.textContent=stage==='gallery'?'Choose media':stage==='preview'?'Next · Audience':stage==='audience'?'Send · Publish':'Publishing…';
+  back.hidden=stage==='gallery';next.textContent=stage==='gallery'?'Choose media':stage==='preview'?'Next · Audience':stage==='audience'?'Send · Publish':'Publishing…';
   next.disabled=stage==='upload';setInfo('');
  }
  async function forward(){
