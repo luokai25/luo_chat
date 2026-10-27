@@ -69,6 +69,18 @@ test('Worlds modal validates actual username formatting and calculates distinct 
   assert.equal(form.querySelector('button').type,'submit');
  }finally{x.close()}
 });
+test('Worlds visibility dropdown remains connected to original form when options have text',async()=>{
+ const x=create();try{
+  const d=x.d,form=d.createElement('form');form.className='worlds-modal';
+  form.innerHTML='<h2>New World</h2><label class="worlds-field">World name<input value="Community"></label><label class="worlds-field">Visibility<select><option value="private">Private</option><option value="public">Public</option></select></label><div class="worlds-modal-buttons"><button type="submit">Create World</button></div>';
+  d.body.append(form);await tick();
+  const control=form.querySelector('select'),note=form.querySelector('.luo-v7-worlds-note');
+  assert.match(note.textContent,/Private World/);
+  control.value='public';control.dispatchEvent(new x.w.Event('change',{bubbles:true}));
+  assert.match(note.textContent,/Discoverable World/);
+  assert.equal(form.querySelector('button').type,'submit');
+ }finally{x.close()}
+});
 test('Status viewer preserves existing native reply submit flow while counting typed characters',async()=>{
  const x=create();try{
   const d=x.d,viewer=d.createElement('dialog');viewer.id='luoUpdatesV2Viewer';
