@@ -66,3 +66,12 @@
  .luonix-v10-screen{padding:12px 12px 35px}.luonix-v10-head{padding:8px 10px}.luonix-v10-footer{gap:6px;padding-inline:10px}
  .luonix-v10-footer button{padding:10px 9px}.luonix-v10-media-controls button{font-size:12px;padding:8px 7px}}
 @media(prefers-reduced-motion:reduce){.luonix-v10 *{transition:none!important;animation:none!important}}
+
+/* Authorized Luonix mixed-photo/video feed cards. */
+.luo-feed-card .luo-feed-post-media{max-width:100%;max-height:min(68dvh,650px);width:100%;height:auto;object-fit:contain;background:#050508;border-radius:16px}
+.luo-feed-card video.luo-feed-post-media{display:block;aspect-ratio:9/16;min-height:190px}
+.luo-feed-card .luo-feed-carousel{position:relative;z-index:2}
+.luonix-v10-thumb img{width:100%;height:100%;object-fit:cover;border-radius:9px;display:block}
+.luonix-v10-media-controls{flex-wrap:wrap}
+.luonix-v10-media-controls .luonix-v10-add{border-color:#dbb37b;color:#ffe3a8}
+.luonix-v10-progress:indeterminate{background:#463421;accent-color:#e3be80}
