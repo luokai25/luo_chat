@@ -16,6 +16,7 @@ test('Wallpapers are isolated by account and conversation, and clean on sign-out
  const api=installInstagramChats({win:w,getUser:()=>user,getCurrent:()=>conversation,getChats:()=>[],openRoom:()=>{}});
  try{
   assert.equal(api.wallpaperCount,10);api.onRoom();
+  assert.equal(d.querySelector('.luo-dm-settings').closest('.app'),d.querySelector('.app'));
   d.querySelector('.luo-dm-info').click();
   assert.equal(d.querySelectorAll('.luo-dm-wallpaper').length,10);
   d.querySelector('[data-theme="7"]').click();assert.equal(d.getElementById('room').dataset.luoTheme,'7');
