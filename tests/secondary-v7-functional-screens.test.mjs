@@ -85,7 +85,7 @@ test('Worlds modal validates actual username formatting and calculates distinct 
   users.value='qa_friend,another_name,qa_friend';users.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   assert.match(feedback.textContent,/2 unique invitees/);assert.equal(feedback.dataset.valid,'true');
   users.value='bad name';users.dispatchEvent(new x.w.Event('input',{bubbles:true}));
-  assert.match(feedback.textContent,/1 username/);assert.equal(feedback.dataset.valid,'false');
+  assert.match(feedback.textContent,/1 username/);assert.match(feedback.textContent,/correct invalid invitees/);assert.equal(feedback.dataset.valid,'false');
   assert.equal(users.getAttribute('aria-invalid'),'true');
   users.value='qa_friend';users.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   assert.equal(users.hasAttribute('aria-invalid'),false);
@@ -101,6 +101,7 @@ test('Worlds visibility dropdown remains connected to original form when options
   assert.match(note.textContent,/Private World/);
   control.value='public';control.dispatchEvent(new x.w.Event('change',{bubbles:true}));
   assert.match(note.textContent,/Discoverable World/);
+  assert.match(note.textContent,/Ready to request creation/);
   assert.equal(form.querySelector('button').type,'submit');
  }finally{x.close()}
 });
