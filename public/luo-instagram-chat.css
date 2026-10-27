@@ -17,7 +17,7 @@
 #room .roomhead .room-identity .tiny{font-size:11px;color:#c5aa84}
 #room #messages{background-image:var(--luo-dm-wallpaper)!important;background-color:#0c0c11!important;background-size:cover!important;background-attachment:local;scrollbar-width:thin;padding:20px 15px 30px!important}
 #room.luo-dm-animated #messages{animation:luo-wallpaper-breathe 22s ease-in-out infinite alternate}
-@keyframes luo-wallpaper-breathe{0%{background-position:0 0;filter:saturate(.94)}100%{background-position:10% 8%;filter:saturate(1.04)}}
+@keyframes luo-wallpaper-breathe{0%{background-position:0 0}100%{background-position:10% 8%}}
 #room .bubble{max-width:min(82%,480px);border-radius:19px 19px 19px 5px!important;border:1px solid #ffffff0d;background:linear-gradient(155deg,#272126ee,#1b1a22ee)!important;color:#f6ebe1!important;box-shadow:0 6px 17px #0003;padding:10px 13px 8px;margin-block:8px}
 #room .bubble.mine{background:linear-gradient(135deg,#977037,#5d4528)!important;border-color:#ffdfa34a!important;color:#fff2d8!important;border-radius:19px 19px 5px 19px!important}
 #room .bubble .bubble-body{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:14px}
