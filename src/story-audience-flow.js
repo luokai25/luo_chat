@@ -113,7 +113,11 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
    if(key==='public'){if(!publicReady)return;setAudience([]);committedMode=mode;go('editor');sync(true);return;}
    if(key==='contacts'||key==='except'){if(!loaded){notice('Your contacts must load before choosing this audience.');return}if(key==='contacts'&&contacts.length>100){notice('More than 100 contacts found. Use Selected friends instead.');return}if(key==='except'){open('contacts');return}selected=new Set(effective());apply();go('editor')}
    else if(key==='selected')open('contacts');
-   else if(key==='close')open('close');
+   else if(key==='close'){
+    const saved=circles.find(c=>c.name?.trim().toLowerCase()==='close friends');
+    selected=new Set(normalize(saved?.usernames||[]));
+    open('close');
+   }
   },'luo-story-audience-choice');
   row.replaceChildren(el('strong','',label),el('small','',description),el('span','luo-story-option-mark',key===mode?'✓':'›'));
   row.dataset.selected=String(mode===key);if(key==='public'){row.disabled=!publicReady;row.title=publicReady?'Visible to signed-in Luo Chat members':'Server-side public Story permissions are not enabled'}
@@ -234,5 +238,5 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  };
  dialog.addEventListener('cancel',event=>{if(!requestClose())event.preventDefault()});
  dialog.addEventListener('close',()=>{generation++;loading=false;go('editor')});
- return{reset,signedOut,requestClose,onCirclesLoaded:list=>{circles=Array.isArray(list)?list:[];if(page==='close')render()},audienceMode:()=>mode};
+ return{reset,signedOut,requestClose,onCirclesLoaded:list=>{circles=Array.isArray(list)?list:[];if(page==='close'&&!selected.size){const saved=circles.find(c=>c.name?.trim().toLowerCase()==='close friends');if(saved)selected=new Set(normalize(saved.usernames||[]))}if(page==='close')render()},useSavedCircle:c=>{selected=new Set(normalize(c?.usernames||[]));mode=c?.name?.trim().toLowerCase()==='close friends'?'close':'selected';committedMode=mode;sync(true)},audienceMode:()=>mode};
 }
