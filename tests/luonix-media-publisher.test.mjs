@@ -8,6 +8,7 @@ function harness({deferUpload=false}={}){
  const dom=new JSDOM('<main id="social"></main>',{url:'https://luo.test/',pretendToBeVisual:true});
  const win=dom.window,d=win.document,output=d.getElementById('social');
  win.URL.createObjectURL=({name})=>'blob:luo-'+name;
+ win.HTMLMediaElement.prototype.pause=function(){};
  const revoked=[];win.URL.revokeObjectURL=value=>revoked.push(value);
  win.confirm=()=>true;
  win.crypto.randomUUID=(()=>{let n=0;return()=>('00000000-0000-4000-8000-'+(++n).toString().padStart(12,'0'))})();
@@ -86,6 +87,28 @@ test('privacy second page is explicit and gallery media is published with origin
  }finally{h.done()}
 });
 
+test('single-video Luonix uses clip publishing with verified duration metadata',async()=>{
+ const h=harness();try{
+  const file=new h.win.File(['video'],'short.mp4',{type:'video/mp4'});
+  h.choose(file);
+  const video=h.d.querySelector('.luonix-v10-stage video');
+  Object.defineProperty(video,'duration',{configurable:true,value:42});
+  video.dispatchEvent(new h.win.Event('loadedmetadata'));
+  h.click('.luonix-v10-next');h.click('.luonix-v10-next');await tick();
+  const created=h.calls.find(r=>r.action==='entry.create');
+  const published=h.calls.find(r=>r.action==='entry.publish');
+  assert.equal(created.input.kind,'clip');
+  assert.equal(published.input.media[0].duration,42);
+ }finally{h.done()}
+});
+test('single-video Luonix rejects unreadable and over-90-second durations before any server request',async()=>{
+ const h=harness();try{
+  const file=new h.win.File(['video'],'too-long.webm',{type:'video/webm'});
+  h.choose(file);h.click('.luonix-v10-next');h.click('.luonix-v10-next');await tick();
+  assert.equal(h.calls.filter(c=>c.action==='entry.create').length,0);
+  assert.match(h.d.querySelector('.luonix-v10-message').textContent,/90 seconds or less/);
+ }finally{h.done()}
+});
 test('only one click publishes; interrupted media keeps the same entry and skips already-uploaded files on retry',async()=>{
  const h=harness({deferUpload:true});try{
   const a=new h.win.File(['a'],'a.jpg',{type:'image/jpeg'}),b=new h.win.File(['b'],'b.jpg',{type:'image/jpeg'});
