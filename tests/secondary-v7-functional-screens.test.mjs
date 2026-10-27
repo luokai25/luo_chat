@@ -37,6 +37,8 @@ test('attachment picker enhances only the actual action buttons and respects Esc
   d.body.append(sheet);await tick();
   assert.equal(sheet.dataset.luoV7,'1');
   assert.equal(sheet.querySelectorAll('.luo-v7-attachment-action').length,2);
+  assert.equal(sheet.querySelectorAll('.luo-v7-attachment-glyph[aria-hidden="true"]').length,2);
+  assert.equal(sheet.querySelectorAll('.luo-v7-attachment-action')[0].textContent.trim().endsWith('Photo or video'),true);
   sheet.hidden=false;attach.setAttribute('aria-expanded','true');
   sheet.dispatchEvent(new x.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
   assert.equal(sheet.hidden,true);assert.equal(attach.getAttribute('aria-expanded'),'false');
