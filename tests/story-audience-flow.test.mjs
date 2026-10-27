@@ -5,12 +5,13 @@ import {JSDOM} from 'jsdom';
 import {installStoryAudienceFlow} from '../src/story-audience-flow.js';
 
 const html=await readFile('public/index.html','utf8');
-function create({contacts=[{username:'alex_friend',display_name:'Alex'},{username:'maria_k',display_name:'Maria'},{username:'sam_123',display_name:'Sam'}],deferred=false}={}){
+function create({publicReady=false,contacts=[{username:'alex_friend',display_name:'Alex'},{username:'maria_k',display_name:'Maria'},{username:'sam_123',display_name:'Sam'}],deferred=false}={}){
  const dom=new JSDOM(html,{url:'https://luo.test',pretendToBeVisual:true}),win=dom.window,doc=win.document;
  let actor={id:'alice'},release,fetches=0;
  const calls=[];
  const db={rpc:async(name,params)=>{
   calls.push({name,params});
+  if(name==='chat_public_story_ready')return {data:publicReady,error:null};
   if(name==='get_my_chat_contacts'){fetches++;if(deferred)return new Promise(resolve=>release=resolve);return {data:contacts,error:null}}
   if(name==='save_chat_story_circle')return {data:'circle-id',error:null};
   throw Error('Unexpected RPC: '+name);
@@ -99,6 +100,25 @@ test('Only me never invents recipients and Public cannot silently become a priva
   x.click('Only me');
   assert.equal(d.getElementById('storyAudience').value,'');
   assert.match(d.querySelector('.luo-story-audience-button').textContent,/Only me/);
+ }finally{x.done()}
+});
+
+test('Public audience activates only after explicit server readiness, never by an unchecked toggle',async()=>{
+ const x=create({publicReady:true});try{
+  const d=x.doc;
+  d.querySelector('.luo-story-audience-button').click();await settle();
+  const publicChoice=[...d.querySelectorAll('.luo-story-audience-choice')].find(e=>e.textContent.includes('Public'));
+  assert.equal(publicChoice.disabled,false);
+  publicChoice.click();
+  assert.equal(x.flow.audienceMode(),'public');
+  assert.equal(d.getElementById('storyAudience').value,'');
+  assert.match(d.querySelector('.luo-story-audience-button').textContent,/Public/);
+  const server=await readFile('src/stories.js','utf8');
+  const migration=await readFile('supabase/migrations/20261027140000_story_public_audience_opt_in.sql','utf8');
+  assert.match(server,/create_public_chat_story/);
+  assert.match(migration,/enabled boolean not null default false/);
+  assert.match(migration,/auth\.uid\(\) is not null/);
+  assert.match(migration,/grant execute on function public\.create_public_chat_story/);
  }finally{x.done()}
 });
 
