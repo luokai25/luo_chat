@@ -72,3 +72,11 @@
 #room.luo-dm-animated #messages{background-image:radial-gradient(circle 100px at var(--luo-pointer-x,50%) var(--luo-pointer-y,35%),#efc77814,transparent 100%),var(--luo-dm-wallpaper)!important}
 @media(max-width:520px){.luo-dm-wallpaper-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.luo-dm-wallpapers{padding:12px}.luo-dm-wallpaper{min-height:185px}}
 @media(prefers-reduced-motion:reduce){.luo-dm-wallpaper{transition:none!important}.luo-dm-wallpaper:hover{transform:none!important}#room #messages{background-image:var(--luo-dm-wallpaper)!important}}
+
+/* Mobile safety: keyboard-resilient appearance sheet and legible tap targets. */
+.luo-dm-settings{max-height:min(90dvh,760px);overscroll-behavior:contain;scroll-padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+.luo-dm-wallpaper-search{font-size:16px;min-height:46px}
+.luo-dm-wallpaper{min-height:44px;touch-action:manipulation}
+.luo-dm-dismiss,.luo-dm-action{touch-action:manipulation}
+@media(max-width:380px){.luo-dm-settings{width:100%;padding-inline:11px}.luo-dm-wallpapers{padding:9px}.luo-dm-wallpaper-grid{gap:7px}.luo-dm-wallpaper{padding:5px;min-height:0}.luo-dm-wallpaper-name{font-size:12px}.luo-dm-wallpaper-caption{font-size:10px}}
+@media(hover:none) and (pointer:coarse){.luo-dm-wallpaper:hover{transform:none}#room.luo-dm-animated #messages{animation:none!important}}
