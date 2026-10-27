@@ -42,7 +42,7 @@ test('attachment picker enhances only the actual action buttons and respects Esc
   const file=d.getElementById('mediaFile'),note=sheet.querySelector('.luo-v7-attachment-note');
   Object.defineProperty(file,'files',{configurable:true,value:[new x.w.File(['abc'],'tiny.txt',{type:'text/plain'})]});
   file.dispatchEvent(new x.w.Event('change'));
-  assert.match(note.textContent,/tiny\\.txt.*KB/);
+  assert.ok(note.textContent.includes('tiny.txt') && note.textContent.includes('KB'));
   Object.defineProperty(file,'files',{configurable:true,value:[new x.w.File(['a'],'one.txt'),new x.w.File(['b'],'two.txt')]});
   file.dispatchEvent(new x.w.Event('change'));
   assert.match(note.textContent,/2 files selected.*total/);
