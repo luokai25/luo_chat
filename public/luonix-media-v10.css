@@ -1,0 +1,68 @@
+/* Luonix V10 multi-media gallery and publisher. Familiar WhatsApp-style sequence,
+   Luo Chat colors, no fake byte-level upload percentages. */
+#social[data-social-view="publish-clip"]>.luo-social-topbar,#social[data-social-view="publish-clip"]>.luo-social-tabs,
+#social[data-social-view="publish-clip"]>.luo-social-tools,#social[data-social-view="publish-clip"]>.luo-social-status,
+#social[data-social-view="compose"]>.luo-social-topbar,#social[data-social-view="compose"]>.luo-social-tabs,
+#social[data-social-view="compose"]>.luo-social-tools,#social[data-social-view="compose"]>.luo-social-status{display:none!important}
+.app[data-tab="social"] #social[data-social-view="compose"],.app[data-tab="social"] #social[data-social-view="publish-clip"]{
+ position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;max-height:100dvh!important;
+ z-index:255!important;padding:0!important;margin:0!important;background:#0c0a10!important;overflow:hidden!important;
+}
+#social[data-social-view="compose"]>.luo-social-content,
+#social[data-social-view="publish-clip"]>.luo-social-content{height:100%;overflow:hidden!important;display:block!important}
+.luonix-v10{box-sizing:border-box;--luonix-gold:#e7bc76;--luonix-muted:#c6b39d;display:flex;flex-direction:column;
+ height:100dvh;max-height:100dvh;width:100%;max-width:760px;margin:auto;color:#f8e7cc;background:#100e14;border-inline:1px solid #443525}
+.luonix-v10-head{position:relative;z-index:4;display:flex;align-items:center;gap:12px;padding:13px 14px;
+ background:#19151be8;border-bottom:1px solid #634c31;min-height:58px;box-sizing:border-box}
+.luonix-v10-head h2{font-size:19px;line-height:1.3;margin:0;flex:1;text-align:center;letter-spacing:-.4px}
+.luonix-v10-head button{width:46px;height:46px;flex:0 0 46px;border-radius:50%;color:#ffe2b4;background:#30241f;border:1px solid #88663f;font-size:23px}
+.luonix-v10-hint{font-size:12px;line-height:1.5;text-align:center;color:var(--luonix-muted);margin:0;padding:9px 14px}
+.luonix-v10-screens{flex:1;min-height:0;overflow:hidden}
+.luonix-v10-screen{display:flex;flex-direction:column;gap:13px;height:100%;overflow-y:auto;overscroll-behavior:contain;padding:17px max(16px,calc((100% - 600px)/2)) 38px;box-sizing:border-box}
+.luonix-v10-screen[hidden]{display:none!important}
+.luonix-v10-screen h3{color:#f5d9a4;font-size:22px;margin:6px 0 2px}
+.luonix-v10-screen p{font-size:13px;line-height:1.6;color:#c9b49b}
+.luonix-v10-gallery{justify-content:flex-start;background:radial-gradient(ellipse at 70% 0%,#79562e33,transparent 45%),#100e14}
+.luonix-v10-gallery-button,.luonix-v10-camera,.luonix-v10-advanced{min-height:58px;width:100%;padding:13px 18px;border-radius:17px;border:1px solid #a27b43;background:#2c211e;color:#ffe0a2;font-size:16px;font-weight:750;touch-action:manipulation}
+.luonix-v10-gallery-button{background:linear-gradient(120deg,#eecb8a,#b18a43);color:#160f09;border:0}
+.luonix-v10-file{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.luonix-v10-selected{display:grid;gap:9px;min-width:0}
+.luonix-v10-file-item{width:100%;text-align:left;background:#261f23;border:1px solid #5c4938;padding:12px;color:#efd6b1;border-radius:12px;min-height:44px;overflow-wrap:anywhere}
+.luonix-v10-preview{background:#111015}
+.luonix-v10-stage{display:grid;place-items:center;background:#07070a;border:1px solid #6e5134;border-radius:19px;min-height:210px;max-height:54dvh;overflow:hidden;aspect-ratio:4/3}
+.luonix-v10-stage img,.luonix-v10-stage video{display:block;width:100%;height:100%;max-height:54dvh;object-fit:contain;background:#030305}
+.luonix-v10-thumbs{display:flex;flex-wrap:nowrap;gap:9px;overflow-x:auto;scrollbar-width:thin;padding:4px 0}
+.luonix-v10-thumb{width:50px;height:46px;flex:0 0 50px;border:1px solid #846342;border-radius:11px;background:#211c20;color:#f5d19c;font-weight:750}
+.luonix-v10-thumb[aria-pressed="true"]{background:#dcb46f;color:#130e0a;border-color:#e6c58b}
+.luonix-v10-media-controls{display:flex;gap:10px;justify-content:space-between}
+.luonix-v10-media-controls button{min-height:44px;padding:8px 12px;background:#2d2526;border:1px solid #795b3d;border-radius:12px;color:#ffe0b2}
+.luonix-v10-preview label{font-size:13px;font-weight:700;color:#e6c28b}
+.luonix-v10-preview textarea,.luonix-v10-preview input{background:#20191f;border:1px solid #7c603c;border-radius:13px;color:#ffebd0;font-size:16px;padding:13px;max-width:100%;box-sizing:border-box;width:100%;min-height:45px}
+.luonix-v10-preview textarea{min-height:96px;resize:vertical}
+.luonix-v10-counter{text-align:right;color:#b7a38b;font-size:12px}
+.luonix-v10-audience{gap:13px}
+.luonix-v10-audience-options{display:grid;gap:11px}
+.luonix-v10-audience-item{width:100%;min-height:80px;text-align:left;border:1px solid #624d38;border-radius:15px;padding:15px;background:#241f25;color:#ffeed7;
+ display:grid;grid-template-columns:1fr auto;gap:6px 12px}
+.luonix-v10-audience-item strong{font-size:16px;grid-column:1}
+.luonix-v10-audience-item small{grid-column:1;font-size:12px;color:#cab39a;line-height:1.4}
+.luonix-v10-check{grid-column:2;grid-row:1/3;align-self:center;color:#f2cf88;visibility:hidden}
+.luonix-v10-audience-item[data-selected="true"]{background:#392a24;border-color:#e3b873}
+.luonix-v10-audience-item[data-selected="true"] .luonix-v10-check{visibility:visible}
+.luonix-v10-review{font-weight:760;color:#f0cc8f!important}
+.luonix-v10-warning{background:#221d23;border:1px solid #5b4734;border-radius:13px;padding:14px}
+.luonix-v10-upload{align-items:stretch;justify-content:center;gap:24px;text-align:center}
+.luonix-v10-loading{display:grid;gap:15px;justify-items:center;padding:26px 16px;border:1px solid #82603d;background:#221d22;border-radius:22px}
+.luonix-v10-upload-label{color:#f6dda9;font-size:17px;overflow-wrap:anywhere}
+.luonix-v10-progress{width:100%;height:14px;accent-color:#deb76e}
+.luonix-v10-loading small{font-size:12px;line-height:1.6;color:#c6b09a}
+.luonix-v10-footer{display:flex;align-items:center;gap:10px;min-height:78px;padding:10px 15px calc(10px + env(safe-area-inset-bottom,0px));background:#151118ed;border-top:1px solid #6a5034;box-sizing:border-box}
+.luonix-v10-footer button{min-height:48px;padding:11px 14px;border-radius:13px;border:1px solid #89663e;background:#392b23;color:#ffe3b9;font-size:13px;font-weight:800}
+.luonix-v10-footer .luonix-v10-next{background:linear-gradient(115deg,#f0d295,#b88d43);color:#170f09;border:0}
+.luonix-v10-footer .luonix-v10-message{flex:1;line-height:1.35;font-size:12px;color:#f8bf96;min-width:0;overflow-wrap:anywhere}
+.luonix-v10 :is(button,input,textarea):focus-visible{outline:3px solid #f4d08b;outline-offset:3px}
+.luonix-v10 button:disabled{opacity:.58;cursor:not-allowed}
+@media(max-width:540px){.luonix-v10{border:0}.luonix-v10-stage{min-height:175px;max-height:46dvh}.luonix-v10-stage img,.luonix-v10-stage video{max-height:46dvh}
+ .luonix-v10-screen{padding:12px 12px 35px}.luonix-v10-head{padding:8px 10px}.luonix-v10-footer{gap:6px;padding-inline:10px}
+ .luonix-v10-footer button{padding:10px 9px}.luonix-v10-media-controls button{font-size:12px;padding:8px 7px}}
+@media(prefers-reduced-motion:reduce){.luonix-v10 *{transition:none!important;animation:none!important}}
