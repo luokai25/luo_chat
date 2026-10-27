@@ -149,6 +149,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   if(!files.length&&!caption.value.trim()){setInfo('Choose photos or videos and add a caption.');return}
   const singleClip=files.length===1&&files[0].type.startsWith('video/');
   if(singleClip&&(!Number.isFinite(duration)||duration<=0||duration>90)){setInfo('Video clips need a readable duration of 90 seconds or less. Use Advanced video editing to trim longer clips.');return}
+  if(win.navigator?.onLine===false){setInfo('You are offline. Reconnect and tap Send again. Your selection is still here.');return}
   if(audience==='public'&&!win.confirm('Make this Luonix visible publicly?'))return;
   publishing=true;stage='upload';root.dataset.stage='upload';for(const panel of screens.children)panel.hidden=panel!==uploadPage;
   next.disabled=true;exit.disabled=true;back.disabled=true;heading.textContent='Publishing';setInfo('');
@@ -169,9 +170,21 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
     const file=originals[i],ext=LUONIX_MEDIA_RULES.types[file.type];
     const path=owner+'/'+tx.id+'/'+String(i)+'-'+tx.id+'.'+ext;
     uploadLabel.textContent='Uploading '+(i+1)+' of '+originals.length+' · '+file.name.slice(0,70);
-    const result=await db.storage.from('luo-social').upload(path,file,{upsert:false,contentType:file.type});
+    const storage=db.storage.from('luo-social');
+    const result=await storage.upload(path,file,{upsert:false,contentType:file.type});
     if(!current())return;
-    if(result.error)throw Error('Upload interrupted at file '+(i+1)+'. Retry to continue. '+result.error.message);
+    if(result.error){
+     // A lost acknowledgement can leave a successful upload on the server.
+     // Accept a retry only when the authorized object exists with the exact file size.
+     let confirmed=false;
+     if(typeof storage.info==='function'){
+      try{const remote=await storage.info(path);if(!current())return;
+       const size=Number(remote.data?.metadata?.size??remote.data?.size);
+       confirmed=!remote.error&&Number.isFinite(size)&&size===file.size;
+      }catch{}
+     }
+     if(!confirmed)throw Error('Upload interrupted at file '+(i+1)+'. Retry to continue. '+result.error.message);
+    }
     done.set(i,{path});bar.value=done.size;bar.setAttribute('aria-valuetext',done.size+' of '+originals.length+' files uploaded');
    }
    if(!current())return;
