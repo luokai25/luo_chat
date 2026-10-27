@@ -5,9 +5,9 @@ import {JSDOM} from 'jsdom';
 import {createChatWallpapers,installInstagramChats} from '../src/instagram-chat.js';
 import {parseLuoShare,installReelMessagePreviews} from '../src/reel-message-preview.js';
 
-test('Luo direct messages provide 100 distinct offline wallpapers with no external URLs',()=>{
+test('Luo direct messages provide ten curated interactive offline scenes with no external URLs',()=>{
  const themes=createChatWallpapers();
- assert.equal(themes.length,100);assert.equal(new Set(themes.map(x=>x.id)).size,100);assert.equal(new Set(themes.map(x=>x.name)).size,100);
+ assert.equal(themes.length,10);assert.equal(new Set(themes.map(x=>x.id)).size,100);assert.equal(new Set(themes.map(x=>x.name)).size,100);
  for(const theme of themes){assert.match(theme.background,/gradient/);assert.doesNotMatch(theme.background,/url\s*\(/i);}
 });
 test('Wallpapers are isolated by account and conversation, and clean on sign-out',()=>{
@@ -15,11 +15,11 @@ test('Wallpapers are isolated by account and conversation, and clean on sign-out
  const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};let user={id:'human1'},conversation={id:'direct1',kind:'direct',person:{username:'Friend'}};
  const api=installInstagramChats({win:w,getUser:()=>user,getCurrent:()=>conversation,getChats:()=>[],openRoom:()=>{}});
  try{
-  assert.equal(api.wallpaperCount,100);api.onRoom();
+  assert.equal(api.wallpaperCount,10);api.onRoom();
   d.querySelector('.luo-dm-info').click();
-  assert.equal(d.querySelectorAll('.luo-dm-wallpaper').length,100);
-  d.querySelector('[data-theme="37"]').click();assert.equal(d.getElementById('room').dataset.luoTheme,'37');
-  assert.equal(JSON.parse(w.localStorage.getItem('luo-dm-theme-v1:human1:direct1')).theme,37);
+  assert.equal(d.querySelectorAll('.luo-dm-wallpaper').length,10);
+  d.querySelector('[data-theme="7"]').click();assert.equal(d.getElementById('room').dataset.luoTheme,'7');
+  assert.equal(JSON.parse(w.localStorage.getItem('luo-dm-theme-v1:human1:direct1')).theme,7);
   conversation={id:'direct2',kind:'direct',person:{username:'Other'}};api.onRoom();
   assert.equal(d.getElementById('room').dataset.luoTheme,'0');
   user={id:'human2'};api.onRoom();assert.equal(d.getElementById('room').dataset.luoTheme,'0');
