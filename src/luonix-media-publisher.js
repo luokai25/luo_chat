@@ -14,7 +14,7 @@ export function validateLuonixMedia(files){
  return list;
 }
 export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublished,onCancel,onAdvanced}){
- const doc=win.document,owner=getUser()?.id;let removed=false,stage='gallery',files=[],urls=[],selected=0,publishing=false,operation=null,duration=0;
+ const doc=win.document,owner=getUser()?.id;let removed=false,stage='gallery',files=[],urls=[],selected=0,publishing=false,operation=null,duration=0,textOnly=false;
  const valid=()=>!removed&&!!owner&&getUser()?.id===owner&&root.isConnected;
  const el=(tag,cls,value)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(value!==undefined)n.textContent=String(value);return n};
  const btn=(text,fn,cls='')=>{const n=el('button',cls,text);n.type='button';n.addEventListener('click',fn);return n};
@@ -34,7 +34,8 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   addMode=false;picker.multiple=false;picker.accept='image/*';picker.setAttribute('capture','environment');picker.click();
  },'luonix-v10-camera');
  const edit=btn('Advanced video editing',()=>{if(files.length&&!win.confirm('Open the video studio? This post selection will be discarded.'))return;onAdvanced?.()},'luonix-v10-advanced');
- gallery.append(el('h3','','Choose media'),el('p','','Select up to six photos and videos. They can appear together in one post.'),choose,camera,picker,edit);
+ const textPost=btn('Write a text-only post',()=>{textOnly=true;files=[];release();renderSelected();navigate('preview')},'luonix-v10-text-post');
+ gallery.append(el('h3','','Choose media'),el('p','','Select up to six photos and videos. They can appear together in one post.'),choose,camera,picker,textPost,edit);
  const selectedFiles=el('div','luonix-v10-selected');
  gallery.append(selectedFiles);
  const stageMedia=el('div','luonix-v10-stage'),thumbs=el('div','luonix-v10-thumbs');
@@ -76,7 +77,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   files.forEach((file,i)=>selectedFiles.append(btn((i+1)+'. '+file.name.slice(0,65)+' · '+size(file.size),()=>{selected=i;navigate('preview')},'luonix-v10-file-item')));
  }
  function showMedia(index){
-  if(!files.length){clearMedia();return}
+  if(!files.length){clearMedia();stageMedia.append(el('p','luonix-v10-text-preview','Text-only Luonix · add your thoughts below.'));left.disabled=right.disabled=remove.disabled=true;return}
   selected=(index+files.length)%files.length;clearMedia();
   const file=files[selected],url=urls[selected];
   if(file.type.startsWith('image/')){
@@ -101,7 +102,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  function updateFiles(values){
   const incoming=validateLuonixMedia(addMode?[...files,...Array.from(values||[])]:values);if(!incoming.length)return;
   if(publishing)return;
-  release();files=incoming;urls=files.map(f=>win.URL.createObjectURL(f));selected=addMode?files.length-1:0;operation=null;duration=0;
+  release();files=incoming;textOnly=false;urls=files.map(f=>win.URL.createObjectURL(f));selected=addMode?files.length-1:0;operation=null;duration=0;
   renderSelected();showMedia(0);setInfo('');navigate('preview');
  }
  picker.addEventListener('change',()=>{
@@ -125,7 +126,8 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   if(publishing)return;
   if(nextStage==='exit')return leave();
   if(!['gallery','preview','audience','upload'].includes(nextStage))return;
-  if(nextStage!=='gallery'&&!files.length){setInfo('Choose media first.');return}
+  if(nextStage!=='gallery'&&!files.length&&!textOnly){setInfo('Choose media first.');return}
+  if(nextStage==='audience'&&!files.length&&!caption.value.trim()){setInfo('Write some text before selecting the post audience.');return}
   stage=nextStage;root.dataset.stage=stage;for(const panel of screens.children)panel.hidden=!panel.classList.contains('luonix-v10-'+stage);
   if(stage!=='preview')stageMedia.querySelector('video')?.pause();
   if(stage==='preview')showMedia(selected);
@@ -168,7 +170,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   if(operation?.identity!==identity){
    operation={id:win.crypto.randomUUID(),identity,completed:new Map(),created:false,published:false,kind};
   }
-  const tx=operation,done=tx.completed;bar.max=originals.length;bar.value=done.size;
+  const tx=operation,done=tx.completed;bar.max=Math.max(1,originals.length);bar.value=done.size;
   bar.setAttribute('aria-valuetext',done.size+' of '+originals.length+' files uploaded');
   const current=()=>valid()&&getUser()?.id===ownerAtStart;
   try{
