@@ -45,3 +45,5 @@
 
 .luo-v7-shortcut-empty{padding:20px 14px;border:1px dashed #806648;border-radius:12px;background:#221d23;color:#e1c79e;text-align:center;font-size:14px}
 .luo-v7-shortcut-empty[hidden]{display:none}
+
+.worlds-modal.luo-v7-worlds-form .worlds-field :is(input,textarea)[aria-invalid="true"]{border-color:#e2a080!important;outline:1px solid #b86b55;box-shadow:0 0 0 3px #bf67512b}
