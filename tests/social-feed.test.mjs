@@ -78,7 +78,35 @@ test('closing comments or switching account discards pending comments',async()=>
 
 test('photo carousel signs only owned paths and advances without replacing the post',async()=>{
  const h=setup({rpc:async args=>({data:args.input.kind==='post'?[entry('album','post',{media:[{path:'friend/album/first.png'},{path:'friend/album/second.webp'}]})]:[]})});
- try{await tick();const card=h.d.querySelector('.luo-feed-card');find(h,'View photo').click();await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/first\.png/);find(h,'Next photo').click();await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/second\.webp/);assert.equal(h.d.querySelector('.luo-feed-card'),card);assert.match(h.d.querySelector('.luo-feed-carousel').textContent,/2 \/ 2/)}finally{h.close()}
+ try{await tick();const card=h.d.querySelector('.luo-feed-card');find(h,'View media').click();await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/first\.png/);find(h,'Next media').click();await tick();assert.match(h.d.querySelector('.luo-feed-stage img').src,/second\.webp/);assert.equal(h.d.querySelector('.luo-feed-card'),card);assert.match(h.d.querySelector('.luo-feed-carousel').textContent,/2 \/ 2/)}finally{h.close()}
+});
+
+test('mixed Luonix post carousel securely previews a photo and plays video without losing the feed card',async()=>{
+ const h=setup({rpc:async a=>({data:a.input.kind==='post'?[entry('mixed','post',{media:[{path:'friend/mixed/photo.jpg'},{path:'friend/mixed/video.mp4'}]})]:[]})});
+ try{
+  await tick();const card=h.d.querySelector('.luo-feed-card');
+  find(h,'View media').click();await tick();
+  assert.match(card.querySelector('img.luo-feed-post-media').src,/photo\.jpg/);
+  find(h,'Next media').click();await tick();
+  const player=card.querySelector('video.luo-feed-post-media');
+  assert.ok(player);assert.equal(player.controls,true);
+  assert.equal(player.playsInline,true);
+  assert.match(card.querySelector('.luo-feed-carousel').textContent,/2 \/ 2/);
+  assert.equal(h.d.querySelector('.luo-feed-card'),card);
+  player.play();await tick();
+  h.d.dispatchEvent(new h.w.Event('visibilitychange'));
+  h.stop();
+  assert.ok(h.paused.includes(player),'leaving the Luonix feed must stop video');
+  assert.equal(player.hasAttribute('src'),false);
+ }finally{h.close()}
+});
+test('mixed Luonix post refuses signed media URLs pointing to an unexpected origin',async()=>{
+ const h=setup({rpc:async a=>({data:a.input.kind==='post'?[entry('mixed','post',{media:[{path:'friend/mixed/clip.mp4'}]})]:[]}),
+  sign:async()=>({data:{signedUrl:'https://media.attacker.invalid/clip.mp4'}})});
+ try{await tick();find(h,'View media').click();await tick();
+  assert.equal(h.d.querySelector('.luo-feed-post-media'),null);
+  assert.match(h.notes.at(-1),/Unexpected media host/);
+ }finally{h.close()}
 });
 
 const clipRows=(n=2)=>Array.from({length:n},(_,i)=>entry('clip-'+i,'clip',{media:[{path:'friend/clip-'+i+'/video.mp4'}]}));
