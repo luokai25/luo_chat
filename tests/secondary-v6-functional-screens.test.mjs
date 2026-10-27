@@ -55,6 +55,29 @@ test('story preview keeps the same selected image URL when only the story text c
   assert.equal(revoked,1,'closing story preview frees object URL');
  }finally{x.close()}
 });
+test('Story media composer previews real video and audio and clears the previous item on close',()=>{
+ const x=create();try{
+  const d=x.d,media=d.getElementById('storyMedia');
+  const box=d.querySelector('.luo-v6-story-media');
+  let created=0,revoked=0;
+  x.w.URL.createObjectURL=()=>{created++;return 'blob:story-media-'+created};
+  x.w.URL.revokeObjectURL=()=>{revoked++};
+  Object.defineProperty(media,'files',{configurable:true,value:[new x.w.File(['abc'],'clip.mp4',{type:'video/mp4'})]});
+  media.dispatchEvent(new x.w.Event('change',{bubbles:true}));
+  assert.equal(box.querySelector('video')?.controls,true);
+  assert.equal(created,1);
+  d.getElementById('storyComposer').dispatchEvent(new x.w.Event('close'));
+  assert.equal(box.querySelector('video'),null);
+  assert.equal(revoked,1);
+  Object.defineProperty(media,'files',{configurable:true,value:[new x.w.File(['voice'],'voice.ogg',{type:'audio/ogg'})]});
+  media.dispatchEvent(new x.w.Event('change',{bubbles:true}));
+  assert.equal(box.querySelector('audio')?.controls,true);
+  Object.defineProperty(media,'files',{configurable:true,value:[]});
+  media.dispatchEvent(new x.w.Event('change',{bubbles:true}));
+  assert.equal(box.querySelector('audio'),null);
+  assert.match(box.textContent,/Share a photo/);
+ }finally{x.close()}
+});
 test('message action review renders real edit fields and never submits changes automatically',async()=>{
  const x=create();try{
   const d=x.d,fields=d.getElementById('messageActionFields');
