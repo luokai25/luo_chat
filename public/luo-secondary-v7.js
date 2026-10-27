@@ -83,7 +83,10 @@ function worldsCreatePanel(panel){
  const warnings=make('p','luo-v7-worlds-note');
  feedback.append(title,detail,warnings);
  panel.querySelector('.worlds-modal-buttons')?.before(feedback);
- const get=label=>fields.find(x=>x.textContent?.trim()===label)?.querySelector('input,textarea,select');
+ const get=label=>fields.find(field=>{
+  const heading=[...field.childNodes].filter(node=>node.nodeType===3).map(node=>node.textContent).join(' ').trim();
+  return heading===label||field.querySelector(':scope > span, :scope > strong')?.textContent?.trim()===label;
+ })?.querySelector('input,textarea,select');
  const name=get('World name')||get('Group name')||get('Channel name');
  const desc=get('Description');const visibility=get('Visibility');
  const members=get('Member usernames');
