@@ -35,6 +35,19 @@ test('keyboard shortcut panel filters actual provided shortcuts, preserving orig
   assert.equal([...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden).length,count);
  }finally{x.close()}
 });
+test('shortcut search stays accurate when commands are added after panel initialization',async()=>{
+ const x=create();try{
+  const d=x.d,search=d.querySelector('.luo-v7-shortcut-search'),list=d.querySelector('.shortcut-list');
+  search.value='newly added command';search.dispatchEvent(new x.w.Event('input'));
+  assert.equal(d.querySelector('.luo-v7-shortcut-empty').hidden,false);
+  const row=d.createElement('div');row.innerHTML='<dt>Newly added command</dt><dd>Ctrl+9</dd>';
+  list.append(row);await tick();
+  assert.equal(row.hidden,false);
+  assert.equal(d.querySelector('.luo-v7-shortcut-empty').hidden,true);
+  list.removeChild(row);await tick();
+  assert.equal(d.querySelector('.luo-v7-shortcut-empty').hidden,false);
+ }finally{x.close()}
+});
 test('attachment picker enhances only the actual action buttons and respects Escape',async()=>{
  const x=create();try{
   const d=x.d,attach=d.getElementById('attach'),sheet=d.createElement('div');
