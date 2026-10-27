@@ -92,3 +92,6 @@
 .luonix-v10-loading[data-phase="error"] .luonix-v10-upload-label{color:#ffc9ad}
 @keyframes luonix-v10-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.luonix-v10-loading .luonix-v10-upload-label::before{animation:none!important}}
+
+.luonix-v10-text-post{min-height:52px;border-radius:16px;border:1px solid #886845;color:#f4ddb4;background:#251d23;font-weight:730;font-size:14px}
+.luonix-v10-text-preview{font-size:20px!important;line-height:1.6!important;color:#efd8ab!important;max-width:340px;text-align:center;padding:35px 17px;overflow-wrap:anywhere}
