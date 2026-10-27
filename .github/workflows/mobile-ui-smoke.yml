@@ -1,7 +1,7 @@
 name: Mobile UI acceptance smoke
 on:
   push:
-    branches: ['feature/reels-immersive-20261025', 'release/luo-ui-polish-20261027', 'release/agent-api-20261027']
+    branches: ['feature/reels-immersive-20261025', 'release/luo-ui-polish-20261027', 'release/agent-api-20261027', 'release/secondary-pages-v5-20261027', 'release/payments-secondary-complete-20261027']
 permissions:
   contents: read
 concurrency:

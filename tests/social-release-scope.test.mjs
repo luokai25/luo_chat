@@ -10,7 +10,6 @@ test('Combined development update preserves live authentication, stories and con
   "src/auth-recovery.js": "dec3a845de0df5fea3fbf7d5cd84e3509a246c5ee44e727d662a535511a4e18d",
   "src/google-sign-in.js": "b66a66e214499bda486a2a671c7ab206fadc48631811f6bb18976ca65f99fbd3",
   "src/settings.js": "dbefb1f5499c63c933df432650b6aa1006fa549f932a130975ce27829b6642c7",
-  "src/experience.js": "373bf4615bcb49eca707f2217b55cd2cbad53a20b84dd9e06355b0e63bfce14f",
   "src/config.js": "fa7a01c29835bd63f883ed6d092febcffa3389b586aa5135c99aa633327f55f2",
   "public/luo-session-boot.js": "2068acd5af69f38ccf4f25ab3647a39a2087dc4fe97307c3e4b400705c440b64",
   "public/luo-auth-premium.css": "e418ef836af858e4d53debe5726473753e708d091350eb7801793a3795c6deea"
@@ -46,4 +45,43 @@ test('Social is the fifth navigation item and the retired Notes UI is absent',as
  assert.ok(nav.includes("['Calls','phone','calls'],['Social','social','social']"));
  assert.ok(!social.includes("['notes','Notes']")&&!social.includes("key==='notes'"));
  assert.doesNotMatch(app,/installChatNotesRibbon/);
+});
+
+// Scoped deviation: only the verified shared-media request-state lifecycle may
+// differ from the backed-up production experience.js. Undo the exact authorized
+// patch and assert that everything else remains byte-for-byte identical.
+test('Experience changes are restricted to the approved shared-media loading fix',async()=>{
+ let source=await readFile('src/experience.js','utf8');
+ const allowedReversals=[
+ [
+  "let sharedKind='media',sharedRoom=null,sharedRows=[],offset=0,loading=false,sharedGeneration=0;\n const sharedList=$('sharedList');",
+  "let sharedKind='media',sharedRoom=null,sharedRows=[],offset=0,loading=false,sharedGeneration=0;"
+ ],
+ [
+  "async function loadShared(reset=false){if(loading&&!reset||!sharedRoom)return;\n if(reset){sharedRows=[];offset=0}\n const generation=++sharedGeneration,room=sharedRoom,kind=sharedKind;\n loading=true;$('loadMoreShared').disabled=true;\n if(reset){sharedList.dataset.luoLoadingToken=String(generation);\n  sharedList.textContent=kind==='media'?'Loading shared media…':'Loading pinned messages…'}\n try{",
+  "async function loadShared(reset=false){if(loading&&!reset||!sharedRoom)return;if(reset){sharedRows=[];offset=0}const generation=++sharedGeneration,room=sharedRoom,kind=sharedKind;loading=true;$('loadMoreShared').disabled=true;try{"
+ ],
+ [
+  "if(generation!==sharedGeneration||!$('sharedDialog').open)return",
+  "if(generation!==sharedGeneration)return"
+ ],
+ [
+  "finally{if(generation===sharedGeneration){\n  if(sharedList.dataset.luoLoadingToken===String(generation))delete sharedList.dataset.luoLoadingToken;\n  loading=false;$('loadMoreShared').disabled=false;\n }}}",
+  "finally{if(generation===sharedGeneration){loading=false;$('loadMoreShared').disabled=false}}}"
+ ],
+ [
+  "sharedList.textContent=kind==='media'?'Loading shared media…':'Loading pinned messages…';$('sharedDialog').showModal();loadShared(true)",
+  "$('sharedList').textContent='Loading…';$('sharedDialog').showModal();loadShared(true)"
+ ],
+ [
+  "$('closeShared').onclick=()=>$('sharedDialog').close();\n $('sharedDialog').addEventListener('close',()=>{\n  sharedGeneration++;loading=false;delete sharedList.dataset.luoLoadingToken;\n  $('loadMoreShared').disabled=false;\n });$('loadMoreShared')",
+  "$('closeShared').onclick=()=>$('sharedDialog').close();$('loadMoreShared')"
+ ]
+];
+ for(const [changed,original] of allowedReversals){
+  assert.ok(source.includes(changed),'Required scoped loading fix is missing');
+  source=source.replace(changed,original);
+ }
+ assert.equal(digest(source),'373bf4615bcb49eca707f2217b55cd2cbad53a20b84dd9e06355b0e63bfce14f',
+  'Unrelated live experience behavior must stay byte-identical');
 });

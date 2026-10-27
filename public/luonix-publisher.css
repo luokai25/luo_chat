@@ -38,11 +38,11 @@
 @media(prefers-reduced-motion:reduce){.luonix-publishing-steps *{transition:none!important}}
 
 /* The creator replaces the former Social/Explore header, including mobile app tabs. */
-#social[data-social-view=publish-clip]>.luo-social-topbar,
-#social[data-social-view=publish-clip]>.luo-social-tabs,
-#social[data-social-view=publish-clip]>.luo-social-tools,
-#social[data-social-view=publish-clip]>.luo-social-status{display:none!important}
-.app[data-tab=social] #social[data-social-view=publish-clip]{position:fixed!important;inset:0!important;height:100dvh!important;max-height:100dvh!important;z-index:250!important;background:#09080b!important;overflow:hidden!important}
-#social[data-social-view=publish-clip]>.luo-social-content{overflow-y:auto!important;scrollbar-width:thin}
+#social:is([data-social-view=publish-clip],[data-social-view=clip-studio])>.luo-social-topbar,
+#social:is([data-social-view=publish-clip],[data-social-view=clip-studio])>.luo-social-tabs,
+#social:is([data-social-view=publish-clip],[data-social-view=clip-studio])>.luo-social-tools,
+#social:is([data-social-view=publish-clip],[data-social-view=clip-studio])>.luo-social-status{display:none!important}
+.app[data-tab=social] #social:is([data-social-view=publish-clip],[data-social-view=clip-studio]){position:fixed!important;inset:0!important;height:100dvh!important;max-height:100dvh!important;z-index:250!important;background:#09080b!important;overflow:hidden!important}
+#social:is([data-social-view=publish-clip],[data-social-view=clip-studio])>.luo-social-content{overflow-y:auto!important;scrollbar-width:thin}
 .luonix-close{position:absolute;right:10px;top:4px;width:44px;height:44px;border:1px solid #7b5b33;border-radius:50%;color:#f2cf8d;background:#201914;font-size:26px}
 .luo-clip-composer:not(.luo-camera-live)>header{position:relative;padding:4px 50px}

@@ -30,7 +30,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  const kinds=clipsOnly?['clip','post']:['post','clip'];
  const sources=clipsOnly&&mode==='mixed'?['public','friends']:[mode];
  const streams=new Map(sources.flatMap(sourceMode=>kinds.map(kind=>[sourceMode+':'+kind,{kind,sourceMode,before:null,before_id:null,more:true}])));
- const seen=new Set(),media=new Map();
+ const seen=new Set(),media=new Map(),postVideos=new Set();
  const reduced=!!win.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
  const saver=!!win.navigator.connection?.saveData;
  let observer;
@@ -38,7 +38,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
   if(!valid())return;
   for(const entry of entries){const state=media.get(entry.target);if(!state)continue;if(entry.isIntersecting&&entry.intersectionRatio>=.65){activeCard=entry.target;extras?.activate(entry.target);for(const [card,s]of media)if(card!==activeCard)s.video?.pause();if(allowPlayback&&!state.userPaused&&!saver&&!reduced&&!doc.hidden&&!sheet.open)state.play().catch(()=>{});const cards=[...list.children];if(cards.indexOf(entry.target)>=cards.length-2&&!more.hidden)load()}else{state.video?.pause();if(activeCard===entry.target)activeCard=null}}
  },{root:list,threshold:[0,.65]});
- const visibility=()=>{if(doc.hidden)for(const [card,s]of media){s.video?.pause();if(s.video)s.video.playbackRate=1;card.classList.remove('luo-reels-fast')}};doc.addEventListener('visibilitychange',visibility);
+ const visibility=()=>{if(doc.hidden){for(const [card,s]of media){s.video?.pause();if(s.video)s.video.playbackRate=1;card.classList.remove('luo-reels-fast')}for(const video of postVideos)video.pause()}};doc.addEventListener('visibilitychange',visibility);
 
  async function signed(path,item){
   if(typeof path!=='string'||!path.startsWith(item.owner_id+'/'+item.id+'/')||path.includes('..'))throw Error('This media is unavailable.');
@@ -53,7 +53,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
   const article=el('article','luo-feed-card luo-feed-'+item.kind);article.dataset.entryId=item.id;article.tabIndex=0;
   const author=item.author||{},head=el('header','luo-feed-author'),identity=button(author.display_name||'@'+(author.username||'Luo friend'),()=>visit(author.id||item.owner_id),'luo-feed-name');
   identity.append(el('small','','@'+(author.username||'luo')+' · '+date(item.created_at)));head.append(avatar(item),identity);
-  if(item.owner_id===owner&&item.kind!=='clip')head.append(button('Delete post',async()=>{if(!win.confirm('Permanently delete this '+item.kind+'?'))return;await rpc('entry.delete',{id:item.id});if(!valid())return;media.get(article)?.video?.pause();observer?.unobserve(article);media.delete(article);article.remove()},'luo-feed-icon luo-feed-delete','close'));
+  if(item.owner_id===owner&&item.kind!=='clip')head.append(button('Delete post',async()=>{if(!win.confirm('Permanently delete this '+item.kind+'?'))return;await rpc('entry.delete',{id:item.id});if(!valid())return;media.get(article)?.video?.pause();observer?.unobserve(article);media.delete(article);for(const video of article.querySelectorAll('video.luo-feed-post-media')){video.pause();video.removeAttribute('src');video.load();postVideos.delete(video)}article.remove()},'luo-feed-icon luo-feed-delete','close'));
   const stage=el('div','luo-feed-stage');stage.append(el('span','luo-feed-watermark','LUO'));
   const content=el('div','luo-feed-caption');if(item.title)content.append(el('h3','',item.title));if(item.body&&(item.kind==='clip'||item.media?.length)){const text=el('p','luo-feed-body',item.body);content.append(text);if(item.body.length>240){text.classList.add('luo-feed-clamped');content.append(button('Read more',b=>{text.classList.toggle('luo-feed-clamped');b.querySelector('span').textContent=text.classList.contains('luo-feed-clamped')?'Read more':'Show less'},'luo-feed-read'))}}
   if(item.kind==='post'&&!item.media?.length){stage.classList.add('luo-feed-text-stage');stage.append(el('span','luo-feed-quote','“'),el('p','luo-feed-text',item.body||item.title||'A moment from '+(author.username||'a friend')))}
@@ -99,18 +99,38 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
    stage.append(el('span','luo-reels-fast-label','2× playback'));
    media.set(article,state);observer?.observe(article);extras?.mount({article,item,head,actions,isActive:()=>activeCard===article,onCommentCount:count=>{comments=count;updateCount(comment,comments,'Comments')}});
   }else if(item.media?.length){
-   let index=0,image=null,photoRun=0;
-   const photos=item.media.filter(file=>/\.(jpe?g|png|webp|gif)$/i.test(file.path||''));
-   const load=button('View photo',()=>showPhoto(index),'luo-feed-play','play');stage.append(load);
-   const carousel=el('div','luo-feed-carousel');
-   async function showPhoto(next){
-    const ticket=++photoRun,url=await signed(photos[next]?.path,item);if(!valid()||!article.isConnected||ticket!==photoRun)return;
-    const img=el('img');img.alt=(item.title||'Post photo')+' · '+(next+1)+' of '+photos.length;img.src=url;
-    img.onerror=()=>{if(!valid())return;img.remove();load.hidden=false;note('This photo could not load. Try again.')};
-    image?.remove();image=img;stage.prepend(img);index=next;load.hidden=true;count.textContent=(index+1)+' / '+photos.length;
-   }
-   const count=el('span','','1 / '+photos.length);
-   if(photos.length>1){carousel.append(button('Previous photo',()=>showPhoto((index+photos.length-1)%photos.length),'luo-feed-photo-nav'),count,button('Next photo',()=>showPhoto((index+1)%photos.length),'luo-feed-photo-nav'));stage.append(carousel)}
+   let index=0,active=null,mediaRun=0;
+   const attachments=item.media.filter(file=>/\.(jpe?g|png|webp|gif|mp4|webm)$/i.test(file.path||''));
+   if(attachments.length){
+    const load=button('View media',()=>showMedia(index),'luo-feed-play','play');stage.append(load);
+    const carousel=el('div','luo-feed-carousel'),count=el('span','','1 / '+attachments.length);
+    async function showMedia(next){
+     const ticket=++mediaRun,path=attachments[next]?.path;
+     if(!path)return;
+     load.disabled=true;load.querySelector('span').textContent='Loading media…';
+     try{
+      const url=await signed(path,item);
+      if(!valid()||!article.isConnected||ticket!==mediaRun)return;
+      const video=/\.(mp4|webm)$/i.test(path);
+      const element=el(video?'video':'img');
+      if(video){
+       element.controls=true;element.playsInline=true;element.preload='metadata';
+       element.setAttribute('aria-label',(item.title||'Luonix video')+' · '+(next+1)+' of '+attachments.length);
+      }else element.alt=(item.title||'Luonix photo')+' · '+(next+1)+' of '+attachments.length;
+      element.src=url;element.className='luo-feed-post-media';
+      element.onerror=()=>{if(!valid()||ticket!==mediaRun)return;if(element.tagName==='VIDEO')postVideos.delete(element);element.remove();load.hidden=false;load.querySelector('span').textContent='Retry media';note('Media could not play or load on this device.')};
+      if(active?.tagName==='VIDEO'){active.pause();postVideos.delete(active)}active?.remove();active=element;if(video)postVideos.add(element);stage.prepend(element);
+      index=next;load.hidden=true;count.textContent=(index+1)+' / '+attachments.length;
+     }catch(err){if(valid()&&ticket===mediaRun){load.hidden=false;load.querySelector('span').textContent='Retry media';note(err.message||'Media unavailable.')}}
+     finally{if(valid()&&ticket===mediaRun)load.disabled=false}
+    }
+    if(attachments.length>1){
+     carousel.append(button('Previous media',()=>showMedia((index+attachments.length-1)%attachments.length),'luo-feed-photo-nav'),
+      count,button('Next media',()=>showMedia((index+1)%attachments.length),'luo-feed-photo-nav'));
+     stage.append(carousel)
+    }
+   }else stage.append(el('p','luo-feed-feedback','The attached media type is unavailable.'));
+
   }
  }
 
@@ -230,5 +250,5 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  const onKey=ev=>{if(!clipsOnly||!['ArrowDown','ArrowUp'].includes(ev.key)||/INPUT|TEXTAREA|BUTTON/.test(ev.target.tagName))return;ev.preventDefault();const cards=[...list.children],index=Math.max(0,cards.indexOf(activeCard||doc.activeElement));cards[Math.min(cards.length-1,Math.max(0,index+(ev.key==='ArrowDown'?1:-1)))]?.scrollIntoView?.({behavior:reduced?'instant':'smooth',block:'start'})};list.addEventListener('keydown',onKey);
  async function start(){if(initialClip&&/^[0-9a-f-]{36}$/i.test(initialClip)){try{const item=await rpc('entry.get',{id:initialClip});if(valid()&&item?.id&&item.kind==='clip'&&item.published!==false){seen.add(item.id);card(item)}}catch(e){if(valid())note(e.message||'This shared clip is unavailable.')}}if(valid()){await load();if(extras&&await extras.ready()&&valid()){const menu=el('div','luo-reel-feed-switch');for(const [value,title]of [['following','Following'],['saved','Saved']]){const b=button(title,()=>onMode?.(value),'luo-reels-tab');b.setAttribute('aria-pressed',String(mode===value));menu.append(b)}root.querySelector('.luo-reels-top')?.append(menu)}}}
  start();
- return ()=>{disposed=true;extras?.close();for(const timer of timers)win.clearTimeout(timer);timers.clear();observer?.disconnect();doc.removeEventListener('visibilitychange',visibility);list.removeEventListener('keydown',onKey);for(const state of media.values())state.release?.();media.clear();closeComments();sheet.remove();root.remove()};
+ return ()=>{disposed=true;extras?.close();for(const timer of timers)win.clearTimeout(timer);timers.clear();observer?.disconnect();doc.removeEventListener('visibilitychange',visibility);list.removeEventListener('keydown',onKey);for(const state of media.values())state.release?.();media.clear();for(const video of postVideos){video.pause();video.removeAttribute('src');video.load()}postVideos.clear();closeComments();sheet.remove();root.remove()};
 }

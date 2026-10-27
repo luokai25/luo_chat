@@ -43,3 +43,37 @@ test('Mobile Worlds navigation retains genuine app navigation and does not show 
  assert.match(html,/\/luonix-publisher\.css/);
  assert.match(html,/title="Worlds" aria-label="Worlds"/);
 });
+
+test('Worlds group creation is mounted above mobile navigation and removes its overlay on close',async()=>{
+ const {installWorlds}=await import('../src/worlds.js');
+ const {JSDOM}=await import('jsdom');
+ const dom=new JSDOM('<div class="app" data-screen="home" data-tab="group"><div id="group"></div><nav id="luoApprovedNav"></nav></div>',{url:'https://luo.example'});
+ const w=dom.window,d=w.document;
+ const api=installWorlds({win:w,db:{rpc:async()=>({data:[]})},$:id=>d.getElementById(id),getUser:()=>({id:'one'}),note:()=>{},openRoom:()=>{},refreshChats:async()=>{},getChats:()=>[]});
+ try{
+  api.onTab('group');await new Promise(ok=>setTimeout(ok,0));
+  d.querySelector('.worlds-group-create').click();
+  const overlay=d.querySelector('.worlds-modal-backdrop');
+  assert.ok(overlay);assert.equal(overlay.parentElement,d.body);
+  overlay.querySelector('button').click();
+  assert.equal(d.querySelector('.worlds-modal-backdrop'),null);
+ }finally{api.signedOut();w.close()}
+});
+
+test('Worlds group member usernames with n are preserved rather than split apart',async()=>{
+ const dom=new JSDOM('<div class="app" data-screen="home" data-tab="group"><div id="group"></div></div>',{url:'https://luo.example'});
+ const w=dom.window,d=w.document,calls=[];
+ const db={rpc:async(name,args)=>{calls.push({name,args});return {data:name==='create_group_chat'?'33333333-3333-4333-8333-333333333333':[]}}};
+ const api=installWorlds({win:w,db,$:id=>d.getElementById(id),getUser:()=>({id:'owner'}),note:()=>{},openRoom:async()=>{},refreshChats:async()=>{},getChats:()=>[]});
+ try{
+  api.onTab('group');await new Promise(ok=>setTimeout(ok,0));
+  d.querySelector('.worlds-group-create').click();
+  d.querySelector('.worlds-modal input[aria-label="Group name"]').value='QA Group';
+  d.querySelector('.worlds-modal textarea[aria-label="Member usernames"]').value='qa_friend,anna_bot';
+  d.querySelector('.worlds-modal').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+  await new Promise(ok=>setTimeout(ok,0));
+  const group=calls.find(x=>x.name==='create_group_chat');
+  assert.ok(group);assert.deepEqual(group.args.member_usernames,['qa_friend','anna_bot']);
+  assert.equal(d.querySelector('.worlds-form-error'),null);
+ }finally{api.signedOut();w.close()}
+});

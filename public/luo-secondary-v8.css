@@ -1,0 +1,22 @@
+/* Luo secondary V8: native, accessible list controls; no synthetic vault or schedule data. */
+.luo-v8-vault,.luo-v8-schedules,.luo-v8-people{--v8-gold:#ead09f;--v8-border:#765b3a;min-width:0}
+.luo-v8-list-tools,.luo-v8-contacts-tools{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:10px 0;margin:8px 0}
+.luo-v8-summary{font-size:12px;color:#e5cba2;line-height:1.45;min-height:20px;margin:0;font-variant-numeric:tabular-nums}
+.luo-v8-clear{min-height:44px;border:1px solid #92734b;background:#292126;color:#f4dab5;border-radius:11px;padding:9px 14px;font-size:13px;font-weight:650;cursor:pointer;touch-action:manipulation}
+.luo-v8-clear[hidden]{display:none!important}
+.luo-v8-clear:hover{border-color:#e5c38e;background:#352a2b}
+.luo-v8-clear:focus-visible,.luo-v8-schedule-tools input:focus-visible,.luo-v8-schedule-tools select:focus-visible{outline:2px solid #f2d69d;outline-offset:3px}
+.luo-v8-schedule-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto;gap:10px;align-items:end;padding:16px;margin:16px 0 8px;background:linear-gradient(135deg,#241c20,#131216);border:1px solid #806039;border-radius:17px}
+.luo-v8-filter-label{display:grid;gap:6px;color:#ebd1a8;font-weight:700;font-size:12px}
+.luo-v8-schedule-tools input,.luo-v8-schedule-tools select{height:46px;min-height:46px;width:100%;min-width:0;background:#17151b;color:#f5e7d2;border:1px solid #7d6243;border-radius:11px;padding:10px 12px;font-size:16px}
+.luo-v8-no-results{font-size:13px;color:#d6bf9b;line-height:1.5;text-align:center;padding:24px 17px;border:1px dashed #715a3f;border-radius:13px;background:#221c22}
+.luo-v8-no-results[hidden]{display:none!important}
+.luo-v8-schedule-hint{font-size:11px;color:#bdb09b;line-height:1.5;padding:2px 1px;margin:12px 0 18px}
+.luo-v8-schedules #scheduledList .collection-card[hidden]{display:none!important}
+.luo-v8-schedules #scheduledList .collection-card{border-radius:15px;overflow-wrap:anywhere}
+.luo-v8-vault #savedList .collection-card{border-radius:15px;overflow-wrap:anywhere}
+.luo-v8-people #contactList{min-width:0}
+.luo-v8-shared #sharedFilters .luo-v8-clear{width:100%;margin-top:5px}
+@media(max-width:620px){.luo-v8-schedule-tools{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.luo-v8-schedule-tools .luo-v8-schedule-search{grid-column:2}.luo-v8-schedule-tools .luo-v8-clear{grid-column:1/-1;justify-self:end}.luo-v8-vault .toolbar{flex-wrap:wrap}}
+@media(max-width:380px){.luo-v8-schedule-tools{grid-template-columns:minmax(0,1fr)}.luo-v8-schedule-tools .luo-v8-schedule-search,.luo-v8-schedule-tools .luo-v8-clear{grid-column:auto}.luo-v8-schedule-tools .luo-v8-clear{justify-self:stretch}}
+@media(prefers-reduced-motion:reduce){.luo-v8-clear,.luo-v8-schedule-tools input,.luo-v8-schedule-tools select{transition:none!important;animation:none!important}}

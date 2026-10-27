@@ -1,4 +1,4 @@
-import {build} from 'esbuild';
+import {build,transform} from 'esbuild';
 import {cp,mkdir,readFile,writeFile,rm,rename,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {SUPABASE_URL,SUPABASE_KEY} from './src/config.js';
@@ -10,7 +10,7 @@ const csp=hosting.headers?.find(rule=>rule.source==='/(.*)')?.headers?.find(head
 validatePublicConfig({url:SUPABASE_URL,key:SUPABASE_KEY,csp});
 // Prevent the Reels preview branch from silently falling back to the live chat DB.
 // Only the isolated staging publishable key and project may be used in previews.
-if(process.env.VERCEL_ENV==='preview'&&['feature/reels-immersive-20261025','release/luo-ui-polish-20261027','release/agent-api-20261027'].includes(process.env.VERCEL_GIT_COMMIT_REF)){
+if(process.env.VERCEL_ENV==='preview'&&['feature/reels-immersive-20261025','release/luo-ui-polish-20261027','release/agent-api-20261027','release/secondary-pages-v5-20261027','release/payments-secondary-complete-20261027'].includes(process.env.VERCEL_GIT_COMMIT_REF)){
  if(process.env.LUO_SUPABASE_URL!=='https://itecovbwilcrvjqkdoyd.supabase.co'||!process.env.LUO_SUPABASE_KEY)throw Error('Reels preview requires the isolated staging Supabase URL and publishable key; refusing production fallback.');
 }
 
@@ -23,6 +23,17 @@ const release=JSON.parse(await readFile('package.json','utf8')).version;
 if(!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(release))throw Error('A valid release version is required.');
 await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});await cp('public','dist',{recursive:true});
 await enhanceSite('dist');
+// Combine the new secondary styles in source order, keeping the current payload ceiling.
+let appShell=await readFile('dist/index.html','utf8');
+const styleLinks=[...appShell.matchAll(/<link\b[^>]*href="(\/[^"?]+\.css)(?:\?[^"\s]*)?"[^>]*>/g)]
+ .filter(m=>/^\/(?:luo-secondary-|luo-story-v9|luonix-media-v10)/.test(m[1]));
+const styles=await Promise.all(styleLinks.map(m=>readFile('dist'+m[1],'utf8')));
+const combined=await transform(styles.join('\n'),{loader:'css',minify:true,legalComments:'eof',target:['es2022']});
+const secondaryCSS='luo-secondary-screens-'+createHash('sha256').update(combined.code).digest('hex').slice(0,12)+'.css';
+await writeFile('dist/'+secondaryCSS,combined.code);
+for(const [index,link] of styleLinks.entries())appShell=appShell.replace(link[0],index===0?'<link rel="stylesheet" href="/'+secondaryCSS+'">':'');
+await writeFile('dist/index.html',appShell);
+console.log('Luo secondary stylesheet bundle',secondaryCSS);
 const images=await optimizePNGs('dist');console.log('Lossless PNG compression:',JSON.stringify(images));
 await build({entryPoints:{app:'src/entry.js'},entryNames:'[name]',outdir:'dist',define:{'process.env.LUO_SUPABASE_URL':JSON.stringify(process.env.LUO_SUPABASE_URL||''),'process.env.LUO_SUPABASE_KEY':JSON.stringify(process.env.LUO_SUPABASE_KEY||'')},bundle:true,format:'esm',target:['es2022'],minify:true,legalComments:'eof'});
 // esbuild's graph hash can differ across source paths even for identical bytes.
@@ -38,7 +49,7 @@ const iconMap={};for(const old of ['icon.svg','icon-32.png','icon-180.png','icon
 const manifest=JSON.parse(await readFile('dist/manifest.json','utf8'));for(const icon of manifest.icons)icon.src=iconMap[icon.src]||icon.src;const manifestText=JSON.stringify(manifest),manifestName='manifest-'+createHash('sha256').update(manifestText).digest('hex').slice(0,12)+'.json';await writeFile('dist/manifest.json',manifestText);await writeFile('dist/'+manifestName,manifestText);
 let html=await readFile('dist/index.html','utf8');html=html.replace('<span id="appVersion">development</span>','<span id="appVersion">'+release+'</span>').replace('</head>','<meta name="luo-version" content="'+release+'"></head>');for(const [old,fresh] of Object.entries(iconMap))html=html.replaceAll(old,fresh);html=html.replace('src="/app.js"','src="/'+js+'"').replace('href="/style.css"','href="/'+css+'"').replace('href="/luo-social-feed.css"','href="/'+socialCSS+'"');await writeFile('dist/index.html',html);
 html=html.replace(/href="\/luo-call-quality\.css(?:\?[^"]*)?"/,'href="/'+callCSS+'"');await writeFile('dist/index.html',html);
-const shell=['/index.html','/'+js,'/'+css,'/'+socialCSS,'/'+callCSS,...Object.values(iconMap),'/'+manifestName];
+const shell=['/index.html','/'+secondaryCSS,'/'+js,'/'+css,'/'+socialCSS,'/'+callCSS,...Object.values(iconMap),'/'+manifestName];
 // Self-service diagnostics must follow this build, not obsolete bundle hashes.
 let checks=await readFile('dist/connection-checks.js','utf8');
 checks=checks.replace(/\/app-[A-Z0-9]+\.js/g,'/'+js).replace(/\/style-[a-f0-9]+\.css/g,'/'+css).replace(/\/icon-192-[a-f0-9]+\.png/g,iconMap['/icon-192.png']);

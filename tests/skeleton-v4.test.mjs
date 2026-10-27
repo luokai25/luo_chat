@@ -7,6 +7,11 @@ const html=await readFile('public/index.html','utf8');
 const controller=await readFile('public/luo-skeleton-v4.js','utf8');
 const css=await readFile('public/luo-skeleton-v4.css','utf8');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(check,timeout=1200){
+ const end=Date.now()+timeout;
+ while(Date.now()<end){if(check())return;await sleep(20);}
+ assert.ok(check(),'Expected skeleton transition did not appear within the bounded timeout');
+}
 function ready(){
  const dom=new JSDOM(html,{url:'https://luo-chat-luokai25.vercel.app',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,d=w.document,app=d.querySelector('.app');
@@ -40,13 +45,13 @@ test('real request events are versioned, stale completions cannot dismiss a newe
  const x=ready();try{
   const host=x.d.getElementById('chatlist');host.replaceChildren();
   const event=(id,pending)=>x.w.dispatchEvent(new x.w.CustomEvent('luo:loading-state',{detail:{key:'inbox',id,pending}}));
-  event(1,true);await sleep(150);
+  event(1,true);await until(()=>host.querySelector('.sk-chat-row'));
   assert.ok(host.querySelector('.sk-chat-row'));
   event(2,true);event(1,false);
   await sleep(60);
   assert.equal(host.getAttribute('aria-busy'),'true');
   assert.ok(host.querySelector('.sk-chat-row'));
-  event(2,false);await sleep(210);
+  event(2,false);await until(()=>!host.querySelector('.luo-skeleton-stage'));
   assert.equal(host.querySelector('.luo-skeleton-stage'),null);
   assert.equal(host.hasAttribute('aria-busy'),false);
  }finally{x.close()}
@@ -135,10 +140,7 @@ test('private profile loading and comment loading never invent user content',asy
   assert.equal(content.querySelector('.luo-skeleton-stage'),null);
   const comments=add(x.d,'dialog','luo-feed-comments');comments.setAttribute('open','');
   comments.innerHTML='<div class="luo-feed-comment-list"></div><p class="luo-feed-feedback">Loading comments…</p>';
-  // rAF discovery plus the 120 ms reveal delay may start late under CI load.
-  // Wait for the rendered state instead of assuming a 170 ms wall-clock budget.
-  const commentDeadline=Date.now()+3000;
-  while(!comments.querySelector('.sk-comment-row')&&Date.now()<commentDeadline)await sleep(20);
+  await sleep(170);
   assert.equal(comments.querySelectorAll('.sk-comment-row').length,4);
   comments.querySelector('.luo-feed-feedback').textContent='No comments yet';
   await sleep(225);
@@ -168,7 +170,7 @@ test('measured CSS matches production rows, cards, media frames and accessibilit
   [/\.sk-post-media\{[^}]*aspect-ratio:4\/5/,'4:5 feed media'],
   [/\.sk-channel-row\{[^}]*min-height:43px/,'43px channel'],
   [/\.sk-world-avatar\{[^}]*width:45px/,'45px Worlds icon'],
-  [/\.sk-profile-avatar\{[^}]*width:88px/,'88px profile avatar'],
+  [/\.sk-profile-avatar\{[^}]*width:99px/,'99px profile avatar'],
   [/\.sk-reel-card\{[^}]*min-height:clamp\(360px,calc\(100dvh - 210px\),760px\)/,'full reel'],
   [/@media\(prefers-reduced-motion:reduce\)/,'reduced motion'],
   [/\.luo-skeleton-stage\.luo-skeleton-v4\[data-kind="status"\]\{order:1/,'my status remains first']
@@ -176,4 +178,74 @@ test('measured CSS matches production rows, cards, media frames and accessibilit
  for(const [regex,label] of checks)assert.match(css,regex,label);
  assert.ok(html.includes('/luo-skeleton-v4.js'));
  assert.ok(html.includes('/luo-skeleton-v4.css'));
+});
+
+test('shared media and global search have genuine request-shaped placeholders, not fake results',async()=>{
+ const x=ready();try{
+  const dialog=x.d.getElementById('sharedDialog');
+  const shared=x.d.getElementById('sharedList');
+  dialog.setAttribute('open','');shared.innerHTML='<div class="empty">Loading shared media…</div>';
+  await until(()=>shared.querySelectorAll('.sk-shared-card').length===4);
+  assert.equal(shared.querySelector('.luo-skeleton-stage')?.dataset.kind,'shared');
+  shared.replaceChildren(Object.assign(x.d.createElement('div'),{className:'shared-item'}));
+  await until(()=>!shared.hasAttribute('aria-busy'));
+  assert.equal(shared.querySelector('.luo-skeleton-stage'),null);
+  assert.equal(shared.getAttribute('aria-busy'),null);
+  const search=x.d.getElementById('globalSearchResults');
+  search.textContent='Searching messages…';await until(()=>search.querySelectorAll('.sk-search-row').length===3);
+  assert.equal(search.querySelector('.luo-skeleton-stage')?.dataset.kind,'search');
+  search.replaceChildren(Object.assign(x.d.createElement('article'),{className:'search-result'}));
+  await until(()=>!search.querySelector('.luo-skeleton-stage'));
+  assert.equal(search.querySelectorAll('.search-result').length,1);
+ }finally{x.close()}
+});
+test('loaders for secondary surfaces do not appear on idle, errors, or after signout',async()=>{
+ const x=ready();try{
+  const dialog=x.d.getElementById('sharedDialog');
+  const shared=x.d.getElementById('sharedList');
+  dialog.setAttribute('open','');shared.textContent='No media yet.';
+  const search=x.d.getElementById('globalSearchResults');
+  search.textContent='Nothing found.';
+  await sleep(180);
+  assert.equal(shared.querySelector('.luo-skeleton-stage'),null);
+  assert.equal(search.querySelector('.luo-skeleton-stage'),null);
+  search.textContent='Searching messages…';
+  await until(()=>search.querySelector('.sk-search-row'));
+  x.app.dataset.screen='auth';
+  await until(()=>!search.querySelector('.luo-skeleton-stage'));
+ }finally{x.close()}
+});
+
+test('secondary loaders stop after genuine network failures and do not inherit self-set busy',async()=>{
+ const x=ready();try{
+  const search=x.d.getElementById('globalSearchResults');
+  search.textContent='Searching messages…';
+  await until(()=>search.querySelector('.sk-search-row'));
+  search.textContent='Network unavailable. Try again.';
+  await until(()=>!search.hasAttribute('aria-busy'));
+  assert.equal(search.querySelector('.luo-skeleton-stage'),null);
+  const shared=x.d.getElementById('sharedList');
+  x.d.getElementById('sharedDialog').setAttribute('open','');
+  shared.textContent='Loading shared media…';
+  await until(()=>shared.querySelector('.sk-shared-card'));
+  shared.textContent='Permission denied.';
+  await until(()=>!shared.hasAttribute('aria-busy'));
+  assert.equal(shared.querySelector('.luo-skeleton-stage'),null);
+ }finally{x.close()}
+});
+
+test('profile skeleton does not dismiss itself while the real profile is still loading',async()=>{
+ const x=ready();try{
+  const dialog=add(x.d,'dialog');dialog.id='personDialog';dialog.setAttribute('open','');
+  const status=x.d.createElement('p');status.id='personStatus';status.textContent='Loading profile…';
+  const body=x.d.createElement('div');body.id='personBody';
+  dialog.append(status,body);
+  await until(()=>!!body.querySelector('.sk-profile-card'));
+  await sleep(310);
+  assert.ok(body.querySelector('.sk-profile-card'),'placeholder must not count as real profile data');
+  body.prepend(Object.assign(x.d.createElement('article'),{className:'person-hero'}));
+  status.textContent='';
+  await until(()=>!body.querySelector('.luo-skeleton-stage'));
+  assert.equal(body.hasAttribute('aria-busy'),false);
+ }finally{x.close()}
 });

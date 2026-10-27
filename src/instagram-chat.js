@@ -1,36 +1,29 @@
 // Luo Chat Messenger: Instagram-inspired DM ergonomics over the existing trusted chat handlers.
 // Wallpapers are local, per-account/per-conversation settings. They contain no remote resources.
-export const WALLPAPER_FAMILIES=[
- ['Midnight','223','58','38'],['Aurora','181','72','45'],['Rose','342','74','48'],
- ['Nebula','267','78','51'],['Ocean','201','82','42'],['Emerald','151','66','40'],
- ['Sunset','19','89','51'],['Stardust','243','52','48'],['Royal','282','69','46'],['Amber','39','88','47']
+// Ten deliberately designed interactive scenes replace the old 100 pattern combinations.
+// All backgrounds are generated locally, with no remote image loads.
+export const WALLPAPER_SCENES=[
+ ['Golden Orbit',39,12,78,'Radial light follows your finger'],
+ ['Midnight Nebula',256,29,64,'Drifting violet galaxies'],
+ ['Ocean Current',196,20,67,'Soft blue currents'],
+ ['Emerald Canopy',155,21,66,'A luminous forest atmosphere'],
+ ['Rose Lanterns',339,27,68,'Warm floating rose light'],
+ ['Solar Eclipse',28,14,74,'Gold around a dark sun'],
+ ['Aurora Veil',169,24,68,'Northern-light ribbons'],
+ ['Starlit Desert',36,29,63,'Sand and distant constellations'],
+ ['Royal Prism',275,27,70,'Amethyst light refractions'],
+ ['Moonlit Clouds',219,16,64,'Calm moonlight in the clouds']
 ];
-export const WALLPAPER_PATTERNS=['Cosmos','Silk','Glass','Prism','Dream','Waves','Bloom','Halo','Comets','Eclipse'];
-const clip=(n,min,max)=>Math.max(min,Math.min(max,n));
 export function createChatWallpapers(){
- const list=[];
- for(let family=0;family<10;family++)for(let pattern=0;pattern<10;pattern++){
-  const [name,hue,_,light]=WALLPAPER_FAMILIES[family],h=Number(hue),l=Number(light),s=70;
-  const a='hsla('+((h+pattern*7)%360)+','+s+'%,'+clip(l+pattern%4*3,28,65)+'%,.34)';
-  const b='hsla('+((h+58+pattern*13)%360)+',83%,50%,.19)';
-  const c='hsla('+((h+158)%360)+',72%,55%,.12)';
-  const x=10+pattern*8,y=12+(pattern*17)%77;
-  const textures=[
-   'radial-gradient(circle at 23% 18%,#fff6 1px,transparent 2px) 0 0/46px 52px,',
-   'repeating-linear-gradient(114deg,transparent 0 29px,#ffffff09 31px 32px),',
-   'linear-gradient(45deg,#ffffff08 25%,transparent 25% 75%,#ffffff08 75%) 0 0/37px 37px,',
-   'conic-gradient(from '+(pattern*34)+'deg at 65% 38%,transparent,#ffffff09,transparent),',
-   'repeating-radial-gradient(circle at 40% 70%,#ffffff0a 0 1px,transparent 3px 37px),',
-   'repeating-linear-gradient(155deg,transparent 0 46px,#ffffff0e 47px,transparent 48px),',
-   'radial-gradient(ellipse at 80% 75%,#ffffff1a,transparent 31%),',
-   'radial-gradient(circle at 50% 60%,transparent 21%,#ffffff0c 22%,transparent 23%),',
-   'repeating-linear-gradient(45deg,transparent 0 70px,#ffffff0c 71px 73px,transparent 74px),',
-   'conic-gradient(from 180deg at 50% 30%,#ffffff0a,transparent 90deg,#ffffff0a,transparent 240deg),'
-  ];
-  const background=textures[pattern]+'radial-gradient(ellipse at '+x+'% '+y+'%,'+a+',transparent 62%),radial-gradient(circle at '+(100-x)+'% '+(100-y)+'%,'+b+',transparent 55%),linear-gradient(145deg,#08090f,'+c+' 49%,#0a090e)';
-  list.push({id:family*10+pattern,name:name+' '+WALLPAPER_PATTERNS[pattern],background,animated:[0,3,4,5,7,8].includes(pattern)});
- }
- return list;
+ return WALLPAPER_SCENES.map(([name,hue,x,y,description],id)=>{
+  const background=[
+   'radial-gradient(circle at '+x+'% '+y+'%,hsla('+hue+',85%,72%,.34),transparent 36%)',
+   'radial-gradient(ellipse at 84% 84%,hsla('+((hue+70)%360)+',67%,42%,.25),transparent 60%)',
+   'repeating-radial-gradient(circle at 47% 58%,transparent 0 34px,#ffffff06 35px 36px)',
+   'linear-gradient(145deg,#080a12,#16101e 57%,#0d0b12)'
+  ].join(',');
+  return {id,name,description,background,animated:true};
+ });
 }
 export function installInstagramChats({win,db,getUser,getCurrent,getChats,openRoom}){
  const doc=win.document,app=doc.querySelector('.app'),room=doc.getElementById('room'),chats=doc.getElementById('chats'),messages=doc.getElementById('messages');
@@ -38,7 +31,7 @@ export function installInstagramChats({win,db,getUser,getCurrent,getChats,openRo
  const wallpapers=createChatWallpapers(),byId=new Map(wallpapers.map(x=>[x.id,x]));
  const el=(tag,cls,text)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
  const button=(label,act,cls)=>{const b=el('button',cls,label);b.type='button';b.addEventListener('click',act);return b};
- const options=el('dialog','luo-dm-settings');options.setAttribute('aria-label','Chat appearance and actions');doc.body.append(options);
+ const options=el('dialog','luo-dm-settings');options.setAttribute('aria-label','Chat appearance and actions');app.append(options);
  const head=el('div','luo-dm-settings-head');head.append(el('h2','','Chat details'),button('✕',()=>options.close(),'luo-dm-dismiss'));options.append(head);
  const active=()=>getCurrent()?.id&&getUser()?.id;
  const storageKey=()=>active()?'luo-dm-theme-v1:'+getUser().id+':'+getCurrent().id:'';
@@ -46,13 +39,13 @@ export function installInstagramChats({win,db,getUser,getCurrent,getChats,openRo
  const save=p=>{try{win.localStorage.setItem(storageKey(),JSON.stringify(p))}catch{notice.textContent='Theme applied for this session. Browser storage is unavailable.'}};
  const notice=el('p','luo-dm-settings-note');notice.setAttribute('role','status');
  const profile=el('section','luo-dm-profile'),actions=el('div','luo-dm-quick-actions'),gallery=el('section','luo-dm-wallpapers');
- const wallpaperTitle=el('h3','','Chat wallpapers · 100 original looks'),filter=el('input','luo-dm-wallpaper-search');filter.type='search';filter.placeholder='Search wallpapers';filter.setAttribute('aria-label','Find a wallpaper');
- const grid=el('div','luo-dm-wallpaper-grid'),motion=el('label','luo-dm-motion'),toggle=el('input');toggle.type='checkbox';motion.append(toggle,el('span','','Animate subtle backgrounds'));gallery.append(wallpaperTitle,filter,motion,grid);
+ const wallpaperTitle=el('h3','','Interactive backgrounds · 10 original scenes'),filter=el('input','luo-dm-wallpaper-search');filter.type='search';filter.placeholder='Search wallpapers';filter.setAttribute('aria-label','Find a wallpaper');
+ const grid=el('div','luo-dm-wallpaper-grid'),motion=el('label','luo-dm-motion'),toggle=el('input');toggle.type='checkbox';motion.append(toggle,el('span','','Animate subtle backgrounds'));const guidance=el('p','luo-dm-wallpaper-intro','Choose a living scene for this conversation. Movement follows your pointer, with reduced-motion support.');gallery.append(wallpaperTitle,guidance,filter,motion,grid);
  options.append(profile,actions,gallery,notice);
  const openExisting=id=>{options.close();doc.getElementById(id)?.click()};
  const shortcuts=[['⌕ Search','roomSearchToggle'],['▣ Media','openMedia'],['♧ Pins','openPins'],['♧ Personalize','openPersonalize'],['⋯ More','roomMenu']];
  for(const [label,id] of shortcuts){const b=button(label,()=>{if(id==='roomMenu'){options.close();doc.querySelector('#roomMenu summary')?.click()}else openExisting(id)},'luo-dm-action');actions.append(b)}
- const headerButton=button('Chat details',()=>{}, 'luo-dm-info');headerButton.setAttribute('aria-label','Open chat details and 100 wallpapers');
+ const headerButton=button('Chat details',()=>{}, 'luo-dm-info');headerButton.setAttribute('aria-label','Open chat details and 10 interactive backgrounds');
  // Chat-details cannot become a competing top-layer modal over someone’s profile.
  const profileDialogOpen=()=>Boolean(doc.getElementById('personDialog')?.open||doc.getElementById('personPhotoDialog')?.open);
  headerButton.onclick=()=>{if(!active()||profileDialogOpen())return;fill();options.showModal()};
@@ -80,7 +73,7 @@ export function installInstagramChats({win,db,getUser,getCurrent,getChats,openRo
   for(const item of wallpapers.filter(w=>w.name.toLowerCase().includes(search))){
    const b=button('',()=>{}, 'luo-dm-wallpaper');b.dataset.theme=String(item.id);b.setAttribute('aria-label',item.name);b.setAttribute('aria-pressed',String(item.id===selected));
    const art=el('span','luo-dm-wallpaper-art');art.style.background=item.background;
-   b.append(art,el('span','luo-dm-wallpaper-name',item.name));
+   b.append(art,el('span','luo-dm-wallpaper-name',item.name),el('small','luo-dm-wallpaper-caption',item.description));
    b.onclick=()=>{if(!active())return;const p=preference();p.theme=item.id;save(p);apply(p.theme,p.motion);notice.textContent=item.name+' applied to this conversation.'};
    grid.append(b);
   }
@@ -89,14 +82,16 @@ export function installInstagramChats({win,db,getUser,getCurrent,getChats,openRo
  filter.oninput=renderGallery;
  toggle.onchange=()=>{if(!active())return;const p=preference();p.motion=toggle.checked;save(p);apply(p.theme,p.motion)};
  let lastRoom=null;
+ const movement=event=>{if(event.pointerType==='touch'||event.pointerType==='pen')return;if(!room.classList.contains('luo-dm-animated'))return;const bounds=messages.getBoundingClientRect();if(!bounds.width||!bounds.height)return;const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;messages.style.setProperty('--luo-pointer-x',Math.max(0,Math.min(100,x*100)).toFixed(1)+'%');messages.style.setProperty('--luo-pointer-y',Math.max(0,Math.min(100,y*100)).toFixed(1)+'%')};
+ messages.addEventListener('pointermove',movement,{passive:true});
  function onRoom(){
-  if(!active()){lastRoom=null;room.style.removeProperty('--luo-dm-wallpaper');return}
-  const id=getCurrent().id;if(lastRoom!==id){lastRoom=id;if(options.open)options.close()}
+  if(!active()){lastRoom=null;room.style.removeProperty('--luo-dm-wallpaper');room.classList.remove('luo-dm-animated');delete room.dataset.luoTheme;messages.style.removeProperty('--luo-pointer-x');messages.style.removeProperty('--luo-pointer-y');return}
+  const id=getUser().id+':'+getCurrent().id;if(lastRoom!==id){lastRoom=id;messages.style.removeProperty('--luo-pointer-x');messages.style.removeProperty('--luo-pointer-y');if(options.open)options.close()}
   const p=preference();apply(p.theme,p.motion);
  }
  const obs=new win.MutationObserver(()=>{if(app.dataset.screen==='room')onRoom()});
  obs.observe(app,{attributes:true,attributeFilter:['data-screen']});
  function onTab(tab){if(tab==='chats'){if(options.open)options.close()}if(app.dataset.screen==='room')onRoom()}
- function signedOut(){lastRoom=null;if(options.open)options.close();room.style.removeProperty('--luo-dm-wallpaper')};
+ function signedOut(){lastRoom=null;if(options.open)options.close();room.style.removeProperty('--luo-dm-wallpaper');room.classList.remove('luo-dm-animated');delete room.dataset.luoTheme;messages.style.removeProperty('--luo-pointer-x');messages.style.removeProperty('--luo-pointer-y')};
  return {onRoom,onTab,signedOut,wallpaperCount:wallpapers.length};
 }

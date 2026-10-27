@@ -1,0 +1,78 @@
+/* Luo Chat Stories V9: WhatsApp-inspired full-screen mobile composer and
+   Instagram-style audience drilldown. Existing private server permissions remain. */
+#storyComposer.luo-v9-story[open]{
+ width:min(96vw,680px);max-width:680px;height:min(94dvh,900px);max-height:94dvh;
+ border:1px solid #97764b;border-radius:23px;padding:0;background:#101015;color:#f9e7c7;
+ overflow:hidden;box-shadow:0 35px 110px #000b
+}
+#storyComposer.luo-v9-story #storyForm{height:100%;display:block;overflow:hidden;min-width:0}
+#storyComposer.luo-v9-story .luo-story-page{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;box-sizing:border-box;padding:18px 20px calc(26px + env(safe-area-inset-bottom,0px))}
+#storyComposer.luo-v9-story .luo-story-page[hidden]{display:none!important}
+.luo-v9-story .luo-story-editor{background:radial-gradient(ellipse at 78% -10%,#7b5d2838,transparent 42%),#111015}
+.luo-v9-story .luo-story-editor .dialog-heading{position:sticky;top:-18px;z-index:5;background:#171218f2;backdrop-filter:blur(12px);padding:16px 10px;margin:-18px -12px 15px;border-bottom:1px solid #6c5538}
+.luo-v9-story .luo-story-editor .dialog-heading h2{font-size:21px;letter-spacing:-.5px}
+.luo-v9-story .luo-story-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:4px 0 16px}
+.luo-v9-story .luo-story-eyebrow{color:#d6bb8c;font-size:11px;font-weight:780;letter-spacing:1.2px}
+.luo-v9-story .luo-story-audience-button{border:1px solid #a6814e;background:#35261f;color:#ffe0a4;border-radius:22px;font-weight:750;min-height:45px;padding:9px 15px;text-align:left;max-width:100%}
+.luo-v9-story .luo-story-editor .luo-v6-story-preview{min-height:230px;border-radius:22px;background:radial-gradient(ellipse at 92% 12%,#77563b55,transparent 55%),#221922;border-color:#957445;margin:12px 0 18px}
+.luo-v9-story .luo-story-editor .luo-v6-story-media{min-height:170px;border-radius:15px}
+.luo-v9-story .luo-story-editor .luo-v6-story-media :is(video,audio){display:block;max-width:100%;width:100%;max-height:260px}
+.luo-v9-story #storyBody{border-radius:17px;resize:vertical;min-height:100px;font-size:16px;line-height:1.5}
+.luo-v9-story #storyMusic,.luo-v9-story #storyCircleName,.luo-v9-story #storyAudience{font-size:16px}
+.luo-v9-story .luo-story-advanced{border:1px solid #5b4937;background:#1b1820;border-radius:13px;margin:14px 0;padding:12px}
+.luo-v9-story .luo-story-advanced summary{cursor:pointer;color:#d8c39e;font-size:13px;font-weight:720;min-height:40px;display:flex;align-items:center}
+.luo-v9-story .luo-story-advanced[open]{display:grid;gap:10px}
+.luo-v9-story #storyStatus{min-height:20px;color:#f3bf8c;overflow-wrap:anywhere;font-size:13px}
+.luo-v9-story #publishStory{position:sticky;bottom:0;width:100%;z-index:4;min-height:52px;margin:16px 0 0;border-radius:17px;font-weight:800;font-size:15px;box-shadow:0 -8px 20px #101015b0}
+.luo-v9-story .luo-story-secondary{background:linear-gradient(145deg,#1f171d,#0d0e14);display:flex!important;flex-direction:column;gap:13px}
+.luo-v9-story .luo-story-secondary[hidden]{display:none!important}
+.luo-v9-story .luo-story-subhead{display:flex;align-items:center;gap:12px;position:sticky;top:-18px;z-index:4;margin:-18px -20px 0;padding:14px 18px;background:#19141bf5;border-bottom:1px solid #584832}
+.luo-v9-story .luo-story-back{border:1px solid #73583a;border-radius:14px;background:#34251f;color:#ffdfaa;min-height:44px;padding:10px 13px}
+.luo-v9-story .luo-story-page-title{font-size:21px;letter-spacing:-.4px;margin:0}
+.luo-v9-story .luo-story-help{font-size:13px;line-height:1.55;color:#d2bea4;margin:4px 0}
+.luo-v9-story .luo-story-page-body{display:grid;gap:10px;min-width:0}
+.luo-v9-story .luo-story-audience-choice{width:100%;min-width:0;text-align:left;padding:14px 15px;min-height:75px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;background:#241f26;border:1px solid #654d38;border-radius:16px;color:#f5e5ce}
+.luo-v9-story .luo-story-audience-choice strong{font-size:15px;grid-column:1}
+.luo-v9-story .luo-story-audience-choice small{font-size:12px;color:#c4b29d;grid-column:1;line-height:1.45}
+.luo-v9-story .luo-story-option-mark{grid-column:2;grid-row:1/3;font-size:20px;color:#e9c17c}
+.luo-v9-story .luo-story-audience-choice[data-selected="true"]{border-color:#ddb57a;background:#3a2b26}
+.luo-v9-story .luo-story-audience-choice:disabled{opacity:.48;cursor:not-allowed}
+.luo-v9-story .luo-story-contact-search{width:100%;min-height:48px;font-size:16px;border:1px solid #8a6c45;border-radius:13px;background:#191720;color:#f8e6d1;padding:12px 14px}
+.luo-v9-story .luo-story-contact-list{display:grid;gap:8px;max-height:45dvh;overflow:auto;overscroll-behavior:contain}
+.luo-v9-story .luo-story-contact-row{display:flex;align-items:center;gap:12px;background:#251e24;border:1px solid #604e39;border-radius:14px;padding:10px 13px;min-height:59px;cursor:pointer}
+.luo-v9-story .luo-story-contact-avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;background:#886538;color:#140d0c;font-weight:900}
+.luo-v9-story .luo-story-contact-identity{display:grid;gap:4px;flex:1;min-width:0;overflow-wrap:anywhere}
+.luo-v9-story .luo-story-contact-identity strong{font-size:14px;color:#f8e5c9}
+.luo-v9-story .luo-story-contact-identity small{font-size:12px;color:#c4af97}
+.luo-v9-story .luo-story-contact-row input{width:22px;height:22px;accent-color:#ddb779;flex-shrink:0}
+.luo-v9-story .luo-story-selection-actions{position:sticky;bottom:-26px;display:flex;gap:9px;flex-wrap:wrap;background:#151319f2;padding:12px 2px}
+.luo-v9-story .luo-story-selection-actions button,.luo-v9-story .luo-story-secondary-action,.luo-v9-story .luo-story-circle-chip{padding:10px 14px;min-height:44px;border-radius:12px;border:1px solid #8d6a42;background:#352720;color:#efdbbb}
+.luo-v9-story .luo-story-primary{background:#d9b370!important;border-color:#ddb975!important;color:#17100c!important;font-weight:800;margin-left:auto}
+.luo-v9-story .luo-story-inline-note{font-size:13px;line-height:1.5;color:#dbc19a;overflow-wrap:anywhere}
+.luo-v9-story .luo-story-circles{display:grid;gap:9px}
+.luo-v9-story .luo-story-circle-chip{text-align:left}
+.luo-v9-story :is(button,input,summary,textarea):focus-visible{outline:3px solid #ffcf80;outline-offset:3px}
+@media(max-width:600px){
+ #storyComposer.luo-v9-story[open]{width:100vw;height:100dvh;max-height:100dvh;max-width:100vw;margin:0;border:0;border-radius:0}
+ .luo-v9-story .luo-story-page{padding:15px 14px calc(24px + env(safe-area-inset-bottom,0px))}
+ .luo-v9-story .luo-story-subhead{margin:-15px -14px 0;top:-15px}
+ .luo-v9-story .luo-story-contact-list{max-height:55dvh}
+ .luo-v9-story #publishStory{bottom:0}
+}
+@media(prefers-reduced-motion:reduce){.luo-v9-story *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Camera and gallery actions target the existing secure Story upload field. */
+.luo-v9-story .luo-story-media-actions{display:flex;flex-wrap:wrap;gap:9px;margin:10px 0 18px}
+.luo-v9-story .luo-story-media-action{flex:1 1 180px;min-height:48px;text-align:center;padding:11px 14px;background:#2d2428;border:1px solid #957147;border-radius:13px;color:#f8dfb2;font-weight:750;touch-action:manipulation}
+.luo-v9-story .luo-story-media-action:hover{background:#40302a;border-color:#e6bc7e}
+.luo-v9-story .luo-story-status{min-height:20px;margin:0;font-size:13px;color:#ffcc9b;line-height:1.4;overflow-wrap:anywhere}
+.luo-v9-story .luo-story-secondary .luo-story-status:empty{display:none}
+.luo-v9-story #publishStory:disabled{opacity:.75;cursor:progress;pointer-events:none}
+.luo-v9-story #publishStory[aria-busy="true"]{background:#685432;color:#fff0d1}
+@media(max-width:380px){.luo-v9-story .luo-story-media-action{flex-basis:100%}}
+
+/* Explicit notice when a saved private circle contains usernames that are no longer saved contacts. */
+.luo-v9-story .luo-story-outside-contacts{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border:1px solid #a2794c;border-radius:14px;background:#342b25;padding:12px}
+.luo-v9-story .luo-story-outside-contacts p{flex:1 1 100%;margin:0}
+.luo-v9-story .luo-story-outside-remove{min-height:44px;padding:10px 12px;border-radius:11px;border:1px solid #e0b77a;background:#442923;color:#ffe1b1;font-size:13px}
+.luo-v9-story .luo-story-outside-remove:focus-visible{outline:3px solid #ffd18a;outline-offset:2px}

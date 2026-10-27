@@ -1,7 +1,7 @@
 name: Web reliability checks
 on:
   push:
-    branches: [main, 'hardening/**', 'feature/reels-immersive-20261025', 'release/luo-ui-polish-20261027', 'release/agent-api-20261027']
+    branches: [main, 'hardening/**', 'feature/reels-immersive-20261025', 'release/luo-ui-polish-20261027', 'release/agent-api-20261027', 'release/secondary-pages-v5-20261027', 'release/payments-secondary-complete-20261027']
   pull_request:
 permissions:
   contents: read

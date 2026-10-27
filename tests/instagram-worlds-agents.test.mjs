@@ -5,9 +5,9 @@ import {JSDOM} from 'jsdom';
 import {createChatWallpapers,installInstagramChats} from '../src/instagram-chat.js';
 import {parseLuoShare,installReelMessagePreviews} from '../src/reel-message-preview.js';
 
-test('Luo direct messages provide 100 distinct offline wallpapers with no external URLs',()=>{
+test('Luo direct messages provide ten curated interactive offline scenes with no external URLs',()=>{
  const themes=createChatWallpapers();
- assert.equal(themes.length,100);assert.equal(new Set(themes.map(x=>x.id)).size,100);assert.equal(new Set(themes.map(x=>x.name)).size,100);
+ assert.equal(themes.length,10);assert.equal(new Set(themes.map(x=>x.id)).size,10);assert.equal(new Set(themes.map(x=>x.name)).size,10);
  for(const theme of themes){assert.match(theme.background,/gradient/);assert.doesNotMatch(theme.background,/url\s*\(/i);}
 });
 test('Wallpapers are isolated by account and conversation, and clean on sign-out',()=>{
@@ -15,15 +15,32 @@ test('Wallpapers are isolated by account and conversation, and clean on sign-out
  const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};let user={id:'human1'},conversation={id:'direct1',kind:'direct',person:{username:'Friend'}};
  const api=installInstagramChats({win:w,getUser:()=>user,getCurrent:()=>conversation,getChats:()=>[],openRoom:()=>{}});
  try{
-  assert.equal(api.wallpaperCount,100);api.onRoom();
+  assert.equal(api.wallpaperCount,10);api.onRoom();
+  assert.equal(d.querySelector('.luo-dm-settings').closest('.app'),d.querySelector('.app'));
   d.querySelector('.luo-dm-info').click();
-  assert.equal(d.querySelectorAll('.luo-dm-wallpaper').length,100);
-  d.querySelector('[data-theme="37"]').click();assert.equal(d.getElementById('room').dataset.luoTheme,'37');
-  assert.equal(JSON.parse(w.localStorage.getItem('luo-dm-theme-v1:human1:direct1')).theme,37);
+  assert.equal(d.querySelectorAll('.luo-dm-wallpaper').length,10);
+  d.querySelector('[data-theme="7"]').click();assert.equal(d.getElementById('room').dataset.luoTheme,'7');
+  const canvas=d.getElementById('messages');
+  canvas.getBoundingClientRect=()=>({left:0,top:0,width:300,height:600});
+  canvas.dispatchEvent(new w.MouseEvent('pointermove',{clientX:150,clientY:300,bubbles:true}));
+  assert.equal(canvas.style.getPropertyValue('--luo-pointer-x'),'50.0%');
+  assert.equal(canvas.style.getPropertyValue('--luo-pointer-y'),'50.0%');
+  const touch=new w.Event('pointermove',{bubbles:true});
+  Object.defineProperty(touch,'pointerType',{value:'touch'});
+  Object.defineProperty(touch,'clientX',{value:250});
+  Object.defineProperty(touch,'clientY',{value:500});
+  canvas.dispatchEvent(touch);
+  assert.equal(canvas.style.getPropertyValue('--luo-pointer-x'),'50.0%','touch scrolling must not repaint wallpaper');
+
+  assert.equal(JSON.parse(w.localStorage.getItem('luo-dm-theme-v1:human1:direct1')).theme,7);
   conversation={id:'direct2',kind:'direct',person:{username:'Other'}};api.onRoom();
+  assert.equal(canvas.style.getPropertyValue('--luo-pointer-x'),'');
+  assert.equal(canvas.style.getPropertyValue('--luo-pointer-y'),'');
   assert.equal(d.getElementById('room').dataset.luoTheme,'0');
   user={id:'human2'};api.onRoom();assert.equal(d.getElementById('room').dataset.luoTheme,'0');
   api.signedOut();assert.equal(d.getElementById('room').style.getPropertyValue('--luo-dm-wallpaper'),'');
+  assert.equal(d.getElementById('room').classList.contains('luo-dm-animated'),false);
+  assert.equal(d.getElementById('room').hasAttribute('data-luo-theme'),false);
  }finally{w.close()}
 });
 test('Rich shares recognize real video and written/photo references, reject arbitrary markup',()=>{

@@ -60,7 +60,24 @@ $('personalizeForm').onsubmit=async e=>{e.preventDefault();const room=getCurrent
 function tone(name){if(name==='off')return;const Context=win.AudioContext||win.webkitAudioContext;if(!Context)return;const context=new Context();context.resume().then(()=>{const osc=context.createOscillator(),gain=context.createGain();osc.type='sine';osc.frequency.value=name==='bell'?880:name==='tap'?380:660;gain.gain.setValueAtTime(.08,context.currentTime);gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.5);osc.connect(gain).connect(context.destination);osc.start();osc.stop(context.currentTime+.5);osc.onended=()=>context.close()}).catch(()=>context.close())}
 for(const [id,reverse] of [['prepareTranslation',false],['prepareTranslationReverse',true]])$(id).onclick=async()=>{try{$('personalizeStatus').textContent='Preparing language model…';const from=reverse?$('translateTarget').value:$('translateSource').value,to=reverse?$('translateSource').value:$('translateTarget').value;await translation.prepare(from,to,{download:true});$('personalizeStatus').textContent=(reverse?'Outgoing':'Incoming')+' translation is ready for this app session.'}catch(e){$('personalizeStatus').textContent=e.message}};
 $('testChatSound').onclick=()=>tone($('chatSound').value);
-function cancelSearch(){searchRequest++;$('globalSearchSubmit').disabled=false}async function search(){const actor=getUser()?.id;if(!actor)return;const seq=++searchRequest,epoch=sessionEpoch,active=()=>getUser()?.id===actor&&seq===searchRequest&&epoch===sessionEpoch;$('globalSearchSubmit').disabled=true;try{const args=parseSearch($('globalSearchInput').value),rows=await rpc('search_chat_everything',args);if(!active())return;$('globalSearchResults').replaceChildren();for(const m of rows||[]){const chat=getChats().find(c=>c.id===m.conversation_id);const b=button((chat?.title||chat?.person?.display_name||'Conversation')+' · '+new Date(m.created_at).toLocaleString()+'\n'+(m.matched_text||m.body).slice(0,350),()=>jump(m),'global-result');$('globalSearchResults').append(b)}if(!$('globalSearchResults').children.length)$('globalSearchResults').textContent='No results.';else $('globalSearchResults').append(el('p','Showing up to 80 results. Narrow your text or filters for more.','tiny muted'))}catch(e){if(active())$('globalSearchResults').textContent=e.message}finally{if(active())$('globalSearchSubmit').disabled=false}}
+function cancelSearch(){searchRequest++;delete $('globalSearchResults').dataset.luoLoadingToken;$('globalSearchSubmit').disabled=false}
+async function search(){
+ const actor=getUser()?.id;if(!actor)return;
+ const seq=++searchRequest,epoch=sessionEpoch;
+ const active=()=>getUser()?.id===actor&&seq===searchRequest&&epoch===sessionEpoch;
+ const results=$('globalSearchResults');
+ $('globalSearchSubmit').disabled=true;
+ try{
+  // Validate first: invalid filters do not flash a loading skeleton.
+  const args=parseSearch($('globalSearchInput').value);
+  results.dataset.luoLoadingToken=String(seq);
+  results.textContent='Searching messages…';
+  const rows=await rpc('search_chat_everything',args);
+  if(!active())return;
+  results.replaceChildren();for(const m of rows||[]){const chat=getChats().find(c=>c.id===m.conversation_id);const b=button((chat?.title||chat?.person?.display_name||'Conversation')+' · '+new Date(m.created_at).toLocaleString()+'\n'+(m.matched_text||m.body).slice(0,350),()=>jump(m),'global-result');$('globalSearchResults').append(b)}if(!$('globalSearchResults').children.length)$('globalSearchResults').textContent='No results.';else $('globalSearchResults').append(el('p','Showing up to 80 results. Narrow your text or filters for more.','tiny muted'))}catch(e){if(active())results.textContent=e.message}finally{
+  if(results.dataset.luoLoadingToken===String(seq))delete results.dataset.luoLoadingToken;
+  if(active())$('globalSearchSubmit').disabled=false;
+ }}
 $('globalSearchForm').onsubmit=e=>{e.preventDefault();search()};
 $('showProfileQR').onclick=()=>{const username=getProfile()?.username;if(!username)return;modal('One-scan connection',async body=>{body.append(el('p','Scan this with a phone camera to open your profile. Sending a chat still requires confirmation.','tiny muted'));const image=el('img');image.alt='QR code for @'+username;image.className='profile-qr';image.src=await QRCode.toDataURL(win.location.origin+'/?user='+encodeURIComponent(username),{width:320,margin:3,color:{dark:'#000000',light:'#ffffff'},errorCorrectionLevel:'M'});body.append(image,el('p','@'+username))})};
 const cardsInterval=win.setInterval(()=>refreshCards().catch(()=>{}),10000);let expiryTimer=win.setInterval(()=>{for(const e of doc.querySelectorAll('[data-countdown]')){const left=Math.max(0,new Date(e.dataset.countdown)-Date.now());e.textContent=left?Math.floor(left/86400000)+'d '+Math.floor(left/3600000)%24+'h '+Math.floor(left/60000)%60+'m '+Math.floor(left/1000)%60+'s':'Time’s up';}for(const node of $('messages').querySelectorAll('[data-expires]'))if(node.dataset.expires&&new Date(node.dataset.expires)<=new Date())node.remove()},1000);
