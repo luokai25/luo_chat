@@ -187,7 +187,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
     const r=await db.rpc('save_chat_story_circle',{circle_name:'Close friends',recipient_usernames:[...selected]});
     if(r.error)throw r.error;
     if(request!==generation||who!==getUser()?.id)return;
-    notice('Close friends circle saved to your account.');setAudience([...selected]);sync(true);go('editor');
+    notice('Close friends circle saved to your account.');setAudience([...selected]);committedMode='close';sync(true);go('editor');
     $('storyCircleName').value='';dialog.dispatchEvent(new win.CustomEvent('luo:story-circle-saved'));
    }catch(e){if(current()&&request===generation)notice(e.message||'Could not save close friends.')}
    finally{save.disabled=false;save.textContent='Save close friends'}
