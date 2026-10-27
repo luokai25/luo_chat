@@ -44,8 +44,10 @@ function attachmentPicker(){
  for(const btn of buttons){
   btn.classList.add('luo-v7-attachment-action');
   const label=btn.textContent.trim();
-  btn.prepend(make('span','luo-v7-attachment-glyph',
-   label==='Camera'?'◎':label==='Document'?'▤':label==='Poll'?'≡':label==='Schedule message'?'◷':'▧'));
+  const glyph=make('span','luo-v7-attachment-glyph',
+   label==='Camera'?'◎':label==='Document'?'▤':label==='Poll'?'≡':label==='Schedule message'?'◷':'▧');
+  glyph.setAttribute('aria-hidden','true');
+  btn.prepend(glyph);
  }
  const details=make('p','luo-v7-attachment-note',
  'Uploads are limited by the original file validation and chat permissions.');
