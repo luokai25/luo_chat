@@ -39,6 +39,16 @@ test('attachment picker enhances only the actual action buttons and respects Esc
   assert.equal(sheet.querySelectorAll('.luo-v7-attachment-action').length,2);
   assert.equal(sheet.querySelectorAll('.luo-v7-attachment-glyph[aria-hidden="true"]').length,2);
   assert.equal(sheet.querySelectorAll('.luo-v7-attachment-action')[0].textContent.trim().endsWith('Photo or video'),true);
+  const file=d.getElementById('mediaFile'),note=sheet.querySelector('.luo-v7-attachment-note');
+  Object.defineProperty(file,'files',{configurable:true,value:[new x.w.File(['abc'],'tiny.txt',{type:'text/plain'})]});
+  file.dispatchEvent(new x.w.Event('change'));
+  assert.match(note.textContent,/tiny\\.txt.*KB/);
+  Object.defineProperty(file,'files',{configurable:true,value:[new x.w.File(['a'],'one.txt'),new x.w.File(['b'],'two.txt')]});
+  file.dispatchEvent(new x.w.Event('change'));
+  assert.match(note.textContent,/2 files selected.*total/);
+  Object.defineProperty(file,'files',{configurable:true,value:[]});
+  file.dispatchEvent(new x.w.Event('change'));
+  assert.match(note.textContent,/Uploads are limited/);
   sheet.hidden=false;attach.setAttribute('aria-expanded','true');
   sheet.dispatchEvent(new x.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
   assert.equal(sheet.hidden,true);assert.equal(attach.getAttribute('aria-expanded'),'false');
