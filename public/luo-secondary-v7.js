@@ -53,10 +53,17 @@ function attachmentPicker(){
  'Uploads are limited by the original file validation and chat permissions.');
  sheet.append(details);
  file.addEventListener('change',()=>{
-  const value=file.files?.[0];
-  details.textContent=value
-   ?'Selected: '+value.name.slice(0,90)+' · '+(value.size/1048576).toFixed(1)+' MB'
-   :'Uploads are limited by the original file validation and chat permissions.';
+  const selected=Array.from(file.files||[]);
+  if(!selected.length){
+   details.textContent='Uploads are limited by the original file validation and chat permissions.';
+   return;
+  }
+  const bytes=selected.reduce((sum,item)=>sum+item.size,0);
+  const unit=bytes>=1048576?'MB':'KB';
+  const size=(bytes/(unit==='MB'?1048576:1024)).toFixed(1);
+  details.textContent=selected.length===1
+   ?'Selected: '+selected[0].name.slice(0,90)+' · '+size+' '+unit
+   :selected.length+' files selected · '+size+' '+unit+' total';
  });
  sheet.addEventListener('keydown',event=>{
   if(event.key==='Escape'){
