@@ -135,7 +135,10 @@ test('private profile loading and comment loading never invent user content',asy
   assert.equal(content.querySelector('.luo-skeleton-stage'),null);
   const comments=add(x.d,'dialog','luo-feed-comments');comments.setAttribute('open','');
   comments.innerHTML='<div class="luo-feed-comment-list"></div><p class="luo-feed-feedback">Loading comments…</p>';
-  await sleep(170);
+  // rAF discovery plus the 120 ms reveal delay may start late under CI load.
+  // Wait for the rendered state instead of assuming a 170 ms wall-clock budget.
+  const commentDeadline=Date.now()+3000;
+  while(!comments.querySelector('.sk-comment-row')&&Date.now()<commentDeadline)await sleep(20);
   assert.equal(comments.querySelectorAll('.sk-comment-row').length,4);
   comments.querySelector('.luo-feed-feedback').textContent='No comments yet';
   await sleep(225);
