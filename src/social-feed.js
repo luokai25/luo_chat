@@ -30,7 +30,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  const kinds=clipsOnly?['clip','post']:['post','clip'];
  const sources=clipsOnly&&mode==='mixed'?['public','friends']:[mode];
  const streams=new Map(sources.flatMap(sourceMode=>kinds.map(kind=>[sourceMode+':'+kind,{kind,sourceMode,before:null,before_id:null,more:true}])));
- const seen=new Set(),media=new Map();
+ const seen=new Set(),media=new Map(),postVideos=new Set();
  const reduced=!!win.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
  const saver=!!win.navigator.connection?.saveData;
  let observer;
@@ -38,7 +38,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
   if(!valid())return;
   for(const entry of entries){const state=media.get(entry.target);if(!state)continue;if(entry.isIntersecting&&entry.intersectionRatio>=.65){activeCard=entry.target;extras?.activate(entry.target);for(const [card,s]of media)if(card!==activeCard)s.video?.pause();if(allowPlayback&&!state.userPaused&&!saver&&!reduced&&!doc.hidden&&!sheet.open)state.play().catch(()=>{});const cards=[...list.children];if(cards.indexOf(entry.target)>=cards.length-2&&!more.hidden)load()}else{state.video?.pause();if(activeCard===entry.target)activeCard=null}}
  },{root:list,threshold:[0,.65]});
- const visibility=()=>{if(doc.hidden)for(const [card,s]of media){s.video?.pause();if(s.video)s.video.playbackRate=1;card.classList.remove('luo-reels-fast')}};doc.addEventListener('visibilitychange',visibility);
+ const visibility=()=>{if(doc.hidden){for(const [card,s]of media){s.video?.pause();if(s.video)s.video.playbackRate=1;card.classList.remove('luo-reels-fast')}for(const video of postVideos)video.pause()}};doc.addEventListener('visibilitychange',visibility);
 
  async function signed(path,item){
   if(typeof path!=='string'||!path.startsWith(item.owner_id+'/'+item.id+'/')||path.includes('..'))throw Error('This media is unavailable.');
@@ -119,7 +119,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
       }else element.alt=(item.title||'Luonix photo')+' · '+(next+1)+' of '+attachments.length;
       element.src=url;element.className='luo-feed-post-media';
       element.onerror=()=>{if(!valid()||ticket!==mediaRun)return;element.remove();load.hidden=false;load.querySelector('span').textContent='Retry media';note('Media could not play or load on this device.')};
-      active?.pause?.();active?.remove();active=element;stage.prepend(element);
+      if(active?.tagName==='VIDEO'){active.pause();postVideos.delete(active)}active?.remove();active=element;if(video)postVideos.add(element);stage.prepend(element);
       index=next;load.hidden=true;count.textContent=(index+1)+' / '+attachments.length;
      }catch(err){if(valid()&&ticket===mediaRun){load.hidden=false;load.querySelector('span').textContent='Retry media';note(err.message||'Media unavailable.')}}
      finally{if(valid()&&ticket===mediaRun)load.disabled=false}
@@ -250,5 +250,5 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
  const onKey=ev=>{if(!clipsOnly||!['ArrowDown','ArrowUp'].includes(ev.key)||/INPUT|TEXTAREA|BUTTON/.test(ev.target.tagName))return;ev.preventDefault();const cards=[...list.children],index=Math.max(0,cards.indexOf(activeCard||doc.activeElement));cards[Math.min(cards.length-1,Math.max(0,index+(ev.key==='ArrowDown'?1:-1)))]?.scrollIntoView?.({behavior:reduced?'instant':'smooth',block:'start'})};list.addEventListener('keydown',onKey);
  async function start(){if(initialClip&&/^[0-9a-f-]{36}$/i.test(initialClip)){try{const item=await rpc('entry.get',{id:initialClip});if(valid()&&item?.id&&item.kind==='clip'&&item.published!==false){seen.add(item.id);card(item)}}catch(e){if(valid())note(e.message||'This shared clip is unavailable.')}}if(valid()){await load();if(extras&&await extras.ready()&&valid()){const menu=el('div','luo-reel-feed-switch');for(const [value,title]of [['following','Following'],['saved','Saved']]){const b=button(title,()=>onMode?.(value),'luo-reels-tab');b.setAttribute('aria-pressed',String(mode===value));menu.append(b)}root.querySelector('.luo-reels-top')?.append(menu)}}}
  start();
- return ()=>{disposed=true;extras?.close();for(const timer of timers)win.clearTimeout(timer);timers.clear();observer?.disconnect();doc.removeEventListener('visibilitychange',visibility);list.removeEventListener('keydown',onKey);for(const state of media.values())state.release?.();media.clear();closeComments();sheet.remove();root.remove()};
+ return ()=>{disposed=true;extras?.close();for(const timer of timers)win.clearTimeout(timer);timers.clear();observer?.disconnect();doc.removeEventListener('visibilitychange',visibility);list.removeEventListener('keydown',onKey);for(const state of media.values())state.release?.();media.clear();for(const video of postVideos){video.pause();video.removeAttribute('src');video.load()}postVideos.clear();closeComments();sheet.remove();root.remove()};
 }
