@@ -21,7 +21,7 @@ function shortcutHelp(){
  list.before(search,status);
  const rows=[...list.querySelectorAll(':scope > div')];
  function render(){
-  const term=search.value.trim().toLocaleLowerCase();let shown=0;
+  const typed=search.value.trim().toLocaleLowerCase();const term=typed==='escape'?'esc':typed;let shown=0;
   for(const row of rows){row.hidden=!!term&&!row.textContent.toLocaleLowerCase().includes(term);if(!row.hidden)shown++;}
   status.textContent=shown+' keyboard shortcut'+(shown===1?'':'s')+' available';
  }
