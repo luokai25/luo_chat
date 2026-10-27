@@ -29,9 +29,9 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  footer.append(back,message,next);root.append(top,state,screens,footer);output.append(root);
  let addMode=false;
  const picker=el('input','luonix-v10-file');picker.type='file';picker.multiple=true;picker.accept='image/jpeg,image/png,image/webp,video/mp4,video/webm';picker.setAttribute('aria-label','Choose photos and videos from gallery');
- const choose=btn('Choose from gallery',()=>{addMode=false;picker.click()},'luonix-v10-gallery-button');
+ const choose=btn('Choose from gallery',()=>{addMode=false;picker.multiple=true;picker.accept='image/jpeg,image/png,image/webp,video/mp4,video/webm';picker.removeAttribute('capture');picker.click()},'luonix-v10-gallery-button');
  const camera=btn('Camera photo',()=>{
-  addMode=false;picker.accept='image/*';picker.setAttribute('capture','environment');picker.click();
+  addMode=false;picker.multiple=false;picker.accept='image/*';picker.setAttribute('capture','environment');picker.click();
  },'luonix-v10-camera');
  const edit=btn('Advanced video editing',()=>{if(files.length&&!win.confirm('Open the video studio? This post selection will be discarded.'))return;onAdvanced?.()},'luonix-v10-advanced');
  gallery.append(el('h3','','Choose media'),el('p','','Select up to six photos and videos. They can appear together in one post.'),choose,camera,picker,edit);
@@ -107,7 +107,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  picker.addEventListener('change',()=>{
   try{updateFiles(picker.files)}
   catch(e){setInfo(e.message||'Unsupported selection')}
-  finally{addMode=false;picker.value='';picker.removeAttribute('capture');picker.accept='image/jpeg,image/png,image/webp,video/mp4,video/webm'}
+  finally{addMode=false;picker.value='';picker.multiple=true;picker.removeAttribute('capture');picker.accept='image/jpeg,image/png,image/webp,video/mp4,video/webm'}
  });
  function removeCurrent(){
   if(publishing||!files.length)return;
