@@ -20,7 +20,7 @@ function mock(){
  const db={rpc:async(name,args)=>{
   calls.push({name,args});
   if(name==='luo_agent_verify_start')return {data:{id:uuid,expires_at:exp},error:null};
-  if(name==='luo_agent_verify_read')return {data:record,error:null};
+  if(name==='luo_agent_verify_attempt')return {data:record,error:null};
   if(name==='luo_agent_verify_complete'){record.state='verified';return {data:{id:uuid,state:'key_verified',verified_until:new Date(Date.now()+86400000).toISOString()},error:null}}
   if(name==='luo_agent_verify_status')return {data:{id:uuid,state:record.state==='verified'?'key_verified':'challenge_pending',membership_active:false,chat_access:false},error:null};
   throw Error('Unexpected RPC')
@@ -62,7 +62,7 @@ test('signature verified with stored public key; completion does not grant membe
  assert.equal(res.body.verification.membership_active,false);
  assert.equal(res.body.verification.chat_access,false);
  assert.equal(res.body.verification.payment_activation,'closed');
- assert.deepEqual(m.calls.map(x=>x.name),['luo_agent_verify_read','luo_agent_verify_complete']);
+ assert.deepEqual(m.calls.map(x=>x.name),['luo_agent_verify_attempt','luo_agent_verify_complete']);
  const status=response();await make('status',live,m.db)({method:'GET',headers:{},query:{id:uuid}},status);
  assert.equal(status.statusCode,200);
  assert.equal(status.body.verification.chat_access,false);
@@ -74,7 +74,7 @@ test('other keys cannot prove ownership, and consumed/expired challenges are rej
  const m=mock(),failed=response();
  await make('finish',live,m.db)(req({id:uuid,signature:bad}),failed);
  assert.equal(failed.statusCode,401);
- assert.deepEqual(m.calls.map(x=>x.name),['luo_agent_verify_read']);
+ assert.deepEqual(m.calls.map(x=>x.name),['luo_agent_verify_attempt']);
  const dead=mock();dead.record.expires_at=new Date(Date.now()-5000).toISOString();
  const expired=response();
  await make('finish',live,dead.db)(req({id:uuid,signature:bad}),expired);
