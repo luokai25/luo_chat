@@ -47,3 +47,12 @@
 .luo-v7-shortcut-empty[hidden]{display:none}
 
 .worlds-modal.luo-v7-worlds-form .worlds-field :is(input,textarea)[aria-invalid="true"]{border-color:#e2a080!important;outline:1px solid #b86b55;box-shadow:0 0 0 3px #bf67512b}
+
+/* UX corrections from mobile community feedback and WCAG 2.2:
+   keep predictable actions, large targets and visible keyboard focus. */
+.luo-v7-shortcuts :is(button,summary),.luo-v7-worlds-form :is(button,summary),.luo-v7-status-viewer :is(button,summary){min-width:30px;min-height:44px}
+.luo-v7-status-viewer :is(.luo-status-v2-hit-back,.luo-status-v2-hit-next){min-width:44px;min-height:44px;touch-action:manipulation}
+.luo-v7-shortcuts .shortcut-list{scroll-margin-block:12px}
+.luo-v7-shortcut-search,.worlds-modal.luo-v7-worlds-form :is(input,textarea,select){scroll-margin-block:80px;font-size:max(16px,1em)}
+.luo-v7-worlds-form .worlds-modal-buttons{position:relative;z-index:1}
+@media(max-width:650px){.worlds-modal.luo-v7-worlds-form{overscroll-behavior:contain;scroll-padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))}.luo-v7-shortcuts[open]{overscroll-behavior:contain;scroll-padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))}}
