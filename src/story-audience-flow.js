@@ -38,7 +38,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   advanced.append(input);
  }
  $('storyStatus')?.before(advanced);
- const secondary=el('section','luo-story-page luo-story-secondary');
+ const secondary=el('section','luo-story-page luo-story-secondary');secondary.setAttribute('aria-label','Story audience selection');
  secondary.hidden=true;
  const top=el('div','luo-story-subhead'),back=btn('‹ Back',()=>open(previous()),'luo-story-back'),title=el('h2','luo-story-page-title');
  top.append(back,title);
@@ -75,7 +75,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(mode==='close'&&!names.length){notice('Choose close friends before sharing.');return false}
   setAudience(names);sync(true);return true;
  };
- function go(name){page=name;secondaryNotice.textContent='';editor.hidden=name!=='editor';secondary.hidden=name==='editor';secondary.dataset.page=name;back.textContent=name==='audience'?'‹ Story editor':'‹ Audience';if(name==='editor')body.replaceChildren();else render()}
+ function go(name){page=name;secondaryNotice.textContent='';editor.hidden=name!=='editor';secondary.hidden=name==='editor';secondary.dataset.page=name;back.textContent=name==='audience'?'‹ Story editor':'‹ Audience';if(name==='editor')body.replaceChildren();else render();if(dialog.open)queueMicrotask(()=>{if(dialog.open)(name==='editor'?audienceButton:back).focus()})}
  async function ensureContacts(){
   if(loaded||loading)return;
   const request=++generation,who=getUser()?.id;
