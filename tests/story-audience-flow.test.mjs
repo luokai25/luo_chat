@@ -114,6 +114,19 @@ test('late contact responses cannot expose a previous user’s contacts after si
  }finally{x.done()}
 });
 
+test('Story contacts are removed from the document after navigating back and signing out',async()=>{
+ const x=create();try{
+  const d=x.doc;d.querySelector('.luo-story-audience-button').click();await settle();
+  x.click('Only share with');
+  assert.equal(d.querySelectorAll('.luo-story-contact-row').length,3);
+  x.flow.signedOut();
+  assert.equal(d.querySelectorAll('.luo-story-contact-row').length,0,'sign-out clears private contact row nodes');
+  x.setActor({id:'another_user'});x.flow.reset();
+  d.querySelector('.luo-story-audience-button').click();
+  assert.equal(d.querySelectorAll('.luo-story-contact-row').length,0,'new account never inherits old contact cards');
+ }finally{x.done()}
+});
+
 test('contact-search Enter does not accidentally submit a Story',async()=>{
  const x=create();try{
   const d=x.doc;d.querySelector('.luo-story-audience-button').click();await settle();x.click('Only share with');
