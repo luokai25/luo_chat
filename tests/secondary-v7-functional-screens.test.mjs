@@ -117,6 +117,11 @@ test('Status viewer preserves existing native reply submit flow while counting t
   assert.equal(viewer.dataset.luoV7,'1');
   input.value='Hi';input.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   assert.match(viewer.querySelector('.luo-v7-status-count').textContent,/2 \/ 10,000/);
+  input.value='a'.repeat(9950);input.dispatchEvent(new x.w.Event('input',{bubbles:true}));
+  assert.match(viewer.querySelector('.luo-v7-status-count').textContent,/50 remaining/);
+  assert.equal(viewer.querySelector('.luo-v7-status-count').dataset.nearLimit,'true');
+  input.value='a'.repeat(10000);input.dispatchEvent(new x.w.Event('input',{bubbles:true}));
+  assert.equal(viewer.querySelector('.luo-v7-status-count').dataset.atLimit,'true');
   input.removeAttribute('maxlength');input.value='Hello';input.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   assert.equal(viewer.querySelector('.luo-v7-status-count').textContent,'5 characters');
   input.maxLength=10000;input.dispatchEvent(new x.w.Event('input',{bubbles:true}));
