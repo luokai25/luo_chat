@@ -238,5 +238,5 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  };
  dialog.addEventListener('cancel',event=>{if(!requestClose())event.preventDefault()});
  dialog.addEventListener('close',()=>{generation++;loading=false;go('editor')});
- return{reset,signedOut,requestClose,onCirclesLoaded:list=>{circles=Array.isArray(list)?list:[];if(page==='close'&&!selected.size){const saved=circles.find(c=>c.name?.trim().toLowerCase()==='close friends');if(saved)selected=new Set(normalize(saved.usernames||[]))}if(page==='close')render()},useSavedCircle:c=>{selected=new Set(normalize(c?.usernames||[]));mode=c?.name?.trim().toLowerCase()==='close friends'?'close':'selected';committedMode=mode;sync(true)},audienceMode:()=>mode};
+ return{reset,signedOut,requestClose,onCirclesLoaded:list=>{circles=Array.isArray(list)?list:[];if(page==='close'&&!selected.size){const saved=circles.find(c=>c.name?.trim().toLowerCase()==='close friends');if(saved)selected=new Set(normalize(saved.usernames||[]))}if(page==='close')render()},useSavedCircle:c=>{const names=normalize(c?.usernames||[]);selected=new Set(names);setAudience(names);mode=c?.name?.trim().toLowerCase()==='close friends'?'close':'selected';committedMode=mode;sync(true)},audienceMode:()=>mode};
 }
