@@ -56,7 +56,15 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  audiencePage.append(el('h3','','Who can see this Luonix?'),audienceOptions,review,approve);
  const loading=el('div','luonix-v10-loading'),bar=el('progress','luonix-v10-progress'),uploadLabel=el('strong','luonix-v10-upload-label','Preparing media…');
  bar.max=1;bar.value=0;bar.setAttribute('aria-label','Files uploaded');bar.setAttribute('aria-valuetext','0 of 0 files uploaded');
- loading.append(uploadLabel,bar,el('small','','During each file upload, exact byte progress is unavailable. File completion is counted accurately.'));
+ const phases=el('ol','luonix-v10-upload-phases');
+ const phaseNames=['Preparing','Uploading','Finalizing'];
+ for(const name of phaseNames)phases.append(el('li','',name));
+ function updatePhase(name){
+  loading.dataset.phase=name.toLowerCase();
+  const index=phaseNames.indexOf(name);
+  for(let i=0;i<phases.children.length;i++)phases.children[i].dataset.state=i<index?'complete':i===index?'current':'upcoming';
+ }
+ loading.append(uploadLabel,phases,bar,el('small','','File-by-file completion is real. Exact byte percentages are not exposed by this uploader.'));
  uploadPage.append(el('h3','','Publishing your Luonix'),loading);
  const size=bytes=>(bytes/1048576).toFixed(1)+' MB';
  const release=()=>{for(const u of urls)if(u)win.URL.revokeObjectURL?.(u);urls=[]};
@@ -151,7 +159,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   if(singleClip&&(!Number.isFinite(duration)||duration<=0||duration>90)){setInfo('Video clips need a readable duration of 90 seconds or less. Use Advanced video editing to trim longer clips.');return}
   if(win.navigator?.onLine===false){setInfo('You are offline. Reconnect and tap Send again. Your selection is still here.');return}
   if(audience==='public'&&!win.confirm('Make this Luonix visible publicly?'))return;
-  publishing=true;stage='upload';root.dataset.stage='upload';for(const panel of screens.children)panel.hidden=panel!==uploadPage;
+  publishing=true;stage='upload';root.dataset.stage='upload';updatePhase('Preparing');for(const panel of screens.children)panel.hidden=panel!==uploadPage;
   next.disabled=true;exit.disabled=true;back.disabled=true;heading.textContent='Publishing';setInfo('');
   const ownerAtStart=owner;const originals=files.slice();
   const kind=files.length===1&&files[0].type.startsWith('video/')?'clip':'post';
@@ -165,6 +173,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   try{
    if(!tx.created){uploadLabel.textContent='Saving post securely…';await rpc('entry.create',{id:tx.id,kind:tx.kind,title:title.value.trim(),body:caption.value.trim(),audience});tx.created=true}
    if(!current())return;
+   updatePhase('Uploading');
    for(let i=0;i<originals.length;i++){
     if(done.has(i))continue;
     const file=originals[i],ext=LUONIX_MEDIA_RULES.types[file.type];
@@ -188,12 +197,12 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
     done.set(i,{path});bar.value=done.size;bar.setAttribute('aria-valuetext',done.size+' of '+originals.length+' files uploaded');
    }
    if(!current())return;
-   uploadLabel.textContent='Finalizing your post…';
+   updatePhase('Finalizing');uploadLabel.textContent='Finalizing your post…';
    if(!tx.published){await rpc('entry.publish',{id:tx.id,media:originals.map((f,i)=>tx.kind==='clip'?{...done.get(i),duration}:done.get(i))});tx.published=true}
    if(!current())return;
    uploadLabel.textContent='Luonix published!';setInfo('Your post is now available to the selected audience.');
    dispose();await onPublished?.();
-  }catch(e){if(current()){setInfo(e.message||'Could not publish. Retry without losing your selection.');uploadLabel.textContent='Upload interrupted · safe to retry'}}
+  }catch(e){if(current()){loading.dataset.phase='error';setInfo(e.message||'Could not publish. Retry without losing your selection.');uploadLabel.textContent='Upload interrupted · safe to retry'}}
   finally{
    publishing=false;
    if(current()&&root.isConnected){exit.disabled=false;back.disabled=false;next.disabled=false;next.textContent='Retry publishing'}
