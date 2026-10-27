@@ -7,6 +7,11 @@ const html=await readFile('public/index.html','utf8');
 const controller=await readFile('public/luo-skeleton-v4.js','utf8');
 const css=await readFile('public/luo-skeleton-v4.css','utf8');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(predicate,ms=1400){
+ const end=Date.now()+ms;
+ while(Date.now()<end){if(predicate())return;await sleep(20)}
+ assert.ok(predicate(),'Expected request skeleton within strict timeout');
+}
 function ready(){
  const dom=new JSDOM(html,{url:'https://luo-chat-luokai25.vercel.app',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,d=w.document,app=d.querySelector('.app');
@@ -40,7 +45,7 @@ test('real request events are versioned, stale completions cannot dismiss a newe
  const x=ready();try{
   const host=x.d.getElementById('chatlist');host.replaceChildren();
   const event=(id,pending)=>x.w.dispatchEvent(new x.w.CustomEvent('luo:loading-state',{detail:{key:'inbox',id,pending}}));
-  event(1,true);await sleep(150);
+  event(1,true);await until(()=>!!host.querySelector('.sk-chat-row'),1400);
   assert.ok(host.querySelector('.sk-chat-row'));
   event(2,true);event(1,false);
   await sleep(60);
