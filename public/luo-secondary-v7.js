@@ -25,7 +25,11 @@ function shortcutHelp(){
   for(const row of rows){row.hidden=!!term&&![...row.querySelectorAll('dt,dd')].some(field=>field.textContent.toLocaleLowerCase().includes(term));if(!row.hidden)shown++;}
   status.textContent=shown+' keyboard shortcut'+(shown===1?'':'s')+' available';
  }
- search.addEventListener('input',render);render();
+ search.addEventListener('input',render);
+ search.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&search.value){event.stopPropagation();search.value='';render();}
+ });
+ render();
 }
 function attachmentPicker(){
  const sheet=$('luoDmAttachSheet'),file=$('mediaFile'),attach=$('attach');
