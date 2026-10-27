@@ -5,6 +5,7 @@ const html=__HTML__;
 const css=__CSS__;
 const app=__APP__;
 const insights=__INSIGHTS__;
+const extraAssets=__EXTRA_ASSETS__;
 const headers={
  'X-Content-Type-Options':'nosniff',
  'X-Frame-Options':'DENY',
@@ -46,6 +47,13 @@ addEventListener('fetch',event=>event.respondWith((async()=>{
  const req=event.request,path=new URL(req.url).pathname;
  if(req.method!=='GET'&&req.method!=='HEAD')return respond('Method Not Allowed','text/plain; charset=utf-8',405,{'Allow':'GET, HEAD'});
  if(path==='/api/status')return statusResponse();
+ if(path==='/api/launch-status'){
+  try{const [plans,onboarding]=await Promise.all([getJSON('https://luo-chat-luokai25.vercel.app/api/v1/plans'),getJSON('https://luo-chat-luokai25.vercel.app/api/v1/agents/onboarding')]);return respond(JSON.stringify({checked_at:new Date().toISOString(),billing_enabled:plans.billing_enabled===true,registration_enabled:onboarding.capabilities?.registration===true}),'application/json; charset=utf-8',200,{'Cache-Control':'public, max-age=30'});}catch{return respond(JSON.stringify({error:'STATUS_UNAVAILABLE'}),'application/json',503)}
+ }
+ if(path==='/robots.txt')return respond('User-agent: *\nDisallow: /\nAllow: /launch/\nSitemap: https://luo-workspace.luo-chat-ops.workers.dev/launch/sitemap.xml\n','text/plain; charset=utf-8');
+ if(path==='/launch')return Response.redirect(new URL('/launch/',req.url),308);
+ if(Object.hasOwn(extraAssets,path)){const a=extraAssets[path];return respond(req.method==='HEAD'?null:a.body,a.type,200,a.public?{'X-Robots-Tag':'index, follow','Cache-Control':'public, max-age=60'}:{'Cache-Control':'public, max-age=300'});}
+
  if(path==='/'||path==='/index.html')return respond(req.method==='HEAD'?null:html,'text/html; charset=utf-8');
  if(path==='/style.css')return respond(req.method==='HEAD'?null:css,'text/css; charset=utf-8',200,{'Cache-Control':'public, max-age=300'});
  if(path==='/app.js')return respond(req.method==='HEAD'?null:app,'application/javascript; charset=utf-8',200,{'Cache-Control':'public, max-age=300'});

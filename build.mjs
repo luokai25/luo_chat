@@ -1,3 +1,4 @@
+import {assertWorkspaceRelease} from './src/server/workspace-controls.js';
 import {build,transform} from 'esbuild';
 import {cp,mkdir,readFile,writeFile,rm,rename,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -14,6 +15,7 @@ if(process.env.VERCEL_ENV==='preview'&&['feature/reels-immersive-20261025','rele
  if(process.env.LUO_SUPABASE_URL!=='https://itecovbwilcrvjqkdoyd.supabase.co'||!process.env.LUO_SUPABASE_KEY)throw Error('Reels preview requires the isolated staging Supabase URL and publishable key; refusing production fallback.');
 }
 
+await assertWorkspaceRelease();
 // Optional read-only PayPal merchant preflight. Never creates a payment.
 if(process.env.VERCEL_ENV==='production'&&process.env.LUO_AGENT_LIVE_PREFLIGHT_REQUIRED==='true')
  await import('./scripts/check-agent-live-paypal.mjs');
@@ -64,3 +66,5 @@ self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys
 self.addEventListener('fetch',event=>{const request=event.request,url=new URL(request.url);if(request.method!=='GET'||url.origin!==self.location.origin)return;if(request.mode==='navigate'&&(url.pathname==='/'||url.pathname==='/index.html')){event.respondWith(fetch(request).then(async response=>{if(response.ok){await(await caches.open(CACHE)).put('/index.html',response.clone());}return response;}).catch(()=>caches.match('/index.html')));return;}if(SHELL.includes(url.pathname)||/^\\/app-[A-Z0-9]+\\.js$|^\\/style-[a-f0-9]+\\.css$/.test(url.pathname)){event.respondWith(caches.match(request).then(cached=>cached||fetch(request).then(async response=>{if(response.ok)await(await caches.open(CACHE)).put(request,response.clone());return response;})));}});
 `);
 console.log('Luo Chat production bundle and private-data-free offline shell ready');
+
+await assertWorkspaceRelease();

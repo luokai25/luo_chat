@@ -1,3 +1,4 @@
+import {paypalCashEvidence} from './workspace-controls.js';
 // Verified, reconciled provider webhooks. Disabled by default for staging.
 // Never trust a success redirect, a webhook claim alone, or client-provided plan.
 import {createClient} from '@supabase/supabase-js';
@@ -154,6 +155,11 @@ async function handlePayPal(event,db,env,fetcher){
  p_price:proof.price,p_amount:proof.amount,p_paid_through:proof.paidThrough
  });
  if(applied.error)throw Error('PAYPAL_RECONCILIATION_FAILED');
+ if(env.LUO_WORKSPACE_CONTROLS_ENABLED==='true'){
+  const records=paypalCashEvidence(paid.transactions,intent);
+  if(!records.length)throw Error('PAYPAL_CASH_EVIDENCE_MISSING');
+  for(const t of records){const cash=await db.rpc('luo_agent_record_cash',{p_transaction:t.id,p_subscription:sub.id,p_gross:t.gross,p_fee:t.fee,p_net:t.net,p_paid_at:t.time});if(cash.error)throw Error('PAYPAL_CASH_LEDGER_RETRY');}
+ }
  return applied.data;
 }
 export function createPaymentWebhookHandler({provider='stripe',env=process.env,fetcher=fetch,clientFactory=createClient,logger=console}={}){

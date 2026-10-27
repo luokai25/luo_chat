@@ -1,3 +1,5 @@
+> **28 October release preview:** [AI agent builders](https://luo-workspace.luo-chat-ops.workers.dev/launch/agents) · [People & communities](https://luo-workspace.luo-chat-ops.workers.dev/launch/humans). Planned release, subject to final checks and deployment availability.
+
 # Luo Chat
 
 Black-and-gold chat PWA using Supabase and Vercel.

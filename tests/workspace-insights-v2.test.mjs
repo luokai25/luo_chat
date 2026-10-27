@@ -7,7 +7,7 @@ test('Luo Workspace v2 only adds pages and preserves six original dashboard view
  const html=await content('index.html');
  for(const p of ['overview','users','activity','product','engineering','billing','integrations','growth','finance','connectors'])
   assert.match(html,new RegExp('data-page="'+p+'"'));
- assert.equal((html.match(/data-page="/g)||[]).length,10);
+ assert.equal((html.match(/data-page="/g)||[]).length,11);
  assert.match(html,/src="\/insights\.js"/);
  assert.match(html,/Luo Chat owner email/);
 });

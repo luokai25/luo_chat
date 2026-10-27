@@ -1,13 +1,13 @@
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm';
 const DB_URL='https://byjixqwpjvsgmqilmzbm.supabase.co';
 const PUBLIC_KEY='sb_publishable_c4fzcsPVh9JZEmacyMOZ7w_qjWyKb5z';
-const db=createClient(DB_URL,PUBLIC_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:false}});
+export const db=createClient(DB_URL,PUBLIC_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:false}});
 const $=id=>document.getElementById(id);
 const dateTime=value=>value?new Date(value).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Never';
 const number=value=>Number(value||0).toLocaleString();
 const make=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e};
-let snapshot=null,project=null,loading=false,active='overview';
-const titles={overview:'Overview',users:'People & accounts',activity:'Platform activity',product:'Luonix · Worlds · Agents',engineering:'Engineering',billing:'Memberships & billing',integrations:'Integrations',growth:'Growth insights',finance:'Financial intelligence',connectors:'Connector intelligence'};
+let snapshot=null,project=null,loading=false,active='overview',authEpoch=0;
+const titles={operations:'Owner controls',overview:'Overview',users:'People & accounts',activity:'Platform activity',product:'Luonix · Worlds · Agents',engineering:'Engineering',billing:'Memberships & billing',integrations:'Integrations',growth:'Growth insights',finance:'Financial intelligence',connectors:'Connector intelligence'};
 const INTEGRATIONS=[
  {symbol:'◈',name:'Supabase',desc:'Live owner-only account, messaging, login and community metrics. Full user management opens securely in Supabase.',status:'Live metrics',url:'https://supabase.com/dashboard/project/byjixqwpjvsgmqilmzbm'},
  {symbol:'⌘',name:'GitHub',desc:'Recent workflows and build health from the Luo Chat repository, with release checks and source management.',status:'Live checks',url:'https://github.com/luokai25/luo_chat'},
@@ -20,7 +20,7 @@ const INTEGRATIONS=[
  {symbol:'▧',name:'Security & health',desc:'Runtime health, identity recovery, abuse limits and the private release checklist.',status:'Review required',url:'https://github.com/luokai25/luo_chat/actions'}
 ];
 function sync(message,error=false){$('sync-note').textContent=message;$('sync-note').className='sync-note '+(error?'fail':'good')}
-function showLoggedIn(email){$('login').hidden=true;$('app').hidden=false;$('signed-in').textContent=email||'Authenticated';renderIntegrations();}
+function showLoggedIn(email){$('login-error').textContent='Checking private owner access…';$('app').hidden=true;$('signed-in').textContent=email||'Authenticated';renderIntegrations();}
 function showLoggedOut(error=''){$('app').hidden=true;$('login').hidden=false;$('login-error').textContent=error;$('password').value='';}
 function view(name){if(!titles[name])return;active=name;$('page-title').textContent=titles[name];for(const s of document.querySelectorAll('[data-page]'))s.hidden=s.dataset.page!==name;for(const b of document.querySelectorAll('[data-view]'))b.classList.toggle('active',b.dataset.view===name);window.scrollTo({top:0,behavior:'instant'});}
 function metric(label,value,detail,gold=false,icon='◇'){const card=make('article','metric');const labelNode=make('div','m-label',label),ic=make('span','m-icon',icon),strong=make('strong',gold?'gold':'',number(value)),small=make('small','',detail);card.append(ic,labelNode,strong,small);return card;}
@@ -58,7 +58,7 @@ function renderHealth(){const host=$('health-list');host.replaceChildren();const
  healthRow('Luo Chat web',project?.site?.status===200?'Production web is responding':'Check runtime status',project?.site?.status===200?'Healthy':'Unknown',project?.site?.status===200?'':'warn'),
  healthRow('Chat authentication',h?.status==='ok'?'Auth service reachable':'Health check not confirmed',h?.status==='ok'?'Healthy':'Pending',h?.status==='ok'?'':'warn'),
  healthRow('GitHub actions',Array.isArray(project?.runs)?'Public release workflow feed connected':'Public workflow feed unavailable',Array.isArray(project?.runs)?'Connected':'Unavailable',Array.isArray(project?.runs)?'':'warn'),
- healthRow('Agent billing', 'Live checkout stays disabled until payment verification',project?.plans?.billing_enabled?'Enabled':'Disabled',project?.plans?.billing_enabled?'error':'warn')
+ healthRow('Agent billing', 'Runtime checkout availability',project?.plans?.billing_enabled?'Enabled':'Disabled',project?.plans?.billing_enabled?'':'warn')
  );}
 function renderEngineering(){const runs=project?.runs||[];fillMetrics('engineering-stats',[
  ['Latest release checks',runs.length,'Workflow records received',true,'⌘'],
@@ -68,8 +68,10 @@ function renderEngineering(){const runs=project?.runs||[];fillMetrics('engineeri
 ]);renderRuns('recent-runs',runs.slice(0,5));renderRuns('all-runs',runs.slice(0,15));}
 function renderIntegrations(){const host=$('integrations-grid');host.replaceChildren();for(const item of INTEGRATIONS){const card=make('article','integration-card'),top=make('div');top.append(make('div','service-logo',item.symbol),make('h3','',item.name));const bottom=make('div','service-bottom'),status=make('span','status-tag '+(item.status.includes('Live')?'':'warn'),item.status),link=make('a','','Open dashboard ↗');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';bottom.append(status,link);card.append(top,make('p','',item.desc),bottom);host.append(card)}}
 async function refresh(){
+ const requestEpoch=authEpoch;
  if(loading)return;loading=true;$('refresh').disabled=true;sync('Refreshing owner analytics and project health…');
  const {data:{session}}=await db.auth.getSession();
+ if(requestEpoch!==authEpoch)return;
  if(!session){loading=false;$('refresh').disabled=false;showLoggedOut();return}
  const responses=await Promise.allSettled([
    db.rpc('luo_workspace_snapshot'),
@@ -77,10 +79,12 @@ async function refresh(){
    db.rpc('luo_workspace_insights'),
    db.rpc('luo_workspace_product_insights')
  ]);
+ if(requestEpoch!==authEpoch)return;
  if(responses[0].status!=='fulfilled'||responses[0].value.error){
   const message='Access denied or private metrics unavailable. Sign in with the owner account.';
-  sync(message,true);showLoggedOut(message);await db.auth.signOut();loading=false;$('refresh').disabled=false;return;
+  sync(message,true);window.dispatchEvent(new CustomEvent('luo-workspace:clear'));showLoggedOut(message);await db.auth.signOut();loading=false;$('refresh').disabled=false;return;
  }
+ $('login').hidden=true;$('app').hidden=false;
  snapshot=responses[0].value.data||{};
  if(responses[1].status==='fulfilled')project=responses[1].value;
  else project={error:'Public health providers unavailable',runs:[],plans:{billing_enabled:false}};
@@ -96,8 +100,10 @@ $('login-form').addEventListener('submit',async event=>{
  try{const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error||!data?.session){$('login-error').textContent='Sign-in unsuccessful. Check your credentials.';return}showLoggedIn(data.user?.email);await refresh();}
  catch{$('login-error').textContent='Sign-in service unavailable.'}finally{btn.disabled=false;}
 });
-$('logout').addEventListener('click',async()=>{await db.auth.signOut();snapshot=null;project=null;window.dispatchEvent(new CustomEvent('luo-workspace:clear'));showLoggedOut();});
+$('logout').addEventListener('click',async()=>{authEpoch++;loading=false;snapshot=null;project=null;window.dispatchEvent(new CustomEvent('luo-workspace:clear'));showLoggedOut();await db.auth.signOut();});
 $('refresh').addEventListener('click',refresh);
 $('search-users').addEventListener('input',renderAccounts);
 document.addEventListener('click',event=>{const b=event.target.closest('[data-go],[data-view]');if(b)view(b.dataset.go||b.dataset.view)});
 (async()=>{try{const {data:{session}}=await db.auth.getSession();if(session){showLoggedIn(session.user?.email);await refresh()}else showLoggedOut();}catch{showLoggedOut('Authentication is temporarily unavailable.')}})();
+
+db.auth.onAuthStateChange?.((event)=>{if(event==='SIGNED_OUT'){authEpoch++;loading=false;snapshot=null;project=null;window.dispatchEvent(new CustomEvent('luo-workspace:clear'));showLoggedOut();}});
