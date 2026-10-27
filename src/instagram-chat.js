@@ -31,7 +31,7 @@ export function installInstagramChats({win,db,getUser,getCurrent,getChats,openRo
  const wallpapers=createChatWallpapers(),byId=new Map(wallpapers.map(x=>[x.id,x]));
  const el=(tag,cls,text)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
  const button=(label,act,cls)=>{const b=el('button',cls,label);b.type='button';b.addEventListener('click',act);return b};
- const options=el('dialog','luo-dm-settings');options.setAttribute('aria-label','Chat appearance and actions');doc.body.append(options);
+ const options=el('dialog','luo-dm-settings');options.setAttribute('aria-label','Chat appearance and actions');app.append(options);
  const head=el('div','luo-dm-settings-head');head.append(el('h2','','Chat details'),button('✕',()=>options.close(),'luo-dm-dismiss'));options.append(head);
  const active=()=>getCurrent()?.id&&getUser()?.id;
  const storageKey=()=>active()?'luo-dm-theme-v1:'+getUser().id+':'+getCurrent().id:'';
