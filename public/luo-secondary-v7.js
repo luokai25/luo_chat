@@ -22,7 +22,7 @@ function shortcutHelp(){
  const rows=[...list.querySelectorAll(':scope > div')];
  function render(){
   const typed=search.value.trim().toLocaleLowerCase();const term=typed==='escape'?'esc':typed;let shown=0;
-  for(const row of rows){row.hidden=!!term&&!row.textContent.toLocaleLowerCase().includes(term);if(!row.hidden)shown++;}
+  for(const row of rows){row.hidden=!!term&&![...row.querySelectorAll('dt,dd')].some(field=>field.textContent.toLocaleLowerCase().includes(term));if(!row.hidden)shown++;}
   status.textContent=shown+' keyboard shortcut'+(shown===1?'':'s')+' available';
  }
  search.addEventListener('input',render);render();
