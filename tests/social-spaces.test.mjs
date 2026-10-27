@@ -8,6 +8,8 @@ function harness(responses={}) {
  const {window}=dom,doc=window.document,requests=[],messages=[];
  let owner={id:'10000000-0000-4000-8000-000000000001'};
  Object.defineProperty(window.crypto,'randomUUID',{value:()=> '20000000-0000-4000-8000-000000000002'});
+ window.URL.createObjectURL=file=>'blob:luonix-'+file.name;
+ window.URL.revokeObjectURL=()=>{};
  window.matchMedia=()=>({matches:true});
  const db={storage:{from:bucket=>({upload:async(path,file)=>{requests.push({name:'upload',bucket,path,type:file.type});return {data:{path},error:null}},createSignedUrl:async()=>({error:{message:'Not available'}})})},rpc:async(name,args)=>{requests.push({name,...args});const response=responses[args.action||name];if(response instanceof Error)return{error:{message:response.message}};return{data:typeof response==='function'?response(args.input):response||[]}}};
  const hub=installSocialSpaces({win:window,db,$:id=>doc.getElementById(id),note:value=>messages.push(value),getUser:()=>owner,getChats:()=>[],tab:name=>{doc.querySelector('.app').dataset.tab=name}});
@@ -175,28 +177,35 @@ test('Social Worlds shortcut routes to dedicated Worlds without duplicating comm
  h.window.close();
 });
 
-test('photo posts upload validated images before publishing and return to the feed',async()=>{
+test('Luonix media post gallery uploads a photo through original authorized backend and returns to Clips',async()=>{
  const h=harness({'feed':[]});
  try{
   h.doc.querySelector('[data-tab="social"]').click();await h.flush();
   h.doc.querySelector('[data-section="compose"]').click();await h.flush();
-  const f=h.doc.querySelector('#social form'),photo=new h.window.File(['photo'],'gold.png',{type:'image/png'});
-  Object.defineProperty(f.querySelector('input[type=file]'),'files',{value:[photo]});
-  f.dispatchEvent(new h.window.Event('submit',{cancelable:true,bubbles:true}));await h.flush();
+  const input=h.doc.querySelector('.luonix-v10-file'),photo=new h.window.File(['photo'],'gold.png',{type:'image/png'});
+  Object.defineProperty(input,'files',{configurable:true,value:[photo]});
+  input.dispatchEvent(new h.window.Event('change',{bubbles:true}));
+  assert.equal(h.doc.querySelector('.luonix-v10').dataset.stage,'preview');
+  h.doc.querySelector('.luonix-v10-next').click();h.doc.querySelector('.luonix-v10-next').click();await h.flush();
   const created=h.requests.findIndex(x=>x.action==='entry.create'),uploaded=h.requests.findIndex(x=>x.name==='upload'),published=h.requests.findIndex(x=>x.action==='entry.publish');
   assert.ok(created>=0&&created<uploaded&&uploaded<published);
   assert.equal(h.requests[published].input.media.length,1);
   assert.match(h.requests[published].input.media[0].path,/\.png$/);
-  assert.equal(h.doc.querySelector('[data-section="feed"]').getAttribute('aria-pressed'),'true');
+  assert.equal(h.doc.querySelector('[data-section="clips"]').getAttribute('aria-pressed'),'true');
  }finally{h.window.close()}
 });
 
-test('invalid photo files are rejected before creating a post draft',async()=>{
- const h=harness({'feed':[]});try{
-  h.doc.querySelector('[data-tab="social"]').click();await h.flush();h.doc.querySelector('[data-section="compose"]').click();await h.flush();
-  const f=h.doc.querySelector('#social form');Object.defineProperty(f.querySelector('input[type=file]'),'files',{value:[new h.window.File(['bad'],'bad.svg',{type:'image/svg+xml'})]});
-  f.dispatchEvent(new h.window.Event('submit',{cancelable:true,bubbles:true}));await h.flush();
-  assert.equal(h.requests.filter(x=>x.action==='entry.create').length,0);assert.match(h.doc.querySelector('.luo-social-status').textContent,/six JPG, PNG or WebP/);
+test('Luonix rejects disallowed media before any server draft is created',async()=>{
+ const h=harness({'feed':[]});
+ try{
+  h.doc.querySelector('[data-tab="social"]').click();await h.flush();
+  h.doc.querySelector('[data-section="compose"]').click();await h.flush();
+  const input=h.doc.querySelector('.luonix-v10-file');
+  Object.defineProperty(input,'files',{configurable:true,value:[new h.window.File(['bad'],'bad.svg',{type:'image/svg+xml'})]});
+  input.dispatchEvent(new h.window.Event('change',{bubbles:true}));
+  await h.flush();
+  assert.equal(h.requests.filter(x=>x.action==='entry.create').length,0);
+  assert.match(h.doc.querySelector('.luonix-v10-message').textContent,/JPG, PNG, WebP, MP4 or WebM/);
  }finally{h.window.close()}
 });
 
