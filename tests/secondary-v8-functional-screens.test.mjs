@@ -70,13 +70,14 @@ test('vault clear filters calls original search and collection listeners instead
 test('contacts search reset retains original input event and native contact cards',async()=>{
  const x=setup();try{
   const d=x.d,search=d.getElementById('contactSearch'),list=d.getElementById('contactList');
-  const contact=d.createElement('article');contact.textContent='Actual contact';list.replaceChildren(contact);await tick();
+  const contact=d.createElement('div');contact.className='contact-row';contact.textContent='Actual contact';list.replaceChildren(contact);await tick();
   let inputEvents=0;search.addEventListener('input',()=>inputEvents++);
   search.value='alice';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   const clear=d.querySelector('.luo-v8-contacts-tools .luo-v8-clear');
   assert.equal(clear.hidden,false);clear.click();
   assert.equal(search.value,'');assert.equal(inputEvents,2);
   assert.ok(list.contains(contact));
+  assert.match(d.querySelector('.luo-v8-people .luo-v8-summary').textContent,/1 matching contact/);
  }finally{x.close()}
 });
 
