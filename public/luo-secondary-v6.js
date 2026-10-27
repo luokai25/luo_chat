@@ -45,7 +45,7 @@ function storyComposer(){
  };
  for(const n of [body,users,music])n.addEventListener('input',render);
  media.addEventListener('change',render);circle.addEventListener('change',()=>queueMicrotask(render));
- form.closest('dialog')?.addEventListener('close',imageCleanup);
+ form.closest('dialog')?.addEventListener('close',()=>{imageCleanup();mediaBox.replaceChildren();});
  window.addEventListener('pagehide',imageCleanup,{once:true});
  render();
 }
