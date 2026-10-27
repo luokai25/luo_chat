@@ -56,3 +56,7 @@
 .luo-v7-shortcut-search,.worlds-modal.luo-v7-worlds-form :is(input,textarea,select){scroll-margin-block:80px;font-size:max(16px,1em)}
 .luo-v7-worlds-form .worlds-modal-buttons{position:relative;z-index:1}
 @media(max-width:650px){.worlds-modal.luo-v7-worlds-form{overscroll-behavior:contain;scroll-padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))}.luo-v7-shortcuts[open]{overscroll-behavior:contain;scroll-padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))}}
+
+/* Status replies communicate the remaining character budget without hiding the original submit action. */
+.luo-v7-status-count[data-near-limit="true"]{color:#f1c283;font-weight:700}
+.luo-v7-status-count[data-at-limit="true"]{color:#ffae98}
