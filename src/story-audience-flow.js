@@ -9,7 +9,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  const audience=$('storyAudience'),circle=$('storyCircle');
  const normalize=list=>[...new Set(list.map(x=>String(x).trim().replace(/^@/,'').toLowerCase()).filter(Boolean))];
  const parse=()=>normalize(audience.value.split(/[,;\n]+/));
- let actor=null,generation=0,publicRequest=0,publicReady=false,contacts=[],loaded=false,loading=false,mode='selected',selected=new Set(),excluded=new Set(),circles=[];
+ let actor=null,generation=0,publicRequest=0,publicReady=false,contacts=[],loaded=false,loading=false,mode='selected',committedMode='onlyMe',selected=new Set(),excluded=new Set(),circles=[];
  const editor=el('section','luo-story-page luo-story-editor');
  const original=[...form.childNodes];editor.append(...original);
  const nav=el('div','luo-story-toolbar'),audienceButton=btn('Audience · Only me',()=>open('audience'),'luo-story-audience-button');
@@ -73,7 +73,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(mode==='contacts'&&!names.length){notice('No saved contacts found. Choose Only me or select friends.');return false}
   if(mode==='selected'&&!names.length){notice('Choose friends, or select Only me to save a private story.');return false}
   if(mode==='close'&&!names.length){notice('Choose close friends before sharing.');return false}
-  setAudience(names);sync(true);return true;
+  setAudience(names);committedMode=mode;sync(true);return true;
  };
  function go(name){page=name;secondaryNotice.textContent='';editor.hidden=name!=='editor';secondary.hidden=name==='editor';secondary.dataset.page=name;back.textContent=name==='audience'?'‹ Story editor':'‹ Audience';if(name==='editor')body.replaceChildren();else render();if(dialog.open)queueMicrotask(()=>{if(dialog.open)(name==='editor'?audienceButton:back).focus()})}
  async function ensureContacts(){
@@ -101,15 +101,15 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  function open(name){
   if(!current())return;
   if(name==='public'&&!publicReady){notice('Public Stories are not enabled on this server yet.');return}
-  if(name==='editor'){go('editor');sync(true);return}
+  if(name==='editor'){mode=committedMode;selected=new Set(parse());go('editor');sync(true);return}
   if(name==='contacts')cameFrom='audience';
   go(name);
   if(['audience','contacts','close'].includes(name))void ensureContacts();
   if(name==='audience')void checkPublic();
  }
  function option(label,description,key){
-  const row=btn(' ',()=>{mode=key;if(key==='onlyMe'){selected.clear();setAudience([]);go('editor');sync(true);return}
-   if(key==='public'){if(!publicReady)return;setAudience([]);go('editor');sync(true);return;}
+  const row=btn(' ',()=>{mode=key;if(key==='onlyMe'){selected.clear();setAudience([]);committedMode=mode;go('editor');sync(true);return}
+   if(key==='public'){if(!publicReady)return;setAudience([]);committedMode=mode;go('editor');sync(true);return;}
    if(key==='contacts'||key==='except'){if(!loaded){notice('Your contacts must load before choosing this audience.');return}if(key==='contacts'&&contacts.length>100){notice('More than 100 contacts found. Use Selected friends instead.');return}if(key==='except'){open('contacts');return}selected=new Set(effective());apply();go('editor')}
    else if(key==='selected')open('contacts');
    else if(key==='close')open('close');
@@ -213,17 +213,17 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(page==='close')closeFriendsView();
  }
  function reset(){
-  generation++;publicRequest++;publicReady=false;actor=getUser()?.id||null;contacts=[];loaded=false;loading=false;mode='onlyMe';selected.clear();excluded.clear();circles=[];if(mediaFile){mediaFile.removeAttribute('capture');mediaFile.setAttribute('accept',originalAccept)}
+  generation++;publicRequest++;publicReady=false;actor=getUser()?.id||null;contacts=[];loaded=false;loading=false;mode='onlyMe';committedMode='onlyMe';selected.clear();excluded.clear();circles=[];if(mediaFile){mediaFile.removeAttribute('capture');mediaFile.setAttribute('accept',originalAccept)}
   setAudience([]);go('editor');notice('');sync(true);
  }
  function signedOut(){
-  generation++;publicRequest++;publicReady=false;actor=null;contacts=[];loaded=false;loading=false;selected.clear();excluded.clear();circles=[];
+  generation++;publicRequest++;publicReady=false;actor=null;contacts=[];loaded=false;loading=false;committedMode='onlyMe';selected.clear();excluded.clear();circles=[];
   mode='onlyMe';go('editor');sync(true);
  }
  audience.addEventListener('input',()=>{
-  if(page==='editor'){const people=parse();selected=new Set(people);mode=people.length?'selected':'onlyMe';sync(true)}
+  if(page==='editor'){const people=parse();selected=new Set(people);mode=people.length?'selected':'onlyMe';committedMode=mode;sync(true)}
  });
- circle.addEventListener('change',()=>{if(circle.value){mode='close';selected=new Set(parse());sync(true)}});
+ circle.addEventListener('change',()=>{if(circle.value){mode='close';committedMode='close';selected=new Set(parse());sync(true)}});
  dialog.addEventListener('close',()=>{generation++;loading=false;go('editor')});
  return{reset,signedOut,onCirclesLoaded:list=>{circles=Array.isArray(list)?list:[];if(page==='close')render()},audienceMode:()=>mode};
 }
