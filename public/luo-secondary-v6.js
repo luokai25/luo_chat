@@ -18,10 +18,10 @@ function storyComposer(){
  const attachment=make('small','luo-v6-story-file');const privacy=make('p','luo-v6-story-privacy');
  const counter=make('p','luo-v6-story-counter');counter.setAttribute('aria-live','polite');
  preview.append(head,mediaBox,text,attachment,privacy,counter);body.before(preview);
- let imageUrl=null,lastFile=null;
+ let imageUrl=null,lastFile=undefined;
  function imageCleanup(){
   if(imageUrl&&typeof URL.revokeObjectURL==='function')URL.revokeObjectURL(imageUrl);
-  imageUrl=null;lastFile=null;
+  imageUrl=null;lastFile=undefined;
  }
  const render=()=>{
   text.textContent=body.value.trim().slice(0,500)||'Your story text appears here';
