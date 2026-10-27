@@ -70,3 +70,9 @@
 .luo-v9-story #publishStory:disabled{opacity:.75;cursor:progress;pointer-events:none}
 .luo-v9-story #publishStory[aria-busy="true"]{background:#685432;color:#fff0d1}
 @media(max-width:380px){.luo-v9-story .luo-story-media-action{flex-basis:100%}}
+
+/* Explicit notice when a saved private circle contains usernames that are no longer saved contacts. */
+.luo-v9-story .luo-story-outside-contacts{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border:1px solid #a2794c;border-radius:14px;background:#342b25;padding:12px}
+.luo-v9-story .luo-story-outside-contacts p{flex:1 1 100%;margin:0}
+.luo-v9-story .luo-story-outside-remove{min-height:44px;padding:10px 12px;border-radius:11px;border:1px solid #e0b77a;background:#442923;color:#ffe1b1;font-size:13px}
+.luo-v9-story .luo-story-outside-remove:focus-visible{outline:3px solid #ffd18a;outline-offset:2px}
