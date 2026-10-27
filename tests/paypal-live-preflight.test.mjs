@@ -85,3 +85,16 @@ test('App-specific remote check fails closed for SOAP webhook, and passes for a 
  assert.equal(success.ok,true);
  assert.equal(calls,2);
 });
+
+test('Equivalent PayPal USD encodings pass without relaxing price or precision checks',()=>{
+ for(const tier of Object.keys(ids)){
+  for(const value of [String(Number(expected[tier])),Number(expected[tier]).toFixed(1),expected[tier]]){
+   const p=plan(tier);p.billing_cycles[0].pricing_scheme.fixed_price.value=value;
+   assert.equal(exactRegularPayPalPlan(p,tier,{id:ids[tier]}),true,value);
+  }
+ }
+ for(const value of ['12.001','12.009','11.99','12.01','1.2e1','+12','-12','12.',' 12','12abc','Infinity','99999999999999999999999999999']){
+  const p=plan('starter');p.billing_cycles[0].pricing_scheme.fixed_price.value=value;
+  assert.equal(exactRegularPayPalPlan(p,'starter',{id:ids.starter}),false,value);
+ }
+});
