@@ -26,7 +26,13 @@ function storyComposer(){
  const render=()=>{
   text.textContent=body.value.trim().slice(0,2000)||'Your story text appears here';
   const names=[...new Set(users.value.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean))];
-  privacy.textContent=names.length?'Private audience: '+names.length+' account'+(names.length===1?'':'s')+' selected':'Only you can see this story until you choose an audience';
+  const audienceMode=form.closest('dialog')?.dataset.storyAudienceMode||'onlyMe';
+  privacy.textContent=audienceMode==='public'?'Public on Luo Chat · visible to signed-in members':
+   audienceMode==='onlyMe'?'Only you can see this Story':
+   audienceMode==='close'?'Close friends · '+names.length+' account'+(names.length===1?'':'s'):
+   audienceMode==='except'?'My contacts except… · '+names.length+' eligible account'+(names.length===1?'':'s'):
+   names.length?'Private audience: '+names.length+' account'+(names.length===1?'':'s')+' selected':
+   'Only you can see this Story until you choose an audience';
   counter.textContent=body.value.length.toLocaleString()+' / 2,000 characters'+(music.value.trim()?' · Music link provided':'');
   const file=media.files?.[0];
   attachment.textContent=file?'Selected file: '+file.name.slice(0,120)+' · '+(file.size/1048576).toFixed(1)+' MB':'No media selected';
@@ -45,6 +51,7 @@ function storyComposer(){
  };
  for(const n of [body,users,music])n.addEventListener('input',render);
  media.addEventListener('change',render);circle.addEventListener('change',()=>queueMicrotask(render));
+ form.closest('dialog')?.addEventListener('luo:story-audience-changed',render);
  form.closest('dialog')?.addEventListener('close',()=>{imageCleanup();mediaBox.replaceChildren();});
  window.addEventListener('pagehide',imageCleanup,{once:true});
  render();
