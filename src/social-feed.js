@@ -53,7 +53,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
   const article=el('article','luo-feed-card luo-feed-'+item.kind);article.dataset.entryId=item.id;article.tabIndex=0;
   const author=item.author||{},head=el('header','luo-feed-author'),identity=button(author.display_name||'@'+(author.username||'Luo friend'),()=>visit(author.id||item.owner_id),'luo-feed-name');
   identity.append(el('small','','@'+(author.username||'luo')+' · '+date(item.created_at)));head.append(avatar(item),identity);
-  if(item.owner_id===owner&&item.kind!=='clip')head.append(button('Delete post',async()=>{if(!win.confirm('Permanently delete this '+item.kind+'?'))return;await rpc('entry.delete',{id:item.id});if(!valid())return;media.get(article)?.video?.pause();observer?.unobserve(article);media.delete(article);article.remove()},'luo-feed-icon luo-feed-delete','close'));
+  if(item.owner_id===owner&&item.kind!=='clip')head.append(button('Delete post',async()=>{if(!win.confirm('Permanently delete this '+item.kind+'?'))return;await rpc('entry.delete',{id:item.id});if(!valid())return;media.get(article)?.video?.pause();observer?.unobserve(article);media.delete(article);for(const video of article.querySelectorAll('video.luo-feed-post-media')){video.pause();video.removeAttribute('src');video.load();postVideos.delete(video)}article.remove()},'luo-feed-icon luo-feed-delete','close'));
   const stage=el('div','luo-feed-stage');stage.append(el('span','luo-feed-watermark','LUO'));
   const content=el('div','luo-feed-caption');if(item.title)content.append(el('h3','',item.title));if(item.body&&(item.kind==='clip'||item.media?.length)){const text=el('p','luo-feed-body',item.body);content.append(text);if(item.body.length>240){text.classList.add('luo-feed-clamped');content.append(button('Read more',b=>{text.classList.toggle('luo-feed-clamped');b.querySelector('span').textContent=text.classList.contains('luo-feed-clamped')?'Read more':'Show less'},'luo-feed-read'))}}
   if(item.kind==='post'&&!item.media?.length){stage.classList.add('luo-feed-text-stage');stage.append(el('span','luo-feed-quote','“'),el('p','luo-feed-text',item.body||item.title||'A moment from '+(author.username||'a friend')))}
@@ -118,7 +118,7 @@ export function mountSocialFeed({win,db,getUser,getChats,output,note,openPerson,
        element.setAttribute('aria-label',(item.title||'Luonix video')+' · '+(next+1)+' of '+attachments.length);
       }else element.alt=(item.title||'Luonix photo')+' · '+(next+1)+' of '+attachments.length;
       element.src=url;element.className='luo-feed-post-media';
-      element.onerror=()=>{if(!valid()||ticket!==mediaRun)return;element.remove();load.hidden=false;load.querySelector('span').textContent='Retry media';note('Media could not play or load on this device.')};
+      element.onerror=()=>{if(!valid()||ticket!==mediaRun)return;if(element.tagName==='VIDEO')postVideos.delete(element);element.remove();load.hidden=false;load.querySelector('span').textContent='Retry media';note('Media could not play or load on this device.')};
       if(active?.tagName==='VIDEO'){active.pause();postVideos.delete(active)}active?.remove();active=element;if(video)postVideos.add(element);stage.prepend(element);
       index=next;load.hidden=true;count.textContent=(index+1)+' / '+attachments.length;
      }catch(err){if(valid()&&ticket===mediaRun){load.hidden=false;load.querySelector('span').textContent='Retry media';note(err.message||'Media unavailable.')}}
