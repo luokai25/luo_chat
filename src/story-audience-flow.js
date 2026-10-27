@@ -14,6 +14,17 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  const nav=el('div','luo-story-toolbar'),audienceButton=btn('Audience · Only me',()=>open('audience'),'luo-story-audience-button');
  nav.append(el('span','luo-story-eyebrow','STATUS · 24 HOURS'),audienceButton);
  editor.querySelector('.dialog-heading')?.after(nav);
+ // Advanced legacy inputs stay inside the original form so existing audited
+ // handlers and circle actions continue to work without duplicate listeners.
+ const advanced=el('details','luo-story-advanced');
+ advanced.append(el('summary','','Advanced privacy and saved circles'));
+ for(const id of ['storyAudience','storyUseContacts','storyCircle','storyCircleName','saveStoryCircle']){
+  const input=$(id);if(!input)continue;
+  const label=editor.querySelector('label[for="'+id+'"]');
+  if(label)advanced.append(label);
+  advanced.append(input);
+ }
+ $('storyStatus')?.before(advanced);
  const secondary=el('section','luo-story-page luo-story-secondary');
  secondary.hidden=true;
  const top=el('div','luo-story-subhead'),back=btn('‹ Back',()=>open(previous()),'luo-story-back'),title=el('h2','luo-story-page-title');
@@ -77,7 +88,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  function option(label,description,key){
   const row=btn(' ',()=>{mode=key;if(key==='onlyMe'){selected.clear();setAudience([]);go('editor');sync(true);return}
    if(key==='public')return;
-   if(key==='contacts'||key==='except'){if(!loaded){notice('Your contacts must load before choosing this audience.');return}if(key==='contacts'&&contacts.length>100){notice('More than 100 contacts found. Use Selected friends instead.');return}selected=new Set(effective());apply();go('editor')}
+   if(key==='contacts'||key==='except'){if(!loaded){notice('Your contacts must load before choosing this audience.');return}if(key==='contacts'&&contacts.length>100){notice('More than 100 contacts found. Use Selected friends instead.');return}if(key==='except'){open('contacts');return}selected=new Set(effective());apply();go('editor')}
    else if(key==='selected')open('contacts');
    else if(key==='close')open('close');
   },'luo-story-audience-choice');
@@ -121,7 +132,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
    draw();
   });
   const none=btn('Clear',()=>{if(mode==='except')excluded.clear();else selected.clear();draw()});
-  const done=btn('Done',()=>{if(apply())go('editor')},'luo-story-primary');
+  const done=btn('Done',()=>{if(mode==='close'){go('close');return}if(apply())go('editor')},'luo-story-primary');
   footer.append(all,none,done);body.append(search,summary,rows,footer);
   function draw(){
    rows.replaceChildren();
