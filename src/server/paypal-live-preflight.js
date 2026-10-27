@@ -9,6 +9,12 @@ export function paypalLiveConfigPresent(env){
   typeof env[k]==='string'&&env[k].length>=16)
   &&Object.values(TIERS).every(tier=>/^P-[A-Z0-9]{8,}$/.test(env['LUO_PAYPAL_PLAN_'+tier+'_REGULAR']||''));
 }
+// PayPal may serialize USD 12.00 as "12" or "12.0". Compare exact cents,
+// accepting at most two decimal places; never round an unexpected price.
+function usdCents(value){
+ const [whole,fraction='']=value.split('.');
+ return BigInt(whole)*100n+BigInt(fraction.padEnd(2,'0'));
+}
 export function exactRegularPayPalPlan(plan,tier,expected){
  if(!plan||typeof plan!=='object'||Array.isArray(plan)||!expected)return false;
  const ids=plan.billing_cycles;
@@ -18,7 +24,7 @@ export function exactRegularPayPalPlan(plan,tier,expected){
  if(cycle?.tenure_type!=='REGULAR'||cycle?.total_cycles!==0||cycle?.sequence!==1
    ||cycle?.frequency?.interval_unit!=='MONTH'||cycle?.frequency?.interval_count!==1)return false;
  if(fixed?.currency_code!=='USD'||typeof fixed.value!=='string'
-   ||!/^\d+\.\d{2}$/.test(fixed.value)||Number(fixed.value)*100!==MEMBERSHIP_PRICES[tier].monthly_cents)return false;
+   ||!/^\d{1,12}(?:\.\d{1,2})?$/.test(fixed.value)||usdCents(fixed.value)!==BigInt(MEMBERSHIP_PRICES[tier].monthly_cents))return false;
  if(plan.payment_preferences?.setup_fee&&Number(plan.payment_preferences.setup_fee.value)>0)return false;
  return true;
 }
