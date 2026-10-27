@@ -106,6 +106,24 @@ test('only one click publishes; interrupted media keeps the same entry and skips
  }finally{h.done()}
 });
 
+test('after failed upload Back returns to privacy instead of triggering a hidden retry',async()=>{
+ const h=harness({deferUpload:true});try{
+  const photo=new h.win.File(['image'],'private.jpg',{type:'image/jpeg'});
+  h.choose(photo);h.click('.luonix-v10-next');h.click('.luonix-v10-next');
+  await tick();assert.equal(h.getRequestCount(),1);
+  h.releaseUpload({data:null,error:{message:'temporary offline'}});await tick();
+  assert.equal(h.composer.getState().stage,'upload');
+  h.click('.luonix-v10-footer button:first-child');
+  assert.equal(h.composer.getState().stage,'audience');
+  const before=h.calls.filter(x=>x.action==='entry.publish').length;
+  h.click('.luonix-v10-audience-item[data-value=private]');
+  h.click('.luonix-v10-footer button:first-child');
+  assert.equal(h.composer.getState().stage,'preview');
+  assert.equal(h.calls.filter(x=>x.action==='entry.publish').length,before);
+  assert.equal(h.composer.getState().audience,'private');
+ }finally{h.done()}
+});
+
 test('sign out during upload stops publishing and avoids announcing success',async()=>{
  const h=harness({deferUpload:true});try{
   const photo=new h.win.File(['a'],'safe.jpg',{type:'image/jpeg'});
