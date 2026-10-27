@@ -27,6 +27,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  const footer=el('footer','luonix-v10-footer'),back=btn('Back',()=>navigate(stage==='audience'?'preview':'gallery')),next=btn('Next',forward,'luonix-v10-next');
  const message=el('p','luonix-v10-message');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
  footer.append(back,message,next);root.append(top,state,screens,footer);output.append(root);
+ let addMode=false;
  const picker=el('input','luonix-v10-file');picker.type='file';picker.multiple=true;picker.accept='image/jpeg,image/png,image/webp,video/mp4,video/webm';picker.setAttribute('aria-label','Choose photos and videos from gallery');
  const choose=btn('Choose from gallery',()=>picker.click(),'luonix-v10-gallery-button');
  const camera=btn('Camera photo',()=>{
@@ -38,7 +39,8 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  gallery.append(selectedFiles);
  const stageMedia=el('div','luonix-v10-stage'),thumbs=el('div','luonix-v10-thumbs');
  const controls=el('div','luonix-v10-media-controls'),left=btn('‹ Previous',()=>showMedia(selected-1)),right=btn('Next ›',()=>showMedia(selected+1)),remove=btn('Remove',removeCurrent);
- controls.append(left,right,remove);preview.append(stageMedia,thumbs,controls);
+ const addMore=btn('+ Add media',()=>{addMode=true;picker.click()},'luonix-v10-add');
+ controls.append(left,right,remove,addMore);preview.append(stageMedia,thumbs,controls);
  const title=el('input','luonix-v10-title');title.placeholder='Add a title (optional)';title.maxLength=160;title.setAttribute('aria-label','Post title');
  const caption=el('textarea','luonix-v10-caption');caption.placeholder='Add a caption…';caption.maxLength=12000;caption.setAttribute('aria-label','Post caption');
  const count=el('small','luonix-v10-counter','0 / 12,000');caption.addEventListener('input',()=>count.textContent=caption.value.length.toLocaleString()+' / 12,000');
@@ -79,22 +81,24 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
    stageMedia.append(video);
   }
   for(let i=0;i<files.length;i++){
-   const media=btn(String(i+1),()=>showMedia(i),'luonix-v10-thumb');media.setAttribute('aria-label','View selected media '+(i+1));
+   const media=btn('',()=>showMedia(i),'luonix-v10-thumb');media.setAttribute('aria-label','View selected media '+(i+1));
+   if(files[i].type.startsWith('image/')){const pic=el('img');pic.src=urls[i];pic.alt='';pic.setAttribute('aria-hidden','true');media.append(pic)}
+   else media.append(el('span','', '▶'));
    media.setAttribute('aria-pressed',String(i===selected));thumbs.append(media);
   }
   left.disabled=right.disabled=files.length===1;
   state.textContent='Preview '+(selected+1)+' of '+files.length+' · '+file.name;
  }
  function updateFiles(values){
-  const incoming=validateLuonixMedia(values);if(!incoming.length)return;
+  const incoming=validateLuonixMedia(addMode?[...files,...Array.from(values||[])]:values);if(!incoming.length)return;
   if(publishing)return;
-  release();files=incoming;urls=files.map(f=>win.URL.createObjectURL(f));selected=0;operation=null;
+  release();files=incoming;urls=files.map(f=>win.URL.createObjectURL(f));selected=addMode?files.length-1:0;operation=null;duration=0;
   renderSelected();showMedia(0);setInfo('');navigate('preview');
  }
  picker.addEventListener('change',()=>{
   try{updateFiles(picker.files)}
   catch(e){setInfo(e.message||'Unsupported selection')}
-  finally{picker.value='';picker.removeAttribute('capture');picker.accept='image/jpeg,image/png,image/webp,video/mp4,video/webm'}
+  finally{addMode=false;picker.value='';picker.removeAttribute('capture');picker.accept='image/jpeg,image/png,image/webp,video/mp4,video/webm'}
  });
  function removeCurrent(){
   if(publishing||!files.length)return;
