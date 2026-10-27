@@ -42,3 +42,6 @@
 #room #messages .bubble:hover>.stamp,#room #messages .bubble:focus-within>.stamp{opacity:1;visibility:visible;transform:none}
 @media(hover:none){#room #messages .bubble:active>.stamp{opacity:1;visibility:visible;transform:none}}
 @media(prefers-reduced-motion:reduce){#auth .primary.luo-auth-processing::after{animation:none;border-right-color:currentColor}#room #messages .bubble>.stamp{transition:none;transform:none}}
+
+.luo-v7-shortcut-empty{padding:20px 14px;border:1px dashed #806648;border-radius:12px;background:#221d23;color:#e1c79e;text-align:center;font-size:14px}
+.luo-v7-shortcut-empty[hidden]{display:none}
