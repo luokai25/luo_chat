@@ -15,6 +15,17 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  const nav=el('div','luo-story-toolbar'),audienceButton=btn('Audience · Only me',()=>open('audience'),'luo-story-audience-button');
  nav.append(el('span','luo-story-eyebrow','STATUS · 24 HOURS'),audienceButton);
  editor.querySelector('.dialog-heading')?.after(nav);
+ const mediaFile=$('storyMedia'),originalAccept=mediaFile?.getAttribute('accept')||'';
+ if(mediaFile){
+  const picker=el('div','luo-story-media-actions');
+  const gallery=btn('Choose photo, video or audio',()=>{
+   mediaFile.removeAttribute('capture');mediaFile.setAttribute('accept',originalAccept);mediaFile.click();
+  },'luo-story-media-action');
+  const camera=btn('Take photo',()=>{
+   mediaFile.setAttribute('accept','image/*');mediaFile.setAttribute('capture','environment');mediaFile.click();
+  },'luo-story-media-action');
+  picker.append(gallery,camera);mediaFile.after(picker);
+ }
  // Advanced legacy inputs stay inside the original form so existing audited
  // handlers and circle actions continue to work without duplicate listeners.
  const advanced=el('details','luo-story-advanced');
