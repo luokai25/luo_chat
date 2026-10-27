@@ -47,7 +47,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  const secondaryNotice=el('p','luo-story-status');secondaryNotice.setAttribute('role','status');secondaryNotice.setAttribute('aria-live','polite');
  secondary.append(top,help,secondaryNotice,body);
  form.append(editor,secondary);
- let page='editor',cameFrom='audience';
+ let page='editor';
  const previous=()=>page==='contacts'||page==='close'?'audience':'editor';
  const setAudience=names=>{audience.value=normalize(names).slice(0,100).join(', ');audience.dispatchEvent(new win.Event('input',{bubbles:true}))};
  const current=()=>getUser()?.id===actor&&actor!==null;
@@ -56,7 +56,9 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(!force&&page==='contacts')return;
   const list=parse();
   const labels={selected:'Selected friends',contacts:'My contacts',except:'My contacts except…',close:'Close friends',onlyMe:'Only me',public:'Public'};
-  audienceButton.textContent='Audience · '+labels[mode]+' · '+(mode==='onlyMe'?0:list.length);
+  audienceButton.textContent='Audience · '+labels[mode]+' · '+(mode==='onlyMe'||mode==='public'?0:list.length);
+  dialog.dataset.storyAudienceMode=mode;
+  dialog.dispatchEvent(new win.CustomEvent('luo:story-audience-changed',{detail:{mode,count:list.length}}));
  };
  const effective=()=>{
   const all=contacts.map(p=>p.username);
@@ -102,7 +104,6 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(!current())return;
   if(name==='public'&&!publicReady){notice('Public Stories are not enabled on this server yet.');return}
   if(name==='editor'){mode=committedMode;selected=new Set(parse());go('editor');sync(true);return}
-  if(name==='contacts')cameFrom='audience';
   go(name);
   if(['audience','contacts','close'].includes(name))void ensureContacts();
   if(name==='audience')void checkPublic();
@@ -224,6 +225,14 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(page==='editor'){const people=parse();selected=new Set(people);mode=people.length?'selected':'onlyMe';committedMode=mode;sync(true)}
  });
  circle.addEventListener('change',()=>{if(circle.value){mode='close';committedMode='close';selected=new Set(parse());sync(true)}});
+ const hasDraft=()=>!!($('storyBody')?.value.trim()||$('storyMusic')?.value.trim()||mediaFile?.files?.length);
+ const requestClose=()=>{
+  if($('publishStory')?.disabled){notice('Your Story is being published. Keep this window open until it finishes.');return false}
+  if(page!=='editor'){open(previous());return false}
+  if(hasDraft()&&!win.confirm('Discard your unfinished Story?'))return false;
+  return true;
+ };
+ dialog.addEventListener('cancel',event=>{if(!requestClose())event.preventDefault()});
  dialog.addEventListener('close',()=>{generation++;loading=false;go('editor')});
- return{reset,signedOut,onCirclesLoaded:list=>{circles=Array.isArray(list)?list:[];if(page==='close')render()},audienceMode:()=>mode};
+ return{reset,signedOut,requestClose,onCirclesLoaded:list=>{circles=Array.isArray(list)?list:[];if(page==='close')render()},audienceMode:()=>mode};
 }
