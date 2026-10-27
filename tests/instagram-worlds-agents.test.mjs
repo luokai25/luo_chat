@@ -25,6 +25,13 @@ test('Wallpapers are isolated by account and conversation, and clean on sign-out
   canvas.dispatchEvent(new w.MouseEvent('pointermove',{clientX:150,clientY:300,bubbles:true}));
   assert.equal(canvas.style.getPropertyValue('--luo-pointer-x'),'50.0%');
   assert.equal(canvas.style.getPropertyValue('--luo-pointer-y'),'50.0%');
+  const touch=new w.Event('pointermove',{bubbles:true});
+  Object.defineProperty(touch,'pointerType',{value:'touch'});
+  Object.defineProperty(touch,'clientX',{value:250});
+  Object.defineProperty(touch,'clientY',{value:500});
+  canvas.dispatchEvent(touch);
+  assert.equal(canvas.style.getPropertyValue('--luo-pointer-x'),'50.0%','touch scrolling must not repaint wallpaper');
+
   assert.equal(JSON.parse(w.localStorage.getItem('luo-dm-theme-v1:human1:direct1')).theme,7);
   conversation={id:'direct2',kind:'direct',person:{username:'Other'}};api.onRoom();
   assert.equal(canvas.style.getPropertyValue('--luo-pointer-x'),'');
