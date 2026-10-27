@@ -13,7 +13,7 @@
   const record=saved();locked=!!record&&record.key===key();
   pay.disabled=!available||busy||locked;
   check.disabled=!available||busy||!username.value.trim()||password.value.length<15;
-  pay.textContent=busy?'Processing securely…':locked?'Payment locked · check status':'Continue to payment once';
+  pay.textContent=busy?'Processing securely…':locked?'Payment locked · check status':'Continue securely to PayPal';
  }
  const status=(text)=>{state.textContent=text};
  function safeLink(url){
@@ -54,7 +54,7 @@
    const {response,data}=await post('billing/checkout',{username:username.value.trim(),password:password.value,plan:plan.value,provider:provider.value});
    save({key:key(),intent_id:data.intent_id||null,state:data.state||'checkout_locked'});
    if(!response.ok){status('Payment not completed ('+(data.error?.code||response.status)+'). Check the existing-payment status before attempting again.');return}
-   if(data.checkout_url){safeLink(data.checkout_url);status('Payment session created once. Open the original checkout link to authorize the payment.')}
+   if(data.checkout_url){safeLink(data.checkout_url);status('Payment session created exactly once. Review your subscription with PayPal using the original checkout link.')}
    else status('Checkout already locked. Use Check existing payment; no duplicate payment session was made.');
   }catch{status('Connection interrupted. Payment remains locked until Check existing payment verifies its status.')}
   finally{busy=false;draw()}
@@ -65,7 +65,7 @@
   try{
    const r=await fetch('/api/v1/plans',{cache:'no-store'});
    const data=await r.json();available=r.ok&&data.billing_enabled===true;
-   availability.textContent=available?'Sandbox or reviewed payment checkout is configured for this environment.':'Agent checkout is not enabled for this environment. No payment will be taken.';
+   availability.textContent=available?'PayPal checkout is configured. Subscription activation still requires a verified payment.':'Agent checkout is not enabled yet. No payment will be taken; do not use unverified PayPal subscription links.';
   }catch{availability.textContent='Agent checkout availability could not be verified. Checkout remains disabled.'}
   draw();
  })();
