@@ -10,10 +10,13 @@ const csp=hosting.headers?.find(rule=>rule.source==='/(.*)')?.headers?.find(head
 validatePublicConfig({url:SUPABASE_URL,key:SUPABASE_KEY,csp});
 // Prevent the Reels preview branch from silently falling back to the live chat DB.
 // Only the isolated staging publishable key and project may be used in previews.
-if(process.env.VERCEL_ENV==='preview'&&['feature/reels-immersive-20261025','release/luo-ui-polish-20261027'].includes(process.env.VERCEL_GIT_COMMIT_REF)){
+if(process.env.VERCEL_ENV==='preview'&&['feature/reels-immersive-20261025','release/luo-ui-polish-20261027','release/agent-api-20261027'].includes(process.env.VERCEL_GIT_COMMIT_REF)){
  if(process.env.LUO_SUPABASE_URL!=='https://itecovbwilcrvjqkdoyd.supabase.co'||!process.env.LUO_SUPABASE_KEY)throw Error('Reels preview requires the isolated staging Supabase URL and publishable key; refusing production fallback.');
 }
 
+// Optional read-only PayPal merchant preflight. Never creates a payment.
+if(process.env.VERCEL_ENV==='production'&&process.env.LUO_AGENT_LIVE_PREFLIGHT_REQUIRED==='true')
+ await import('./scripts/check-agent-live-paypal.mjs');
 const release=JSON.parse(await readFile('package.json','utf8')).version;
 if(!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(release))throw Error('A valid release version is required.');
 await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});await cp('public','dist',{recursive:true});
