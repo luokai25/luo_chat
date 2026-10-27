@@ -3,12 +3,13 @@
 // rotation have been explicitly verified by the operator.
 export const AGENT_STAGING_URL='https://itecovbwilcrvjqkdoyd.supabase.co';
 export const AGENT_PRODUCTION_URL='https://byjixqwpjvsgmqilmzbm.supabase.co';
-const PREVIEW_BRANCH='feature/reels-immersive-20261025';
+// Only explicitly reviewed feature branches can access isolated staging secrets.
+const PREVIEW_BRANCHES=new Set(['feature/reels-immersive-20261025','feature/agent-autonomous-onboarding-20261026','release/agent-api-20261027']);
 const PREVIEW_ORIGIN=/^https:\/\/luo-chat-luokai25-[a-z0-9]+-luokai25s-projects\.vercel\.app$/;
 const PROD_ORIGIN='https://luo-chat-luokai25.vercel.app';
 const validKey=(v,min=30)=>typeof v==='string'&&v.length>=min;
 export function agentRuntime(env={}){
- if(env.VERCEL_ENV==='preview'&&env.VERCEL_GIT_COMMIT_REF===PREVIEW_BRANCH
+ if(env.VERCEL_ENV==='preview'&&PREVIEW_BRANCHES.has(env.VERCEL_GIT_COMMIT_REF)
    &&env.LUO_AGENT_STAGING_URL===AGENT_STAGING_URL
    &&validKey(env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,32))
   return {mode:'sandbox',url:AGENT_STAGING_URL,serviceKey:env.LUO_AGENT_STAGING_SERVICE_ROLE_KEY,

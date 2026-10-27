@@ -1,6 +1,8 @@
 // Hosted recurring checkout adapters. Production must not use staging credentials.
 // Both processors are disabled until real merchant credentials and prices are configured.
 import {createClient} from '@supabase/supabase-js';
+import {createHmac} from 'node:crypto';
+import {isIP} from 'node:net';
 import {normalizeAgentUsername,sendJson} from './agent-platform.js';
 import {quoteAgentPlan,approvedStripePriceId,approvedStripeCouponId} from './agent-pricing.js';
 import {agentRuntime,agentCheckoutOrigin,paypalMerchantSettings} from './agent-environment.js';
@@ -82,6 +84,22 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
   const runtime=agentRuntime(env);
   const db=clientFactory(runtime.url,runtime.serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
   try{
+   // Autonomous verified-key checkout must also defend against password sprays.
+   // Reuse the atomic server-side login cap, before calling external payment APIs.
+   if(runtime.mode==='live'||env.LUO_AGENT_REQUIRE_VERIFIED_KEY==='true'){
+    const secret=env.LUO_AGENT_SIGNUP_HASH_KEY;
+    const ip=env.VERCEL==='1'?req.headers?.['x-vercel-forwarded-for']:req.socket?.remoteAddress;
+    if(typeof secret!=='string'||secret.length<32||typeof ip!=='string'||ip.length>64||ip.includes(',')||!isIP(ip))
+     return jsonError(res,503,'CHECKOUT_RATE_LIMIT_UNAVAILABLE');
+    const digest=value=>createHmac('sha256',secret).update(value).digest('hex');
+    const quota=await db.rpc('luo_agent_reserve_login',{
+     p_ip_digest:digest('checkout-network:'+ip),p_username_digest:digest('checkout-identity:'+username)
+    });
+    if(quota.error?.code==='P0001'){
+     res.setHeader('Retry-After','86400');return jsonError(res,429,'CHECKOUT_RATE_LIMITED');
+    }
+    if(quota.error||quota.data!==true)return jsonError(res,503,'CHECKOUT_RATE_LIMIT_UNAVAILABLE');
+   }
    // Check the merchant's actual Live plan prices and same-app webhook
    // before reserving a checkout or contacting the processor to charge.
    if(runtime.mode==='live'){
@@ -92,6 +110,14 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
    const auth=clientFactory(runtime.url,runtime.publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
    const signed=await auth.auth.signInWithPassword({email:'agent+'+username+'@agents.luo.invalid',password:input.password});
    if(signed.error||!signed.data?.user?.id)return jsonError(res,401,'INVALID_CREDENTIALS');
+   // Never sell a seat which paid login would reject for missing key possession.
+   if(env.LUO_AGENT_REQUIRE_VERIFIED_KEY==='true'){
+    const eligibility=await db.rpc('luo_agent_verified_checkout_eligible',{
+     p_auth_user:signed.data.user.id,p_username:username,p_plan:input.plan
+    });
+    if(eligibility.error)throw Error('VERIFIED_KEY_ELIGIBILITY_UNAVAILABLE');
+    if(eligibility.data!==true)return jsonError(res,409,'VERIFIED_AGENT_IDENTITY_REQUIRED');
+   }
    const quote=quoteAgentPlan(input.plan,{now:now(),promoStart:env.LUO_AGENT_PROMOTIONS_ENABLED==='true'?env.LUO_AGENT_PROMO_START_AT:undefined});
    // A promo checkout is denied if its provider-specific first-invoice contract
    // has not been configured; never silently charge the normal price instead.
@@ -104,12 +130,25 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
    }
    if(!intent.data||intent.data.first_invoice_cents!==quote.first_invoice_price*100||intent.data.regular_cents!==quote.monthly_price*100)throw Error('CHECKOUT_PRICE_MISMATCH');
    const i=intent.data;
+   // Durable create-once claim; do not start another payment while an earlier
+   // processor attempt is unresolved (even after provider deduplication expires).
+   const claim=await db.rpc('luo_agent_claim_checkout_once',{p_intent:i.intent_id});
+   if(claim.error||!claim.data?.action)throw Error('CHECKOUT_CLAIM_FAILED');
+   if(claim.data.action==='locked'){
+    res.setHeader('Retry-After','30');
+    return sendJson(res,202,{checkout_locked:true,state:claim.data.state||'creation_or_reconciliation_pending',
+     intent_id:i.intent_id,requires_status_check:true,message:'Existing checkout locked; no new payment was created.'});
+   }
+   if(!['reuse','create'].includes(claim.data.action))throw Error('INVALID_CHECKOUT_CLAIM');
+   const priorReference=claim.data.action==='reuse'?claim.data.reference:null;
+   const claimToken=claim.data.action==='create'?claim.data.claim_token:null;
+   if(priorReference&&i.existing_reference&&priorReference!==i.existing_reference)throw Error('CHECKOUT_REFERENCE_MISMATCH');
    let approval,external;
    if(input.provider==='stripe'){
-    if(i.existing_reference){
-     const session=await fetchJson(fetcher,'https://api.stripe.com/v1/checkout/sessions/'+encodeURIComponent(i.existing_reference),{headers:{Authorization:'Bearer '+env.LUO_STRIPE_SECRET_KEY}});
+    if(priorReference){
+     const session=await fetchJson(fetcher,'https://api.stripe.com/v1/checkout/sessions/'+encodeURIComponent(priorReference),{headers:{Authorization:'Bearer '+env.LUO_STRIPE_SECRET_KEY}});
      if(session.client_reference_id!==i.intent_id||session.status!=='open'||typeof session.url!=='string')throw Error('CHECKOUT_NOT_REUSABLE');
-     approval=session.url;external=i.existing_reference;
+     approval=session.url;external=priorReference;
     }else{
      const form=stripeSessionForm(i,env,expectedOrigin,now());
      const session=await fetchJson(fetcher,'https://api.stripe.com/v1/checkout/sessions',{
@@ -121,10 +160,10 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
     }
    }else{
     const accessToken=await paypalAccessToken(env,fetcher);
-    if(i.existing_reference){
-     const sub=await fetchJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions/'+encodeURIComponent(i.existing_reference),{headers:{Authorization:'Bearer '+accessToken}});
+    if(priorReference){
+     const sub=await fetchJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions/'+encodeURIComponent(priorReference),{headers:{Authorization:'Bearer '+accessToken}});
      if(sub.custom_id!==i.intent_id)throw Error('CHECKOUT_NOT_REUSABLE');
-     approval=sub.links?.find(v=>v.rel==='approve')?.href;external=i.existing_reference;
+     approval=sub.links?.find(v=>v.rel==='approve')?.href;external=priorReference;
     }else{
      const sub=await fetchJson(fetcher,paypalMerchantSettings(env).api+'/v1/billing/subscriptions',{
       method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json','PayPal-Request-Id':i.intent_id},
@@ -135,9 +174,12 @@ export function createAgentCheckoutHandler({env=process.env,clientFactory=create
     }
     if(typeof external!=='string'||!/^I-[A-Za-z0-9]{8,}$/.test(external)||typeof approval!=='string'||!approval.startsWith(paypalMerchantSettings(env).approval))throw Error('PAYPAL_RESPONSE_INVALID');
    }
-   const bound=await db.rpc('luo_agent_attach_checkout',{p_intent:i.intent_id,p_reference:external});
-   if(bound.error||bound.data!==true)throw Error('CHECKOUT_BIND_FAILED');
-   return sendJson(res,201,{provider:input.provider,checkout_url:approval,intent_id:i.intent_id,
+   if(claimToken){
+    const bound=await db.rpc('luo_agent_bind_checkout_once',{
+     p_intent:i.intent_id,p_reference:external,p_claim:claimToken});
+    if(bound.error||bound.data!==true)throw Error('CHECKOUT_BIND_FAILED');
+   }
+   return sendJson(res,claimToken?201:200,{checkout_locked:true,provider:input.provider,checkout_url:approval,intent_id:i.intent_id,
     first_invoice_price_usd:quote.first_invoice_price,renews_monthly_usd:quote.renewal_monthly_price,
     currency:'USD',promotion:quote.offer_active?'first_invoice_only':'none',
     activation:'awaiting_verified_payment',no_success_url_activation:true});

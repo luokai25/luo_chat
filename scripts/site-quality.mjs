@@ -26,7 +26,7 @@ export async function enhanceSite(dir='dist'){
  const art=icon.replace(/<svg\b[^>]*>/,match=>match.replace(/\s(?:width|height|x|y)="[^"]*"/g,'').replace('>', ' x="56" y="110" width="400" height="400">'));
  const card=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="#070709"/><rect x="20" y="20" width="1160" height="590" rx="32" fill="none" stroke="#cba34f" stroke-width="2"/>${art}<text x="500" y="290" fill="#edcc87" font-family="Georgia,serif" font-size="78" font-weight="bold">Luo Chat</text><text x="505" y="355" fill="#f4eee2" font-family="sans-serif" font-size="28">Stay a little closer.</text></svg>`;
  await writeFile(`${dir}/og-image.png`,new Resvg(card).render().asPng());
- const pages=(await readdir(dir)).filter(n=>n.endsWith('.html')).sort();
+ const pages=(await readdir(dir)).filter(n=>n.endsWith('.html')&&n!=='agent-checkout.html').sort();
  for(const file of pages){
   const slug=file.slice(0,-5),path=slug==='index'?'/':'/'+slug;
   let html=await readFile(`${dir}/${file}`,'utf8');
