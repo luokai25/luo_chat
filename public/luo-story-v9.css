@@ -60,3 +60,13 @@
  .luo-v9-story #publishStory{bottom:calc(-24px - env(safe-area-inset-bottom,0px))}
 }
 @media(prefers-reduced-motion:reduce){.luo-v9-story *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Camera and gallery actions target the existing secure Story upload field. */
+.luo-v9-story .luo-story-media-actions{display:flex;flex-wrap:wrap;gap:9px;margin:10px 0 18px}
+.luo-v9-story .luo-story-media-action{flex:1 1 180px;min-height:48px;text-align:center;padding:11px 14px;background:#2d2428;border:1px solid #957147;border-radius:13px;color:#f8dfb2;font-weight:750;touch-action:manipulation}
+.luo-v9-story .luo-story-media-action:hover{background:#40302a;border-color:#e6bc7e}
+.luo-v9-story .luo-story-status{min-height:20px;margin:0;font-size:13px;color:#ffcc9b;line-height:1.4;overflow-wrap:anywhere}
+.luo-v9-story .luo-story-secondary .luo-story-status:empty{display:none}
+.luo-v9-story #publishStory:disabled{opacity:.75;cursor:progress;pointer-events:none}
+.luo-v9-story #publishStory[aria-busy="true"]{background:#685432;color:#fff0d1}
+@media(max-width:380px){.luo-v9-story .luo-story-media-action{flex-basis:100%}}
