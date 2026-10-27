@@ -30,7 +30,7 @@ function storyComposer(){
   counter.textContent=body.value.length.toLocaleString()+' / 2,000 characters'+(music.value.trim()?' · Music link provided':'');
   const file=media.files?.[0];
   attachment.textContent=file?'Selected file: '+file.name.slice(0,120)+' · '+(file.size/1048576).toFixed(1)+' MB':'No media selected';
-  if(file===lastFile)return;
+  if(file===lastFile&&mediaBox.childNodes.length)return;
   imageCleanup();lastFile=file||null;mediaBox.replaceChildren();
   if(file&&/^(image|video|audio)\//.test(file.type)&&typeof URL.createObjectURL==='function'){
    try{
