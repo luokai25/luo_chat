@@ -21,14 +21,17 @@ function shortcutHelp(){
  const empty=make('p','luo-v7-shortcut-empty','No matching shortcuts. Try a different search.');
  empty.hidden=true;empty.setAttribute('role','status');
  list.before(search,status);list.after(empty);
- const rows=[...list.querySelectorAll(':scope > div')];
+ const getRows=()=>[...list.querySelectorAll(':scope > div')];
  function render(){
   const typed=search.value.trim().toLocaleLowerCase();const term=typed==='escape'?'esc':typed;let shown=0;
-  for(const row of rows){row.hidden=!!term&&![...row.querySelectorAll('dt,dd')].some(field=>field.textContent.toLocaleLowerCase().includes(term));if(!row.hidden)shown++;}
+  for(const row of getRows()){row.hidden=!!term&&![...row.querySelectorAll('dt,dd')].some(field=>field.textContent.toLocaleLowerCase().includes(term));if(!row.hidden)shown++;}
   status.textContent=shown+' keyboard shortcut'+(shown===1?'':'s')+' available';
   empty.hidden=shown!==0;
  }
  search.addEventListener('input',render);
+ const changes=new MutationObserver(records=>{if(records.some(record=>record.type==='childList'))render()});
+ changes.observe(list,{childList:true});
+ window.addEventListener('pagehide',()=>changes.disconnect(),{once:true});
  search.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&search.value){event.preventDefault();event.stopPropagation();search.value='';render();}
  });
