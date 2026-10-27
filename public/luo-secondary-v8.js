@@ -89,9 +89,9 @@
   row.append(summary,clear);list.before(row);
   function render(){
    clear.hidden=!search.value;
-   const count=[...list.children].filter(node=>node.nodeType===1&&!node.matches('.empty,.luo-skeleton-stage')).length;
+   const count=list.querySelectorAll(':scope > .contact-row').length;
    const loading=/^Loading/i.test(list.textContent.trim())&&!count;
-   summary.textContent=loading?'Loading contacts…':count?count+' loaded contact'+(count===1?'':'s'):'Saved contacts';
+   summary.textContent=loading?'Loading contacts…':count?count+' matching contact'+(count===1?'':'s'):(search.value.trim()?'No matching contacts':'Saved contacts');
   }
   search.addEventListener('input',render);
   watch(list,render);render();
