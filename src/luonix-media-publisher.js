@@ -33,7 +33,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  const camera=btn('Camera photo',()=>{
   addMode=false;picker.multiple=false;picker.accept='image/*';picker.setAttribute('capture','environment');picker.click();
  },'luonix-v10-camera');
- const edit=btn('Advanced video editing',()=>{if(files.length&&!win.confirm('Open the video studio? This post selection will be discarded.'))return;onAdvanced?.()},'luonix-v10-advanced');
+ const edit=btn('Advanced video editing',()=>{if((files.length||caption.value.trim()||title.value.trim())&&!win.confirm('Open the video studio? This post draft will be discarded.'))return;onAdvanced?.()},'luonix-v10-advanced');
  const textPost=btn('Write a text-only post',()=>{textOnly=true;files=[];release();renderSelected();navigate('preview')},'luonix-v10-text-post');
  gallery.append(el('h3','','Choose media'),el('p','','Select up to six photos and videos. They can appear together in one post.'),choose,camera,picker,textPost,edit);
  const selectedFiles=el('div','luonix-v10-selected');
@@ -170,13 +170,13 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   if(operation?.identity!==identity){
    operation={id:win.crypto.randomUUID(),identity,completed:new Map(),created:false,published:false,kind};
   }
-  const tx=operation,done=tx.completed;bar.max=Math.max(1,originals.length);bar.value=done.size;
+  const tx=operation,done=tx.completed;bar.hidden=originals.length===0;bar.max=Math.max(1,originals.length);bar.value=done.size;
   bar.setAttribute('aria-valuetext',done.size+' of '+originals.length+' files uploaded');
   const current=()=>valid()&&getUser()?.id===ownerAtStart;
   try{
    if(!tx.created){uploadLabel.textContent='Saving post securely…';await rpc('entry.create',{id:tx.id,kind:tx.kind,title:title.value.trim(),body:caption.value.trim(),audience});tx.created=true}
    if(!current())return;
-   updatePhase('Uploading');
+   if(originals.length)updatePhase('Uploading');
    for(let i=0;i<originals.length;i++){
     if(done.has(i))continue;
     const file=originals[i],ext=LUONIX_MEDIA_RULES.types[file.type];
