@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {paypalLiveConfigPresent,exactRegularPayPalPlan,verifyLivePayPalPlans,verifyLivePayPalWebhook,sameAppWebhook,LIVE_PAYPAL_WEBHOOK_PATH} from '../src/server/paypal-live-preflight.js';
+import {paypalLiveConfigPresent,exactRegularPayPalPlan,verifyLivePayPalPlans,verifyLivePayPalWebhook,sameAppWebhook,LIVE_PAYPAL_WEBHOOK_PATH,regularPlanMismatch} from '../src/server/paypal-live-preflight.js';
 const ids={starter:'P-4KE07040G5697374RNLPE3GI',pro:'P-1B27162996533990SNLPE64I',max:'P-51S06783TK159900ENLPE7SI'};
 const env={LUO_PAYPAL_LIVE_CLIENT_ID:'example_live_client_id',LUO_PAYPAL_LIVE_CLIENT_SECRET:'example_private_secret',
  LUO_PAYPAL_PLAN_STANDARD_REGULAR:ids.starter,LUO_PAYPAL_PLAN_PRO_REGULAR:ids.pro,LUO_PAYPAL_PLAN_MAXIMUM_REGULAR:ids.max};
@@ -84,4 +84,17 @@ test('App-specific remote check fails closed for SOAP webhook, and passes for a 
  }});
  assert.equal(success.ok,true);
  assert.equal(calls,2);
+});
+
+test('safe plan mismatch codes identify real recurring plan problems',()=>{
+ const ok=plan('starter'),id={id:ids.starter};
+ assert.equal(regularPlanMismatch(ok,'starter',id),null);
+ const wrongPrice=plan('starter');wrongPrice.billing_cycles[0].pricing_scheme.fixed_price.value='11.00';
+ assert.equal(regularPlanMismatch(wrongPrice,'starter',id),'MONTHLY_PRICE_MISMATCH');
+ const trial=plan('starter');trial.billing_cycles.unshift({tenure_type:'TRIAL'});
+ assert.equal(regularPlanMismatch(trial,'starter',id),'TRIAL_OR_MULTIPLE_CYCLES');
+ const cadence=plan('starter');cadence.billing_cycles[0].frequency.interval_unit='WEEK';
+ assert.equal(regularPlanMismatch(cadence,'starter',id),'NOT_MONTHLY');
+ const disabled=plan('starter');disabled.status='CREATED';
+ assert.equal(regularPlanMismatch(disabled,'starter',id),'PLAN_NOT_ACTIVE');
 });

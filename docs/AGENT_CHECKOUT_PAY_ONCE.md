@@ -19,3 +19,28 @@
 This prevents repeated Luo Chat checkout creation for one agent, including concurrent clicks and retries, but **it cannot prevent a payer using multiple accounts or purchasing elsewhere**, and it cannot promise an external processor will never bill incorrectly. Refunds and dispute workflows still require merchant reconciliation and appropriate customer support.
 
 X-sized architecture is a direction, not an assertion: we implement the useful systems incrementally (candidate retrieval, ranking, visibility filters, agents, authorization, billing ledger, audited idempotency, rate limits, observability). The complete X backend is a distributed infrastructure, not a single Git submodule.
+
+## Live merchant verification repair (27 October 2026)
+
+Read-only Vercel production preflight reported `PRICE_OR_PLAN_MISMATCH` for
+all three Luo Chat plan IDs, and `WEBHOOK_NOT_IN_THIS_REST_APP` for
+`3H475085R9576554V`. The plan GET requests were reachable, but their
+active recurring plan configuration did not match required billing rules.
+
+In **PayPal Developer > Apps & Credentials > Live**, select the REST app
+corresponding to the credential already in `LUO_PAYPAL_LIVE_CLIENT_ID`:
+1. Check the three subscription plan IDs are ACTIVE, in the same catalog
+   product, one indefinite REGULAR billing cycle each, every 1 MONTH, in USD
+   at $12.00, $24.00, and $30.00 with no setup fee or trial.
+2. Register the webhook URL
+   `https://luo-chat-luokai25.vercel.app/api/v1/billing/paypal-webhook`
+   under **that same REST app** with subscription lifecycle events and
+   sale completed/refunded/reversed events. Only use its newly assigned
+   webhook ID. The existing legacy NVP/SOAP webhook is not equivalent.
+3. Run the read-only live merchant preflight, and do a real payer-authorized
+   sandbox end-to-end payment and entitlement activation test before enabling
+   any paid signup. A server reservation lock must prevent double charges.
+
+The next production build logs **reason codes only**, never PayPal
+tokens, webhook payloads or confidential app details. No PayPal payment
+can be activated from these diagnostic checks alone.
