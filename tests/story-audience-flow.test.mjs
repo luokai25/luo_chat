@@ -221,6 +221,36 @@ test('cancelling excluded-contact edits does not silently commit the exclusion n
  }finally{x.done()}
 });
 
+test('contact checkbox selection keeps the same row mounted instead of jumping on every tap',async()=>{
+ const x=create();try{
+  const d=x.doc;d.querySelector('.luo-story-audience-button').click();await settle();
+  x.click('Only share with');await settle();
+  const first=d.querySelector('.luo-story-contact-row');
+  first.querySelector('input').click();
+  assert.equal(d.querySelector('.luo-story-contact-row'),first,'Touch targets should not be replaced on every selection');
+  assert.equal(first.querySelector('input').checked,true);
+  assert.match(d.querySelector('.luo-story-contact-list').parentElement.textContent,/1 selected/);
+ }finally{x.done()}
+});
+
+test('saved close-friends circles explain and allow removal of usernames outside saved contacts',async()=>{
+ const x=create();try{
+  const d=x.doc;
+  x.flow.onCirclesLoaded([{id:'friend-circle',name:'Close friends',usernames:['alex_friend','not_in_contacts']}]);
+  d.querySelector('.luo-story-audience-button').click();await settle();
+  x.click('Close friends');await settle();
+  x.click('Choose close friends');
+  const explanation=d.querySelector('.luo-story-outside-contacts');
+  assert.ok(explanation);
+  assert.match(explanation.textContent,/not in your saved contacts/);
+  assert.match(explanation.textContent,/not_in_contacts/);
+  explanation.querySelector('button').click();
+  assert.doesNotMatch(d.querySelector('.luo-story-contact-list').textContent,/not_in_contacts/);
+  x.click('Done');x.click('Save close friends');await settle();
+  assert.deepEqual(x.calls.at(-1).params.recipient_usernames,['alex_friend']);
+ }finally{x.done()}
+});
+
 test('contact-search Enter does not accidentally submit a Story',async()=>{
  const x=create();try{
   const d=x.doc;d.querySelector('.luo-story-audience-button').click();await settle();x.click('Only share with');
