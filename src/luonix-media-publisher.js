@@ -14,7 +14,7 @@ export function validateLuonixMedia(files){
  return list;
 }
 export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublished,onCancel,onAdvanced}){
- const doc=win.document,owner=getUser()?.id;let removed=false,stage='gallery',files=[],urls=[],selected=0,publishing=false,snapshot=null,operation=null;
+ const doc=win.document,owner=getUser()?.id;let removed=false,stage='gallery',files=[],urls=[],selected=0,publishing=false,operation=null,duration=0;
  const valid=()=>!removed&&!!owner&&getUser()?.id===owner&&root.isConnected;
  const el=(tag,cls,value)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(value!==undefined)n.textContent=String(value);return n};
  const btn=(text,fn,cls='')=>{const n=el('button',cls,text);n.type='button';n.addEventListener('click',fn);return n};
@@ -75,6 +75,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   }else{
    const video=el('video','');video.src=url;video.controls=true;video.playsInline=true;video.preload='metadata';
    video.setAttribute('aria-label','Selected video '+(selected+1)+' of '+files.length);
+   video.addEventListener('loadedmetadata',()=>{if(files.length===1&&selected===0&&Number.isFinite(video.duration))duration=video.duration});
    stageMedia.append(video);
   }
   for(let i=0;i<files.length;i++){
@@ -87,7 +88,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
  function updateFiles(values){
   const incoming=validateLuonixMedia(values);if(!incoming.length)return;
   if(publishing)return;
-  release();files=incoming;urls=files.map(f=>win.URL.createObjectURL(f));selected=0;snapshot=null;operation=null;
+  release();files=incoming;urls=files.map(f=>win.URL.createObjectURL(f));selected=0;operation=null;
   renderSelected();showMedia(0);setInfo('');navigate('preview');
  }
  picker.addEventListener('change',()=>{
@@ -99,7 +100,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   if(publishing||!files.length)return;
   const chosen=files.filter((_,i)=>i!==selected);
   release();files=chosen;urls=files.map(f=>win.URL.createObjectURL(f));selected=Math.min(selected,files.length-1);
-  snapshot=null;operation=null;renderSelected();
+  operation=null;renderSelected();
   if(!files.length)navigate('gallery');else showMedia(selected);
  }
  function renderAudience(){
@@ -142,11 +143,12 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
   if(publishing||!valid())return;
   try{validateLuonixMedia(files)}catch(e){setInfo(e.message);return}
   if(!files.length&&!caption.value.trim()){setInfo('Choose photos or videos and add a caption.');return}
+  const singleClip=files.length===1&&files[0].type.startsWith('video/');
+  if(singleClip&&(!Number.isFinite(duration)||duration<=0||duration>90)){setInfo('Video clips need a readable duration of 90 seconds or less. Use Advanced video editing to trim longer clips.');return}
   if(audience==='public'&&!win.confirm('Make this Luonix visible publicly?'))return;
   publishing=true;stage='upload';root.dataset.stage='upload';for(const panel of screens.children)panel.hidden=panel!==uploadPage;
   next.disabled=true;exit.disabled=true;back.disabled=true;heading.textContent='Publishing';setInfo('');
   const ownerAtStart=owner;const originals=files.slice();
-  const id=operation?.id||win.crypto.randomUUID();
   const kind=files.length===1&&files[0].type.startsWith('video/')?'clip':'post';
   const identity=JSON.stringify([kind,title.value.trim(),caption.value.trim(),audience,files.map(f=>[f.name,f.size,f.lastModified,f.type])]);
   if(operation?.identity!==identity){
@@ -170,7 +172,7 @@ export function mountLuonixMediaPublisher({win,db,output,getUser,note,onPublishe
    }
    if(!current())return;
    uploadLabel.textContent='Finalizing your post…';
-   if(!tx.published){await rpc('entry.publish',{id:tx.id,media:originals.map((f,i)=>done.get(i))});tx.published=true}
+   if(!tx.published){await rpc('entry.publish',{id:tx.id,media:originals.map((f,i)=>tx.kind==='clip'?{...done.get(i),duration}:done.get(i))});tx.published=true}
    if(!current())return;
    uploadLabel.textContent='Luonix published!';setInfo('Your post is now available to the selected audience.');
    dispose();await onPublished?.();
