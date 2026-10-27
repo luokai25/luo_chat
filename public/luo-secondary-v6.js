@@ -32,9 +32,15 @@ function storyComposer(){
   attachment.textContent=file?'Selected file: '+file.name.slice(0,120)+' · '+(file.size/1048576).toFixed(1)+' MB':'No media selected';
   if(file===lastFile)return;
   imageCleanup();lastFile=file||null;mediaBox.replaceChildren();
-  if(file&&file.type.startsWith('image/')&&typeof URL.createObjectURL==='function'){
-   try{imageUrl=URL.createObjectURL(file);const pic=make('img','');pic.alt='Local preview of selected image';pic.src=imageUrl;mediaBox.append(pic);}
-   catch{mediaBox.append(make('p','','Image chosen. Preview unavailable on this device.'));}
+  if(file&&/^(image|video|audio)\//.test(file.type)&&typeof URL.createObjectURL==='function'){
+   try{
+    imageUrl=URL.createObjectURL(file);
+    const tag=file.type.startsWith('video/')?'video':file.type.startsWith('audio/')?'audio':'img';
+    const preview=make(tag,'');preview.src=imageUrl;
+    if(tag==='img')preview.alt='Local preview of selected image';
+    else{preview.controls=true;preview.preload='metadata';}
+    mediaBox.append(preview);
+   }catch{mediaBox.append(make('p','','Media chosen. Preview unavailable on this device.'));}
   }else mediaBox.append(make('p','',file?'Media will be attached after you publish.':'Share a photo, short video, audio, or text.'));
  };
  for(const n of [body,users,music])n.addEventListener('input',render);
