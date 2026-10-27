@@ -21,7 +21,9 @@ test('keyboard shortcut panel filters actual provided shortcuts, preserving orig
   assert.ok(count>=5);search.value='Escape';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   const visible=[...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden);
   assert.equal(visible.length,1);assert.match(visible[0].textContent,/Esc/);
-  search.dispatchEvent(new x.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  const escape=new x.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true});
+  search.dispatchEvent(escape);
+  assert.equal(escape.defaultPrevented,true,'Clearing search must not close the shortcut dialog');
   assert.equal(search.value,'');
   assert.equal([...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden).length,count);
   search.value='no-such-shortcut-987';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));
@@ -114,6 +116,8 @@ test('V7 design retains actual security and accessibility rules',()=>{
  assert.match(html,/href="\/luo-secondary-v7\.css"/);
  assert.match(html,/src="\/luo-secondary-v7\.js"/);
  assert.match(stylesheet,/prefers-reduced-motion:reduce/);
+ assert.match(stylesheet,/min-height:44px/);
+ assert.match(stylesheet,/overscroll-behavior:contain/);
  assert.match(source,/worlds-modal/);
  assert.match(source,/luoUpdatesV2Viewer/);
  assert.doesNotMatch(source,/supabase|subscription|billing\/checkout/);
