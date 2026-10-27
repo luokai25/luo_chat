@@ -25,6 +25,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
    mediaFile.setAttribute('accept','image/*');mediaFile.setAttribute('capture','environment');mediaFile.click();
   },'luo-story-media-action');
   picker.append(gallery,camera);mediaFile.after(picker);
+  mediaFile.addEventListener('change',()=>{mediaFile.removeAttribute('capture');mediaFile.setAttribute('accept',originalAccept)});
  }
  // Advanced legacy inputs stay inside the original form so existing audited
  // handlers and circle actions continue to work without duplicate listeners.
@@ -205,7 +206,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(page==='close')closeFriendsView();
  }
  function reset(){
-  generation++;actor=getUser()?.id||null;contacts=[];loaded=false;loading=false;mode='onlyMe';selected.clear();excluded.clear();
+  generation++;actor=getUser()?.id||null;contacts=[];loaded=false;loading=false;mode='onlyMe';selected.clear();excluded.clear();if(mediaFile){mediaFile.removeAttribute('capture');mediaFile.setAttribute('accept',originalAccept)}
   setAudience([]);go('editor');notice('');sync(true);
  }
  function signedOut(){
