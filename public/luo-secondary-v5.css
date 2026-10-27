@@ -1,0 +1,38 @@
+/* Real black-and-gold secondary-screen V5 design on existing authorized actions */
+.luo-v5-section-header{display:grid;gap:3px;margin:0 0 14px}.luo-v5-section-header b{font-size:15px;color:#ffdb9a;line-height:1.35}.luo-v5-section-header small{font-size:12px;line-height:1.45;color:#c6b8a6}
+.luo-v5-result-count{display:flex;align-items:center;min-height:37px;gap:10px;font-size:12px;color:#cdb998;padding:7px 4px;font-variant-numeric:tabular-nums}
+.luo-v5-shared #sharedList{min-height:116px;align-content:start}
+.luo-v5-poll-preview{display:grid;gap:8px;padding:16px;background:radial-gradient(circle at top right,#80602b33,transparent 56%),#19151a;border:1px solid #775e3c;border-radius:17px;margin:13px 0;min-width:0}
+.luo-v5-poll-question{font-size:17px;line-height:1.45;color:#f8e8d0;overflow-wrap:anywhere;margin:0 0 8px}
+.luo-v5-poll-choices{display:grid;gap:8px}
+.luo-v5-poll-choice{min-height:45px;display:flex;align-items:center;justify-content:flex-start;text-align:left;padding:11px 14px!important;background:#262028!important;color:#f8e4c3!important;border:1px solid #6a5037!important;border-radius:12px!important;overflow-wrap:anywhere;opacity:1!important;cursor:default!important}
+.luo-v5-poll-preview[data-kind="quiz"] .luo-v5-poll-choice{cursor:pointer!important}
+.luo-v5-poll-preview .luo-v5-poll-choice[aria-pressed="true"]{border-color:#edc27d!important;box-shadow:inset 4px 0 #edc27d;background:#3c3025!important}
+.luo-v5-placeholder{font-size:12px;color:#bfae99;margin:7px 0;padding:9px 0}
+.luo-v5-time-receipt{padding:15px;display:grid;gap:5px;background:#17171d;border:1px solid #69543b;border-radius:15px;margin:7px 0 4px}
+.luo-v5-time-receipt strong{color:#e9cc9a;font-size:13px}.luo-v5-time-receipt p{margin:0;line-height:1.5}.luo-v5-time-value{color:#f6e0b9;font-size:17px;font-weight:750}.luo-v5-time-note{font-size:12px;color:#bbaf9e}
+.luo-v5-time-receipt[data-state="invalid"]{border-color:#b6766f;background:#2a1d21}.luo-v5-time-receipt[data-state="invalid"] .luo-v5-time-note{color:#ffc1ba}
+.luo-v5-media-zoom{display:flex;justify-content:center;align-items:center;gap:9px;padding:9px;margin:8px auto;border:1px solid #6c5336;border-radius:19px;background:#1f1a22;width:max-content;max-width:100%}
+.luo-v5-media-zoom[hidden]{display:none!important}.luo-v5-zoom-button{min-width:49px;min-height:42px;padding:8px 11px;background:#332926;border:1px solid #80623c;border-radius:12px;color:#ffe5b8;font-size:16px;font-weight:800}
+.luo-v5-zoom-value{display:block;min-width:56px;text-align:center;color:#eac987;font-variant-numeric:tabular-nums;font-size:13px}
+.luo-v5-media #mediaContent{overflow:auto;overscroll-behavior:contain;max-height:72dvh;display:grid;place-items:center}
+.luo-v5-media #mediaContent img{transition:transform .16s ease;max-width:100%;height:auto}
+.luo-v5-personalize #personalizeForm{min-width:0}
+.luo-v5-theme-preview{--preview-accent:#e7c56f;padding:17px;margin:14px 0;background:radial-gradient(circle at 92% 9%,#a17d423b,transparent 40%),#15121a;border:1px solid #79603b;border-radius:17px;display:grid;gap:11px}
+.luo-v5-theme-preview[data-theme="midnight"]{background:#0b121f}
+.luo-v5-theme-preview[data-theme="aurora"]{background:linear-gradient(135deg,#191a34,#3b231c)}
+.luo-v5-theme-person{margin:0;color:#f2d09a;font-weight:750;overflow-wrap:anywhere}
+.luo-v5-theme-incoming,.luo-v5-theme-outgoing{margin:0;padding:13px 15px;max-width:86%;border:1px solid #5b503d;line-height:1.45;font-size:13px;overflow-wrap:anywhere}
+.luo-v5-theme-incoming{justify-self:start;background:#26242b;color:#f1e6d7;border-radius:17px 17px 17px 6px}
+.luo-v5-theme-outgoing{justify-self:end;background:var(--preview-accent);color:#1a1410;font-weight:650;border-color:transparent;border-radius:17px 17px 6px 17px}
+.luo-v5-theme-preview[data-bubbles="square"] :is(.luo-v5-theme-incoming,.luo-v5-theme-outgoing){border-radius:7px}
+.luo-v5-theme-preview[data-bubbles="minimal"] :is(.luo-v5-theme-incoming,.luo-v5-theme-outgoing){border-radius:0;border:0;border-bottom:2px solid #d2b17b}
+.luo-v5-delete #deleteForm{max-width:580px}
+.luo-v5-delete-gate{padding:15px 16px;margin:14px 0;background:#291c20;border:1px solid #985951;border-radius:16px}
+.luo-v5-delete-gate p{margin:8px 0;color:#eac4bd;font-weight:650;font-size:13px}
+.luo-v5-delete-gate[data-complete="true"]{border-color:#8b7050;background:#25211f}
+.luo-v5-delete-gate[data-complete="true"] p{color:#efdcbd}
+.luo-v5-delete-gate small{display:block;color:#baaaa4;font-size:12px;line-height:1.45;margin-top:12px}
+.luo-v5-poll :is(button,input,select,textarea):focus-visible,.luo-v5-schedule :is(button,input,textarea):focus-visible,.luo-v5-personalize :is(button,input,select):focus-visible,.luo-v5-media-zoom button:focus-visible{outline:2px solid #f2c987!important;outline-offset:3px}
+@media(max-width:600px){.luo-v5-poll-preview,.luo-v5-theme-preview{padding:12px;border-radius:14px}.luo-v5-poll-choices{gap:7px}.luo-v5-theme-incoming,.luo-v5-theme-outgoing{max-width:94%}.luo-v5-media-zoom{position:sticky;top:0;z-index:4}}
+@media(prefers-reduced-motion:reduce){.luo-v5-media #mediaContent img{transition:none!important}}
