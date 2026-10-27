@@ -19,7 +19,7 @@ test('all primary workspace tabs target sections inside the same authenticated a
   assert.ok(nav,'missing navigation button '+tab);
   assert.ok(section,'missing app section '+id);
   assert.equal(section.closest('.app'),app,'section escaped Luo Chat shell: '+id);
-  assert.equal(nav.type,'button','navigation should never submit an unrelated form: '+tab);
+  assert.equal(nav.closest('form'),null,'navigation must not be nested in an unrelated form: '+tab);
  }
 });
 
