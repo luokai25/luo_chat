@@ -32,7 +32,7 @@ function shared(){
 function poll(){
  const form=$('pollForm'),kind=$('pollKind'),question=$('pollQuestion'),options=$('pollOptions'),correct=$('quizCorrect');
  if(!form||!kind||!question||!options||!correct||form.dataset.luoV5)return;
- form.dataset.luoV5='1';form.closest('dialog')?.classList.add('luo-v5-poll');
+ form.dataset.luoV5='1';if(form.closest('dialog')){form.closest('dialog').dataset.luoV5='1';form.closest('dialog').classList.add('luo-v5-poll')}
  const box=el('section','luo-v5-poll-preview');box.setAttribute('aria-label','Live poll preview');
  const head=title('How it will appear','Preview only. Votes are recorded after you publish.');
  const ask=el('h3','luo-v5-poll-question','Your question appears here');
@@ -60,7 +60,7 @@ function poll(){
 function schedule(){
  const form=$('scheduleForm'),time=$('scheduledTime'),body=$('scheduledBody');
  if(!form||!time||!body||form.dataset.luoV5)return;
- form.dataset.luoV5='1';form.closest('dialog')?.classList.add('luo-v5-schedule');
+ form.dataset.luoV5='1';if(form.closest('dialog')){form.closest('dialog').dataset.luoV5='1';form.closest('dialog').classList.add('luo-v5-schedule')}
  const detail=el('div','luo-v5-time-receipt');detail.setAttribute('role','status');detail.setAttribute('aria-live','polite');
  const heading=el('strong','','Delivery details');const moment=el('p','luo-v5-time-value');const length=el('p','luo-v5-time-note');
  detail.append(heading,moment,length);time.after(detail);
@@ -114,7 +114,7 @@ function personalize(){
  const form=$('personalizeForm'),nickname=$('chatNickname'),theme=$('chatTheme'),accent=$('chatAccent'),
  font=$('chatFont'),bubble=$('chatBubbles'),emoji=$('chatEmoji');
  if(!form||!nickname||!theme||!accent||!font||!bubble||!emoji||form.dataset.luoV5)return;
- form.dataset.luoV5='1';form.closest('dialog')?.classList.add('luo-v5-personalize');
+ form.dataset.luoV5='1';if(form.closest('dialog')){form.closest('dialog').dataset.luoV5='1';form.closest('dialog').classList.add('luo-v5-personalize')}
  const card=el('section','luo-v5-theme-preview');card.setAttribute('aria-label','Live local theme preview');
  const head=title('Your conversation preview','Appearance changes are saved only when you submit the original form.');
  const person=el('p','luo-v5-theme-person');
@@ -137,7 +137,7 @@ function personalize(){
 function deleteAccount(){
  const form=$('deleteForm'),password=$('deletePassword'),phrase=$('deleteConfirmation');
  if(!form||!password||!phrase||form.dataset.luoV5)return;
- form.dataset.luoV5='1';form.closest('dialog')?.classList.add('luo-v5-delete');
+ form.dataset.luoV5='1';if(form.closest('dialog')){form.closest('dialog').dataset.luoV5='1';form.closest('dialog').classList.add('luo-v5-delete')}
  const panel=el('div','luo-v5-delete-gate');panel.setAttribute('role','status');panel.setAttribute('aria-live','polite');
  const a=el('p','','○ Luo Chat password entered');
  const b=el('p','','○ Confirmation phrase matches exactly');
