@@ -105,7 +105,7 @@ function statusViewer(){
  status.setAttribute('aria-live','polite');
  box.append(make('strong','','Reply to this status'),status);
  reply.before(box);
- const draw=()=>{status.textContent=input.value.length.toLocaleString()+' / '+input.maxLength.toLocaleString()+' characters';};
+ const draw=()=>{const limit=input.maxLength;status.textContent=limit>0?input.value.length.toLocaleString()+' / '+limit.toLocaleString()+' characters':input.value.length.toLocaleString()+' characters';};
  input.addEventListener('input',draw);
  viewer.addEventListener('close',()=>{
   input.value='';draw();
