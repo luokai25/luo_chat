@@ -30,7 +30,7 @@ function shortcutHelp(){
  }
  search.addEventListener('input',render);
  search.addEventListener('keydown',event=>{
-  if(event.key==='Escape'&&search.value){event.stopPropagation();search.value='';render();}
+  if(event.key==='Escape'&&search.value){event.preventDefault();event.stopPropagation();search.value='';render();}
  });
  render();
 }
