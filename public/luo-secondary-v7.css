@@ -26,3 +26,19 @@
 :is(.luo-v7-shortcuts,.luo-v7-attachments,.luo-v7-worlds-form,.luo-v7-status-viewer) :is(button,input,select,textarea):focus-visible{outline:2px solid #f1cd8d!important;outline-offset:3px!important}
 @media(max-width:650px){.worlds-modal.luo-v7-worlds-form{width:min(96vw,520px);padding:15px}.luo-v7-shortcuts[open]{width:100vw;max-width:100vw;margin:auto 0 0;border-radius:22px 22px 0 0;max-height:90dvh;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
 @media(prefers-reduced-motion:reduce){.luo-v7-attachments,.worlds-modal.luo-v7-worlds-form{animation:none!important;transition:none!important}}
+
+
+/* Auth submits stay locked until the real request settles. */
+#auth .primary.luo-auth-processing{position:relative;cursor:progress;opacity:.82;pointer-events:none;padding-inline-end:44px}
+#auth .primary.luo-auth-processing::after{content:"";position:absolute;right:16px;top:calc(50% - 9px);width:18px;height:18px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:luoAuthSubmitSpin .75s linear infinite}
+@keyframes luoAuthSubmitSpin{to{transform:rotate(360deg)}}
+
+/* Conversation text remains a clean floating bubble. Timestamps surface only on
+   intent, outside the text, while keeping the original DOM stamp for exports. */
+#room #messages .bubble{overflow:visible;position:relative;margin-block:16px 22px;border-radius:19px 19px 19px 6px}
+#room #messages .bubble.mine{border-radius:19px 19px 6px 19px}
+#room #messages .bubble>.stamp{position:absolute;bottom:-20px;right:7px;display:block;margin:0!important;padding:2px 5px;background:#151216ed;color:#e2cda9;border-radius:8px;font-size:10px;line-height:1.3;box-shadow:0 2px 9px #0005;opacity:0;visibility:hidden;transform:translateY(-3px);transition:opacity .14s ease,transform .14s ease,visibility .14s}
+#room #messages .bubble:not(.mine)>.stamp{right:auto;left:7px}
+#room #messages .bubble:hover>.stamp,#room #messages .bubble:focus-within>.stamp{opacity:1;visibility:visible;transform:none}
+@media(hover:none){#room #messages .bubble:active>.stamp{opacity:1;visibility:visible;transform:none}}
+@media(prefers-reduced-motion:reduce){#auth .primary.luo-auth-processing::after{animation:none;border-right-color:currentColor}#room #messages .bubble>.stamp{transition:none;transform:none}}
