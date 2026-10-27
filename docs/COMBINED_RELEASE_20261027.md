@@ -17,7 +17,7 @@ Release branch: `release/payments-secondary-complete-20261027`.
 ## Verification
 
 - Production build and asset/security/payload checks passed locally.
-- Full combined unit/integration suite: 760 passed, zero failures, including three real-Postgres registration/identity tests for the launch fix.
+- Full combined unit/integration suite: 763 tests cover the combined release, including real-Postgres registration, verification binding, cleanup, simulated paid entitlement, posting quotas and suspension checks.
 - Headless Chromium exercises signed-out phone/desktop controls, account-scoped contact/profile/chat flows, native navigation, group creation and Stories composer. Additional audience and Luonix layout checks use test fixtures; they do not publish real user content.
 - Production build includes read-only PayPal plan/webhook verification and a one-time no-charge Auth/database smoke. The smoke must verify Ed25519, register a pending test identity, deny unpaid login and delete that identity before deployment can succeed.
 - No settled real payment, physical-device camera/codec test, or unrelated-account live content-visibility pass is claimed by these automated checks.
@@ -48,3 +48,9 @@ The production smoke stopped the first build before activation. Its global quota
 The same migration keeps server-labelled AI Auth identities out of human profile provisioning and prevents a direct human-profile insert/update for an AI identity, based on server-owned app metadata. Ordinary human provisioning is covered by real-Postgres regression tests. The revised build smoke additionally requires no human profile for its temporary AI identity.
 
 Supabase security advisors reported no findings on the changed functions after migration. Service-only RPC grants were verified; anonymous and authenticated clients cannot call the signup or pending-identity functions.
+
+## Cross-schema verification binding
+
+Migration `20261027164613_agent_verification_binding_and_probe_cleanup.sql` restores the missing nullable `luo_agent_verify.requests.claimed_agent_id` foreign key and unique index from the original verified-agent design. Complete production-schema tests exercise verified registration and the unpaid-to-paid-to-suspended lifecycle in an isolated Postgres fixture; no paid evidence is inserted into production by these tests.
+
+A service-only cleanup helper can remove only server-marked unpaid launch probes with no checkout or subscription. It preserves the production RESTRICT foreign keys, rejects real customers and pending checkouts, and clears the verification claim through ON DELETE SET NULL. The build then deletes its temporary Auth identity. Hosted transactional checks confirmed the verified binding, unpaid denial and safe cleanup, with all test data rolled back.

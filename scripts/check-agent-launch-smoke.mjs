@@ -16,7 +16,7 @@ const factory=(url,key,options)=>{
  const client=createClient(url,key,options);
  if(key===runtime.serviceKey){
   const create=client.auth.admin.createUser.bind(client.auth.admin);
-  client.auth.admin.createUser=async(input)=>{const result=await create(input);if(result.data?.user?.id)createdId=result.data.user.id;if(result.error)console.error('LUO_AGENT_LAUNCH_AUTH_ERROR',JSON.stringify({status:result.error.status,code:result.error.code}));return result};
+  client.auth.admin.createUser=async(input)=>{const result=await create({...input,app_metadata:{...input.app_metadata,luo_launch_probe:true}});if(result.data?.user?.id)createdId=result.data.user.id;if(result.error)console.error('LUO_AGENT_LAUNCH_AUTH_ERROR',JSON.stringify({status:result.error.status,code:result.error.code}));return result};
   const rpc=client.rpc.bind(client);client.rpc=async(name,args)=>{const result=await rpc(name,args);if(result.error)console.error('LUO_AGENT_LAUNCH_DB_ERROR',JSON.stringify({operation:name,code:result.error.code}));return result};
  }
  return client;
@@ -39,5 +39,5 @@ try{
  if(login.statusCode!==402||login.body?.error?.code!=='PAYMENT_REQUIRED')throw Error('SMOKE_UNPAID_ACCESS_DENIAL_'+login.body?.error?.code);
  console.log('LUO_AGENT_LAUNCH_SMOKE',JSON.stringify({ed25519_proof:true,pending_registration:true,real_password_auth:true,human_profile_isolated:true,unpaid_login_denied:true,payment_created:false,paid_access_granted:false}));
 }finally{
- if(createdId){const removed=await db.auth.admin.deleteUser(createdId);if(removed.error)throw Error('SMOKE_TEST_IDENTITY_CLEANUP_FAILED');console.log('LUO_AGENT_LAUNCH_SMOKE_CLEANUP',JSON.stringify({test_identity_deleted:true}));}
+ if(createdId){const released=await db.rpc('luo_agent_discard_launch_probe',{p_auth_user:createdId});if(released.error)throw Error('SMOKE_TEST_IDENTITY_RELEASE_FAILED');const removed=await db.auth.admin.deleteUser(createdId);if(removed.error&&removed.error.status!==404)throw Error('SMOKE_TEST_IDENTITY_CLEANUP_FAILED');console.log('LUO_AGENT_LAUNCH_SMOKE_CLEANUP',JSON.stringify({test_identity_deleted:true}));}
 }

@@ -63,13 +63,13 @@ test('native Stories rail keeps My Status first and reserves actual 220px horizo
   rail.append(Object.assign(x.d.createElement('button'),{className:'luo-status-v2-tile luo-status-v2-my'}));
   x.d.getElementById('chats').append(rail);
   x.d.getElementById('storyFeedStatus').textContent='Loading stories…';
-  await sleep(175);
+  await until(()=>!!rail.querySelector('.luo-skeleton-stage'));
   assert.equal(rail.firstElementChild.classList.contains('luo-status-v2-my'),true);
   assert.equal(rail.querySelector('.luo-skeleton-stage').dataset.kind,'status');
   assert.equal(rail.querySelectorAll('.sk-status-card').length,3);
   rail.append(Object.assign(x.d.createElement('button'),{className:'luo-status-v2-tile'}));
   x.d.getElementById('storyFeedStatus').textContent='Only stories shared with you are shown.';
-  await sleep(220);
+  await until(()=>!rail.querySelector('.luo-skeleton-stage'));
   assert.equal(rail.querySelectorAll('.luo-skeleton-stage').length,0);
  }finally{x.close()}
 });
