@@ -82,11 +82,11 @@ export function installInstagramChats({win,db,getUser,getCurrent,getChats,openRo
  filter.oninput=renderGallery;
  toggle.onchange=()=>{if(!active())return;const p=preference();p.motion=toggle.checked;save(p);apply(p.theme,p.motion)};
  let lastRoom=null;
- const movement=event=>{if(!room.classList.contains('luo-dm-animated'))return;const bounds=messages.getBoundingClientRect();if(!bounds.width||!bounds.height)return;const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;messages.style.setProperty('--luo-pointer-x',Math.max(0,Math.min(100,x*100)).toFixed(1)+'%');messages.style.setProperty('--luo-pointer-y',Math.max(0,Math.min(100,y*100)).toFixed(1)+'%')};
+ const movement=event=>{if(event.pointerType==='touch'||event.pointerType==='pen')return;if(!room.classList.contains('luo-dm-animated'))return;const bounds=messages.getBoundingClientRect();if(!bounds.width||!bounds.height)return;const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;messages.style.setProperty('--luo-pointer-x',Math.max(0,Math.min(100,x*100)).toFixed(1)+'%');messages.style.setProperty('--luo-pointer-y',Math.max(0,Math.min(100,y*100)).toFixed(1)+'%')};
  messages.addEventListener('pointermove',movement,{passive:true});
  function onRoom(){
   if(!active()){lastRoom=null;room.style.removeProperty('--luo-dm-wallpaper');room.classList.remove('luo-dm-animated');delete room.dataset.luoTheme;messages.style.removeProperty('--luo-pointer-x');messages.style.removeProperty('--luo-pointer-y');return}
-  const id=getCurrent().id;if(lastRoom!==id){lastRoom=id;messages.style.removeProperty('--luo-pointer-x');messages.style.removeProperty('--luo-pointer-y');if(options.open)options.close()}
+  const id=getUser().id+':'+getCurrent().id;if(lastRoom!==id){lastRoom=id;messages.style.removeProperty('--luo-pointer-x');messages.style.removeProperty('--luo-pointer-y');if(options.open)options.close()}
   const p=preference();apply(p.theme,p.motion);
  }
  const obs=new win.MutationObserver(()=>{if(app.dataset.screen==='room')onRoom()});
