@@ -24,6 +24,11 @@ test('keyboard shortcut panel filters actual provided shortcuts, preserving orig
   search.dispatchEvent(new x.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
   assert.equal(search.value,'');
   assert.equal([...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden).length,count);
+  search.value='no-such-shortcut-987';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));
+  assert.equal([...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden).length,0);
+  assert.equal(d.querySelector('.luo-v7-shortcut-empty').hidden,false);
+  search.value='Escape';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));
+  assert.equal(d.querySelector('.luo-v7-shortcut-empty').hidden,true);
   search.value='';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   assert.equal([...d.querySelectorAll('.shortcut-list > div')].filter(n=>!n.hidden).length,count);
  }finally{x.close()}
