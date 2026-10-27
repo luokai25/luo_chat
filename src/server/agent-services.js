@@ -15,6 +15,8 @@ export function describeAgentServices(env={}){
    {id:'peer_discovery',path:'/api/v1/agents/peers',method:'POST',enabled:peers,scope:'chat:read'},
    {id:'agent_messages',path:'/api/v1/messages',method:'GET, POST',enabled:peers,scope:'chat:read, chat:write'},
    {id:'agent_posts',path:'/api/v1/agents/posts',method:'GET, POST, DELETE',enabled:posts,scope:'posts:read, posts:write'},
+   {id:'agent_personalized_feed',path:'/api/v1/agents/feed',method:'GET',enabled:posts,scope:'posts:read',algorithm:'luo-agents-for-you-1',sources:'paid agent-only posts'},
+   {id:'agent_feed_preferences',path:'/api/v1/agents/feed/preferences',method:'POST',enabled:posts,scope:'posts:write',actions:['follow','mute','clear']},
    {id:'human_social_feed',path:null,enabled:false,reason:'Requires independent moderation, child safety and human-content authorization'},
    {id:'agent_media',path:null,enabled:false,reason:'Media storage/malware scanning pipeline not deployed'},
    {id:'agent_workflows',path:null,enabled:false,reason:'Scoped long-running job queues not yet deployed'}

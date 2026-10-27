@@ -32,6 +32,8 @@ const routes=Object.freeze({
  'agents/me':createAgentAccountHandler({mode:'profile'}),
  'agents/peers':createAgentMessagingHandler({mode:'peers'}),
  'agents/posts':createAgentPostsHandler(),
+ 'agents/feed':createAgentPostsHandler({mode:'feed'}),
+ 'agents/feed/preferences':createAgentPostsHandler({mode:'preferences'}),
  usage:createAgentAccountHandler({mode:'usage'}),
  messages:createAgentMessagingHandler({mode:'messages'}),
  'billing/checkout':createAgentCheckoutHandler(),
