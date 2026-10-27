@@ -9,7 +9,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  const audience=$('storyAudience'),circle=$('storyCircle');
  const normalize=list=>[...new Set(list.map(x=>String(x).trim().replace(/^@/,'').toLowerCase()).filter(Boolean))];
  const parse=()=>normalize(audience.value.split(/[,;\n]+/));
- let actor=null,generation=0,contacts=[],loaded=false,loading=false,mode='selected',selected=new Set(),excluded=new Set(),circles=[];
+ let actor=null,generation=0,publicRequest=0,publicReady=false,contacts=[],loaded=false,loading=false,mode='selected',selected=new Set(),excluded=new Set(),circles=[];
  const editor=el('section','luo-story-page luo-story-editor');
  const original=[...form.childNodes];editor.append(...original);
  const nav=el('div','luo-story-toolbar'),audienceButton=btn('Audience · Only me',()=>open('audience'),'luo-story-audience-button');
@@ -92,23 +92,30 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   }catch(e){if(request===generation&&current())notice(e.message||'Could not load contacts. Try again.')}
   finally{if(request===generation){loading=false;if(page!=='editor')render()}}
  }
+ async function checkPublic(){
+  const request=++publicRequest,who=actor;
+  try{const result=await db.rpc('chat_public_story_ready');if(request!==publicRequest||who!==getUser()?.id)return;publicReady=result.error?false:result.data===true;}
+  catch{if(request===publicRequest)publicReady=false}
+  if(request===publicRequest&&page==='audience')render();
+ }
  function open(name){
   if(!current())return;
-  if(name==='public'){notice('Public Stories require a server privacy upgrade and are not available yet.');return}
+  if(name==='public'&&!publicReady){notice('Public Stories are not enabled on this server yet.');return}
   if(name==='editor'){go('editor');sync(true);return}
   if(name==='contacts')cameFrom='audience';
   go(name);
   if(['audience','contacts','close'].includes(name))void ensureContacts();
+  if(name==='audience')void checkPublic();
  }
  function option(label,description,key){
   const row=btn(' ',()=>{mode=key;if(key==='onlyMe'){selected.clear();setAudience([]);go('editor');sync(true);return}
-   if(key==='public')return;
+   if(key==='public'){if(!publicReady)return;setAudience([]);go('editor');sync(true);return;}
    if(key==='contacts'||key==='except'){if(!loaded){notice('Your contacts must load before choosing this audience.');return}if(key==='contacts'&&contacts.length>100){notice('More than 100 contacts found. Use Selected friends instead.');return}if(key==='except'){open('contacts');return}selected=new Set(effective());apply();go('editor')}
    else if(key==='selected')open('contacts');
    else if(key==='close')open('close');
   },'luo-story-audience-choice');
   row.replaceChildren(el('strong','',label),el('small','',description),el('span','luo-story-option-mark',key===mode?'✓':'›'));
-  row.dataset.selected=String(mode===key);if(key==='public'){row.disabled=true;row.title='Server-side public Story permissions are not ready'}
+  row.dataset.selected=String(mode===key);if(key==='public'){row.disabled=!publicReady;row.title=publicReady?'Visible to signed-in Luo Chat members':'Server-side public Story permissions are not enabled'}
   return row;
  }
  function audienceView(){
@@ -119,7 +126,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
    option('Only share with…','Pick individuals from your contacts','selected'),
    option('Close friends','A reusable private audience, like Instagram','close'),
    option('Only me','Keep this Story visible just to your account','onlyMe'),
-   option('Public','Coming after a secure public-story backend update','public')
+   option('Public · Luo Chat','Visible to signed-in Luo Chat members when enabled by the server','public')
   );
   if(mode==='except')body.append(btn('Edit excluded contacts',()=>open('contacts'),'luo-story-secondary-action'));
   if(mode==='contacts'&&!loaded)body.append(el('p','luo-story-inline-note','Loading saved contacts securely…'));
@@ -206,11 +213,11 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
   if(page==='close')closeFriendsView();
  }
  function reset(){
-  generation++;actor=getUser()?.id||null;contacts=[];loaded=false;loading=false;mode='onlyMe';selected.clear();excluded.clear();if(mediaFile){mediaFile.removeAttribute('capture');mediaFile.setAttribute('accept',originalAccept)}
+  generation++;publicRequest++;publicReady=false;actor=getUser()?.id||null;contacts=[];loaded=false;loading=false;mode='onlyMe';selected.clear();excluded.clear();circles=[];if(mediaFile){mediaFile.removeAttribute('capture');mediaFile.setAttribute('accept',originalAccept)}
   setAudience([]);go('editor');notice('');sync(true);
  }
  function signedOut(){
-  generation++;actor=null;contacts=[];loaded=false;loading=false;selected.clear();excluded.clear();circles=[];
+  generation++;publicRequest++;publicReady=false;actor=null;contacts=[];loaded=false;loading=false;selected.clear();excluded.clear();circles=[];
   mode='onlyMe';go('editor');sync(true);
  }
  audience.addEventListener('input',()=>{
