@@ -7,7 +7,7 @@ import {parseLuoShare,installReelMessagePreviews} from '../src/reel-message-prev
 
 test('Luo direct messages provide ten curated interactive offline scenes with no external URLs',()=>{
  const themes=createChatWallpapers();
- assert.equal(themes.length,10);assert.equal(new Set(themes.map(x=>x.id)).size,100);assert.equal(new Set(themes.map(x=>x.name)).size,100);
+ assert.equal(themes.length,10);assert.equal(new Set(themes.map(x=>x.id)).size,10);assert.equal(new Set(themes.map(x=>x.name)).size,10);
  for(const theme of themes){assert.match(theme.background,/gradient/);assert.doesNotMatch(theme.background,/url\s*\(/i);}
 });
 test('Wallpapers are isolated by account and conversation, and clean on sign-out',()=>{
