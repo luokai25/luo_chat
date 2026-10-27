@@ -106,6 +106,10 @@ function worldsCreatePanel(panel){
     :'Private World. Your server-side audience permissions remain authoritative.';
   else warnings.textContent='Your permissions will be checked when you create this channel.';
   feedback.dataset.valid=String(!invalid.length&&!!name?.value.trim());
+  if(members){
+   if(invalid.length){members.setAttribute('aria-invalid','true');}
+   else members.removeAttribute('aria-invalid');
+  }
  }
  for(const f of fields)f.querySelector('input,textarea,select')?.addEventListener('input',preview);
  for(const f of fields)f.querySelector('select')?.addEventListener('change',preview);
