@@ -71,6 +71,9 @@ test('Worlds modal validates actual username formatting and calculates distinct 
   assert.match(feedback.textContent,/2 unique invitees/);assert.equal(feedback.dataset.valid,'true');
   users.value='bad name';users.dispatchEvent(new x.w.Event('input',{bubbles:true}));
   assert.match(feedback.textContent,/1 username/);assert.equal(feedback.dataset.valid,'false');
+  assert.equal(users.getAttribute('aria-invalid'),'true');
+  users.value='qa_friend';users.dispatchEvent(new x.w.Event('input',{bubbles:true}));
+  assert.equal(users.hasAttribute('aria-invalid'),false);
   assert.equal(form.querySelector('button').type,'submit');
  }finally{x.close()}
 });
