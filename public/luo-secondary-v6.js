@@ -24,7 +24,7 @@ function storyComposer(){
   imageUrl=null;lastFile=undefined;
  }
  const render=()=>{
-  text.textContent=body.value.trim().slice(0,500)||'Your story text appears here';
+  text.textContent=body.value.trim().slice(0,2000)||'Your story text appears here';
   const names=[...new Set(users.value.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean))];
   privacy.textContent=names.length?'Private audience: '+names.length+' account'+(names.length===1?'':'s')+' selected':'Only you can see this story until you choose an audience';
   counter.textContent=body.value.length.toLocaleString()+' / 2,000 characters'+(music.value.trim()?' · Music link provided':'');
