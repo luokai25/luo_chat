@@ -168,10 +168,22 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
    const term=search.value.trim().toLocaleLowerCase();
    const matches=contacts.filter(p=>(p.display_name+' '+p.username).toLocaleLowerCase().includes(term));
    const set=mode==='except'?excluded:selected;
-   summary.textContent=set.size+' selected · '+contacts.length+' saved contact'+(contacts.length===1?'':'s');
+   const updateSummary=()=>{summary.textContent=set.size+' selected · '+contacts.length+' saved contact'+(contacts.length===1?'':'s')};
+   updateSummary();
+   const known=new Set(contacts.map(p=>p.username));
+   const outside=mode==='except'?[]:[...set].filter(name=>!known.has(name));
+   if(outside.length){
+    const note=el('div','luo-story-outside-contacts');
+    note.append(el('p','luo-story-inline-note',outside.length+' saved-circle member'+(outside.length===1?' is':'s are')+' not in your saved contacts. They will still receive the Story unless removed.'));
+    for(const name of outside){
+     note.append(btn('Remove @'+name,()=>{set.delete(name);draw()},'luo-story-outside-remove'));
+    }
+    rows.append(note);
+   }
    for(const p of matches)rows.append(contactRow(p,set.has(p.username),checked=>{
-    if(checked&&set.size>=100&&mode!=='except'){notice('Maximum 100 recipients.');draw();return}
-    if(checked)set.add(p.username);else set.delete(p.username);draw();
+    if(checked&&set.size>=100&&mode!=='except'){notice('Maximum 100 recipients.');const control=[...rows.querySelectorAll('.luo-story-contact-row')].find(row=>row.textContent.includes('@'+p.username))?.querySelector('input');if(control)control.checked=false;return}
+    if(checked)set.add(p.username);else set.delete(p.username);
+    updateSummary();
    }));
    if(!matches.length)rows.append(el('p','luo-story-inline-note',term?'No contacts match this search.':'No saved contacts yet. Add friends under People.'));
   }
