@@ -44,3 +44,60 @@ https://developer.paypal.com/subscriptions/webhooks/ .
 7. Until all gates pass, return clear 'billing unavailable' responses instead of accepting or claiming real customer payments.
 
 PayPal merchant dashboard actions are not supported by the currently connected PayPal plugin (which supports payment links and invoices). Account-holder registration of the webhook is necessary. Do not pretend it has been done.
+
+
+## Read-only status recheck (27 October 2026)
+
+**Payments are still not launch-ready.** The production Vercel project has the live
+client ID, live client secret, three recurring plan ID settings and a live
+webhook ID configured, but these *presence checks do not validate them*.
+
+The following operator flags are **absent** in the production environment:
+`LUO_AGENT_PRODUCTION_ENABLED`, `LUO_AGENT_LIVE_SECRET_ROTATED`,
+`LUO_AGENT_BILLING_ENABLED`, `LUO_AGENT_LIVE_CHECKOUT_ENABLED`, and
+`LUO_AGENT_LIVE_WEBHOOK_ENABLED`. Keep them absent until all checks pass.
+`LUO_AGENT_PRODUCTION_DATABASE_READY` is present, which alone never enables
+live checkout.
+
+The latest previously recorded provider-side verification remains
+`PRICE_OR_PLAN_MISMATCH` for all three plans and
+`WEBHOOK_NOT_IN_THIS_REST_APP` for the old special NVP/SOAP webhook ID.
+These are **historical failed checks**, not a new authenticated provider
+preflight today. The connected PayPal transaction search found no recorded
+transactions for 1–27 October 2026.
+
+### Merchant-approved live checkout acceptance sequence
+
+1. Rotate the formerly exposed live REST app client secret in PayPal and update
+   the encrypted production Vercel secret **without putting the secret in chat
+   or GitHub**. Confirm the merchant is eligible to receive USD payments.
+2. In PayPal Developer Dashboard, open the **same Live REST app** represented
+   by `LUO_PAYPAL_LIVE_CLIENT_ID`. Read each live plan via that REST app:
+   ACTIVE, USD, indefinite 1-month regular billing cycle at exactly
+   $12/$24/$30 respectively, correct product binding, no accidental trials or
+   setup charges.
+3. After deploying the verified webhook handler to a reachable HTTPS URL,
+   subscribe within that *same* REST app to subscription lifecycle, sale
+   completed, refunded and reversed events. Replace the old
+   `LUO_PAYPAL_LIVE_WEBHOOK_ID` with the ID that this REST app issues.
+   Never reuse the renamed NVP/SOAP app's webhook ID.
+4. Test isolated Sandbox seller and buyer accounts on a build that points to
+   the staging Supabase database. Confirm checkout approval, successful
+   settled sale, authenticated webhook signature, matching subscription and
+   plan, a single paid agent seat and single-ledger entitlements. Repeat for
+   rejection, cancellation, suspended subscription, renewal, refund and
+   duplicate/delayed webhooks.
+5. Only after sandbox succeeds and the real merchant is verified should the
+   operator approve the production release, deploy it, perform a small
+   **explicitly approved** real payer transaction, and verify the seller's
+   PayPal activity plus the paid agent entitlement record.
+6. Switch the production billing flags on only after a successful deployed
+   production handler, provider plan/webhook preflight and payment acceptance
+   test. The safe launch rule is **no paid customer checkout until payment
+   receipt, account activation, renewal, reversal and support are proven**.
+
+Automated regression test:
+`node --test tests/paypal-live-launch-gates.test.mjs tests/paypal-live-preflight.test.mjs tests/agent-payment-webhooks.test.mjs`.
+This tests local safety gates, not an actual PayPal transfer. The connected
+PayPal connector supports transactions and payment links but not subscriptions
+app administration, webhook configuration or credentials.
