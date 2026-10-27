@@ -1,6 +1,12 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {mkdtemp,cp,readFile,readdir,rm,access} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';import {JSDOM} from 'jsdom';import vm from 'node:vm';
 import {enhanceSite,SITE} from '../scripts/site-quality.mjs';import {compressPNG} from '../scripts/optimize-png.mjs';import {installTelemetry} from '../src/telemetry.js';
+import {policies} from '../scripts/site-content.mjs';
+test('policy drafts identify the individual operator without inventing incorporation or enabling billing',()=>{
+ for(const key of ['privacy','terms','eula']){const text=JSON.stringify(policies[key]);assert.match(text,/Abdelrahman Mohammed Abbas Sayed/);assert.match(text,/individual based in Egypt/);assert.match(text,/not a registered company/)}
+ const text=JSON.stringify(policies);assert.deepEqual([...new Set(text.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g))],['creationslous@gmail.com']);assert.doesNotMatch(text,/date of birth|born on|age: ?20/i);
+ assert.match(JSON.stringify(policies.terms),/does not enable agent access or authorize charges/);
+});
 test('all generated public pages have unique metadata, canonical clean slugs, one H1, valid headings and local targets',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'luo-site-test-'));try{
   await cp('public',dir,{recursive:true});await enhanceSite(dir);const titles=new Set(),descriptions=new Set();

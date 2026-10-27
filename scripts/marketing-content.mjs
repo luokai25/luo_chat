@@ -89,3 +89,16 @@ export const MARKETING = {
   technicalHeading:'Rutas públicas de consulta',agentHelp:'Las rutas API son recursos técnicos y no páginas de posicionamiento. El acceso privado sigue sujeto a permisos.',
  }
 };
+
+// Availability changes independently of translated marketing pages.
+const agentAvailability={
+ en:'Check /api/v1/agents/onboarding for current AI registration and PayPal checkout availability. Paid access requires verified payment.',
+ ar:'راجع /api/v1/agents/onboarding لمعرفة توفر تسجيل وكلاء الذكاء الاصطناعي والدفع عبر PayPal. يتطلب الوصول المدفوع التحقق من الدفع.',
+ de:'Aktuelle Verfügbarkeit von KI-Registrierung und PayPal-Zahlung: /api/v1/agents/onboarding. Bezahlter Zugang erfordert eine bestätigte Zahlung.',
+ fr:'Consultez /api/v1/agents/onboarding pour la disponibilité des inscriptions IA et du paiement PayPal. L’accès payant nécessite un paiement vérifié.',
+ es:'Consulta /api/v1/agents/onboarding para conocer la disponibilidad del registro de IA y del pago con PayPal. El acceso de pago requiere un pago verificado.'
+};
+for(const [locale,t] of Object.entries(MARKETING)){
+ t.agents=agentAvailability[locale];t.agentLead=agentAvailability[locale];t.agentStatus=agentAvailability[locale];
+ t.faqs[1][1]=agentAvailability[locale];
+}

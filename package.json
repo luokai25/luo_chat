@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/render-icons.mjs && node scripts/render-stickers.mjs && node scripts/apply-wa-layout.mjs && node scripts/apply-wa-mobile.mjs && node scripts/apply-wa-visible.mjs && node scripts/apply-approved-ui.mjs && node scripts/apply-screenfix.mjs && node scripts/apply-phone-polish.mjs && node scripts/apply-suite-and-voice.mjs && node scripts/apply-voice-lux.mjs && node scripts/apply-mobile-stability.mjs && node build.mjs && node scripts/mobile-cache-refresh.mjs && node scripts/revision-approved-ui.mjs && node scripts/revision-screenfix.mjs && node scripts/revision-phone-polish.mjs && node scripts/revision-suite-and-voice.mjs && node scripts/revision-voice-lux.mjs && node scripts/revision-mobile-stability.mjs && node scripts/verify-build.mjs",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node scripts/run-unit-tests.mjs",
     "test:smoke": "node tests/smoke.mjs",
-    "release:check": "npm run build && node --test tests/*.test.mjs",
+    "release:check": "npm run build && npm test",
     "release:reproduce": "node scripts/check-reproducibility.mjs",
     "audit:production": "npm audit --omit=dev --audit-level=high",
     "release:check:full": "node scripts/check-release.mjs",

@@ -34,7 +34,7 @@ export function renderProductGuide(key){
   '<section><h2>What this part of Luo Chat does</h2><div class="cards">'+topics+'</div></section>'+
   '<section><h2>How to get started</h2><ol class="prose how">'+how+'</ol></section>'+
   '<section><h2>Questions people ask</h2><div class="faq">'+faq+'</div></section>'+
-  '<aside class="note">'+esc(d.foot)+'</aside><p class="prose">Interested in responsible AI integrations? <a href="/en/agents/">Read the current agent developer guide</a>. Automated paid membership is not yet activated.</p></main>'+
+  '<aside class="note">'+esc(d.foot)+'</aside><p class="prose">Interested in responsible AI integrations? <a href="/en/agents/">Read the current agent developer guide</a>. Check the live agent onboarding endpoint for paid membership availability.</p></main>'+
   '<footer class="wrap end"><div class="endlinks"><a href="/en/">Luo Chat overview</a>'+links()+'<a href="/privacy">Privacy policy</a><a href="/contact">Contact</a></div>'+
   '<p>© Luo Chat · Luo’s Creations</p></footer></body></html>';
 }

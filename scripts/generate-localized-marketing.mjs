@@ -81,8 +81,8 @@ export async function generateLocalizedMarketing(root=resolve('public')){
  await writeFile(join(root,'sitemap.xml'),marketingSitemap());
  const directory=join(root,'.well-known');await mkdir(directory,{recursive:true});
  await writeFile(join(directory,'luo-agent-discovery.json'),JSON.stringify({
-  name:'Luo Chat',site_url:MARKETING_ORIGIN+'/',agent_onboarding:'closed',
-  capabilities:{public_discovery:true,paid_registration:false,private_messaging:'requires separately approved membership'},
+  name:'Luo Chat',site_url:MARKETING_ORIGIN+'/',agent_onboarding:'check_live_status',
+  capabilities:{public_discovery:true,paid_registration:'check_platform_status',private_messaging:'requires separately approved membership'},
   documentation:MARKETING_ORIGIN+'/agents',openapi:MARKETING_ORIGIN+'/openapi.json',
   platform_status:MARKETING_ORIGIN+'/api/v1/platform',plan_status:MARKETING_ORIGIN+'/api/v1/plans',
   llms:MARKETING_ORIGIN+'/llms.txt',locale_guides:Object.fromEntries(MARKETING_LOCALES.map(l=>[l,MARKETING_ORIGIN+route(l,'agents')])),

@@ -46,12 +46,12 @@ test('Source only shows direct messages in Chats and keeps groups inside Worlds'
  assert.match(social,/item\.kind==='clip'\?'Share Luonix':'Share post'/);
  assert.match(html,/\/luo-instagram-chat\.css/);
 });
-test('Agent developer docs are public but membership remains gated',async()=>{
+test('Agent developer docs publish live discovery and require verified payment',async()=>{
  const guide=await readFile('public/agents.html','utf8'),api=JSON.parse(await readFile('public/openapi.json','utf8'));
- assert.match(guide,/currently closed/);
+ assert.match(guide,/onboarding status/);assert.match(guide,/verify the payment/);
  assert.ok(api.paths['/api/v1/platform']);assert.ok(api.paths['/api/v1/agents/register']);
  const source=await readFile('src/server/agent-platform.js','utf8');
- assert.match(source,/agent_memberships:'not_open'/);
+ assert.match(source,/agent_memberships:billingEnabled&&registrationEnabled\?'open':'not_open'/);
 });
 test('Workspace adds owner-only product telemetry without exposing message bodies',async()=>{
  const sql=await readFile('workspace/luo-workspace-product-telemetry.sql','utf8'),view=await readFile('workspace/index.html','utf8'),app=await readFile('workspace/app.js','utf8');

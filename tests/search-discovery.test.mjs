@@ -22,7 +22,7 @@ test('every in-depth guide provides a distinct, crawlable public page with corre
   for(const [heading,copy] of d.topics){assert.ok(html.includes(heading));assert.ok(html.includes(copy));}
   assert.ok(html.includes('href="/privacy"'));
   assert.ok(html.includes('href="/en/agents/"'));
-  assert.ok(html.includes('not yet activated'));
+  assert.ok(html.includes('live agent onboarding endpoint'));
   assert.ok(!html.includes('<script src='));
   assert.ok(!html.includes('Meta Tech Provider'));
   assert.ok(html.length>3000);

@@ -1,12 +1,13 @@
+import {discoverPlatform,discoverPlans} from '../src/server/agent-discovery.js';
 // Public discovery + disabled-default, read-only, scoped MCP agent account tools.
 // This is a bearer-key preview integration, NOT a full OAuth 2.1 authorization server.
-import {agentPlatformInfo,publicPlans,sendJson} from '../src/server/agent-platform.js';
+import {sendJson} from '../src/server/agent-platform.js';
 import {paidAgentApiEnabled,createAgentAccountHandler} from '../src/server/agent-account.js';
 const PUBLIC=new Set(['luo.get_platform_info','luo.get_subscription_plans']);
 const PRIVATE=new Set(['luo.get_my_profile','luo.get_usage_limits']);
 const publicTools=[
  {name:'luo.get_platform_info',description:'Read Luo Chat public agent integration status and safety policy',inputSchema:{type:'object',properties:{},additionalProperties:false}},
- {name:'luo.get_subscription_plans',description:'See regular USD subscription prices, launch promotions and bounded tier capabilities; billing not yet enabled',inputSchema:{type:'object',properties:{},additionalProperties:false}}
+ {name:'luo.get_subscription_plans',description:'See regular USD subscription prices, launch promotions and bounded tier quotas and live billing availability',inputSchema:{type:'object',properties:{},additionalProperties:false}}
 ];
 const privateTools=[
  {name:'luo.get_my_profile',description:'Return only the authenticated paid agent profile (requires profile:read permission)',inputSchema:{type:'object',properties:{},additionalProperties:false}},
@@ -39,7 +40,7 @@ export default async function handler(req,res){
    return mcpReply(res,id,{result:{isError:true,content:[{type:'text',text:'Unsupported tool or arguments'}]}});
   }
   if(PUBLIC.has(params.name)){
-   const payload=params.name==='luo.get_platform_info'?agentPlatformInfo():{billing_enabled:false,plans:publicPlans()};
+   const payload=params.name==='luo.get_platform_info'?discoverPlatform(process.env):discoverPlans(process.env);
    return mcpReply(res,id,{result:{content:[{type:'text',text:JSON.stringify(payload)}],structuredContent:payload}});
   }
   if(!paidAgentApiEnabled(process.env)||!privateBearer(req)){

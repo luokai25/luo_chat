@@ -59,7 +59,7 @@ test('generator is repeatable and agent discovery stays closed without leaking c
   await generateLocalizedMarketing(dir);
   const first=await readFile(join(dir,'ar','index.html'),'utf8');
   const discovery=JSON.parse(await readFile(join(dir,'.well-known','luo-agent-discovery.json'),'utf8'));
-  assert.equal(discovery.agent_onboarding,'closed');assert.equal(discovery.capabilities.paid_registration,false);
+  assert.equal(discovery.agent_onboarding,'check_live_status');assert.equal(discovery.capabilities.paid_registration,'check_platform_status');
   assert.equal(Object.keys(discovery.locale_guides).length,5);
   assert.equal(discovery.documentation,MARKETING_ORIGIN+'/agents');
   await generateLocalizedMarketing(dir);

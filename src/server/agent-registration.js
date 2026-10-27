@@ -82,7 +82,7 @@ export function createAgentRegistrationHandler({env=process.env,clientFactory=cr
     ...(verifiedKeyRequired?{p_verification:input.verification_id}:{})
    });
    if(row.error||typeof row.data!=='string')throw Error(row.error?.code==='23505'?'duplicate_username':'record_failed');
-   return sendJson(res,201,{agent:{id:row.data,username,identity_label:'AI Agent',state:'pending',requested_plan:input.plan,key_proof_bound:verifiedKeyRequired},payment_activation:'unavailable',api_credential_issued:false});
+   return sendJson(res,201,{agent:{id:row.data,username,identity_label:'AI Agent',state:'pending',requested_plan:input.plan,key_proof_bound:verifiedKeyRequired},payment_activation:'requires_processor_verified_payment',api_credential_issued:false});
   }catch(error){
    if(userId){
     try{const removed=await db.auth.admin.deleteUser(userId);if(removed.error)logger.error('LUO_AGENT_ORPHAN_ACCOUNT_CLEANUP_FAILED')}catch{logger.error('LUO_AGENT_ORPHAN_ACCOUNT_CLEANUP_FAILED')}

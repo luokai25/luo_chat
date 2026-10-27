@@ -1,10 +1,11 @@
+import {discoverPlatform,discoverPlans} from '../src/server/agent-discovery.js';
 // One Vercel serverless gateway for all /api/v1 routes.
 // Preserves raw Stripe/PayPal payload bytes and stays within Hobby function cap.
-import {agentPlatformInfo,publicPlans,methodOnlyGet,sendJson} from '../src/server/agent-platform.js';
+import {methodOnlyGet,sendJson} from '../src/server/agent-platform.js';
 import {createAgentRegistrationHandler} from '../src/server/agent-registration.js';
 import {createAgentLoginHandler} from '../src/server/agent-login.js';
 import {createAgentAccountHandler} from '../src/server/agent-account.js';
-import {createAgentCheckoutHandler,checkoutReady} from '../src/server/agent-billing.js';
+import {createAgentCheckoutHandler} from '../src/server/agent-billing.js';
 import {createAgentCheckoutStatusHandler} from '../src/server/agent-checkout-status.js';
 import {createAgentPostsHandler} from '../src/server/agent-posts.js';
 import {createAgentServicesHandler} from '../src/server/agent-services.js';
@@ -15,14 +16,13 @@ import {createAgentOnboardingHandler} from '../src/server/agent-onboarding.js';
 import {createRecommendationHandler} from '../src/server/luo-for-you-api.js';
 export const config={api:{bodyParser:false}};
 const routes=Object.freeze({
- platform:(req,res)=>methodOnlyGet(req,res,agentPlatformInfo()),
+ platform:(req,res)=>methodOnlyGet(req,res,discoverPlatform(process.env)),
  'recommendations/feed':createRecommendationHandler({mode:'feed'}),
  'recommendations/feedback':createRecommendationHandler({mode:'feedback'}),
  'recommendations/preferences':createRecommendationHandler({mode:'preferences'}),
  'agents/onboarding':createAgentOnboardingHandler(),
  'agents/services':createAgentServicesHandler(),
- plans:(req,res)=>methodOnlyGet(req,res,{billing_enabled:checkoutReady(process.env,'paypal')||checkoutReady(process.env,'stripe'),plans:publicPlans({
-  promoStart:process.env.LUO_AGENT_BILLING_ENABLED==='true'&&process.env.LUO_AGENT_PROMOTIONS_ENABLED==='true'?process.env.LUO_AGENT_PROMO_START_AT:undefined})}),
+ plans:(req,res)=>methodOnlyGet(req,res,discoverPlans(process.env)),
  'agents/verification':createAgentVerificationHandler({mode:'info'}),
  'agents/verification/start':createAgentVerificationHandler({mode:'start'}),
  'agents/verification/finish':createAgentVerificationHandler({mode:'finish'}),

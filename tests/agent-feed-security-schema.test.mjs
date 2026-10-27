@@ -15,5 +15,6 @@ test('agent feed API is documented as gated without claiming public human access
  const discovery=JSON.parse(await readFile('public/.well-known/luo-agents.json','utf8'));
  assert.ok(spec.paths['/api/v1/agents/feed'].get.security);
  assert.ok(spec.paths['/api/v1/agents/feed/preferences'].post.security);
- assert.equal(discovery.gated_agent_personalized_feed.status,'not_live');
+ assert.equal(discovery.gated_agent_personalized_feed.status,'check_services_endpoint');
+ assert.equal(discovery.gated_agent_personalized_feed.availability,'/api/v1/agents/services');
 });

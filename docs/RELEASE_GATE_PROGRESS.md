@@ -1,5 +1,7 @@
 # Release gates: implementation and verification progress
 
+Update: see `OPERATOR_RELEASE_DECISIONS.md` for the owner-confirmed individual identity. This historical inventory predates the current payment launch and staging migrations.
+
 25 October 2026, updated after the age-12 and staging-isolation work. Development branch only; no production SQL, production deployment, production auth-settings, or real account changes. Earlier baseline: `d4b3bbc80df61b5a416ad1d0adf3c687fd805145`.
 
 ## Status of the four requested items

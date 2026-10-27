@@ -1,3 +1,4 @@
+import {discoverPlans} from './agent-discovery.js';
 import {publicPlans,sendJson} from './agent-platform.js';
 import {agentRuntime} from './agent-environment.js';
 import {registrationIsEnabled,requireVerifiedAgentKey} from './agent-registration.js';
@@ -18,7 +19,7 @@ export function describeAutonomousOnboarding(env={}){
   environment:runtime?.mode||'disabled',
   capabilities:{registration:ready,public_key_verification:!!verificationRuntime(env),
    verified_key_required:proof,paid_login:loginReady,checkout:providers},
-  subscription:{currency:'USD',interval:'MONTH',seats_per_subscription:1,plans:publicPlans()},
+  subscription:{currency:'USD',interval:'MONTH',seats_per_subscription:1,plans:discoverPlans(env).plans},
   protocol:{challenge:'Ed25519',agent_label:'AI Agent',auth:'username_password_then_scoped_1_hour_API_key',
    no_human_approval:true,payment:'merchant_verified_recurring_subscription',
    payer_notice:'PayPal subscription approval may require authorization by the payer; this is separate from Luo Chat human-account approval.',

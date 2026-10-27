@@ -121,6 +121,7 @@ export function paypalPaidEvidence({intent,subscription,transactions,planId}){
  paidThrough:new Date(next).toISOString()};
 }
 async function handlePayPal(event,db,env,fetcher){
+ if(!['BILLING.SUBSCRIPTION.ACTIVATED','BILLING.SUBSCRIPTION.UPDATED','BILLING.SUBSCRIPTION.CANCELLED','BILLING.SUBSCRIPTION.SUSPENDED','BILLING.SUBSCRIPTION.EXPIRED','BILLING.SUBSCRIPTION.PAYMENT.FAILED','PAYMENT.SALE.COMPLETED','PAYMENT.SALE.REFUNDED','PAYMENT.SALE.REVERSED'].includes(event.event_type))return 'ignored';
  const subId=paypalSubscriptionId(event);
  if(typeof subId!=='string'||!/^I-[A-Za-z0-9]+$/.test(subId))return 'ignored';
  const access=await paypalAccessToken(env,fetcher);
@@ -132,8 +133,11 @@ async function handlePayPal(event,db,env,fetcher){
  if(record.error)throw Error('PAYPAL_SNAPSHOT_UNAVAILABLE');
  const intent=record.data;
  if(!intent||intent.reference!==sub.id)return 'ignored';
- if(['CANCELLED','SUSPENDED','EXPIRED'].includes(sub.status)){
-  const state=sub.status==='SUSPENDED'?'paused':'canceled';
+ // A verified refund/reversal must never re-grant access from an old sale.
+ // Confirm the subscription belongs to this checkout before removing access.
+ const reversed=['PAYMENT.SALE.REFUNDED','PAYMENT.SALE.REVERSED'].includes(event.event_type);
+ if(reversed||['CANCELLED','SUSPENDED','EXPIRED'].includes(sub.status)){
+  const state=reversed||sub.status==='SUSPENDED'?'paused':'canceled';
   const applied=await db.rpc('luo_agent_suspend_paid_identity',{p_provider:'paypal',p_subscription:sub.id,p_event:event.id,p_state:state});
   if(applied.error)throw Error('PAYPAL_SUSPENSION_UNAVAILABLE');return applied.data;
  }
@@ -167,6 +171,10 @@ export function createPaymentWebhookHandler({provider='stripe',env=process.env,f
   }else{
    try{event=JSON.parse(raw.toString('utf8'))}catch{return sendJson(res,400,{error:{code:'INVALID_WEBHOOK_JSON'}})}
    if(!event||typeof event!=='object'||Array.isArray(event)||typeof event.id!=='string')return sendJson(res,400,{error:{code:'INVALID_WEBHOOK_EVENT'}});
+   const fields=['paypal-auth-algo','paypal-cert-url','paypal-transmission-id','paypal-transmission-sig','paypal-transmission-time'];
+   if(fields.some(k=>typeof req.headers?.[k]!=='string'||!req.headers[k].trim()||req.headers[k].length>4096))
+    return sendJson(res,400,{error:{code:'INVALID_WEBHOOK_SIGNATURE'}});
+   try{
    // Confirm the event is registered under the same app used to obtain this token.
    // A renamed NVP/SOAP special-app webhook cannot satisfy this check.
    if(agentRuntime(env).mode==='live'){
@@ -181,6 +189,7 @@ export function createPaymentWebhookHandler({provider='stripe',env=process.env,f
      transmission_time:req.headers?.['paypal-transmission-time'],webhook_id:agentRuntime(env).mode==='live'?env.LUO_PAYPAL_LIVE_WEBHOOK_ID:env.LUO_PAYPAL_WEBHOOK_ID,webhook_event:event})
    });
    if(verification.verification_status!=='SUCCESS')return sendJson(res,400,{error:{code:'INVALID_WEBHOOK_SIGNATURE'}});
+   }catch{logger.error('LUO_PAYPAL_VERIFICATION_UNAVAILABLE');return sendJson(res,503,{error:{code:'VERIFICATION_RETRY'}})}
   }
   try{
    const runtime=agentRuntime(env);

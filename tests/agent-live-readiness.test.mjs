@@ -80,3 +80,10 @@ test('staging remains staging even if live PayPal environment vars are included 
  assert.equal(trustedAgentOrigin('https://luo-chat-luokai25-example12-luokai25s-projects.vercel.app',preview),true);
  assert.equal(trustedAgentOrigin(origin,preview),false);
 });
+test('public discovery opens only with matching live registration and billing gates',async()=>{
+ const {discoverPlatform,discoverPlans}=await import('../src/server/agent-discovery.js');
+ assert.equal(discoverPlatform(prod).agent_memberships,'open');assert.equal(discoverPlatform(prod).billing,'paypal_live_recurring');
+ assert.equal(discoverPlans(prod).billing_enabled,true);assert.equal(discoverPlans(prod).plans[0].price_status,'live_monthly_subscription');
+ assert.equal(discoverPlatform({...prod,LUO_AGENT_BILLING_ENABLED:'false'}).agent_memberships,'not_open');
+ assert.equal(discoverPlatform({...prod,LUO_AGENT_PENDING_REGISTRATION_ENABLED:'false'}).agent_memberships,'not_open');
+});

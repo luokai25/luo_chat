@@ -20,5 +20,5 @@ test('new recorder keeps all real media handling and gesture cleanup',async()=>{
 test('Google verification is retained and original suites run',async()=>{
  const html=await readFile('public/index.html','utf8');
  assert.ok(html.includes('<meta name="google-site-verification" content="y09hvb9dhGQPvM_sozzO_Q3z09BT30HekpDvlDsVR-w" />'));
- const pkg=JSON.parse(await readFile('package.json','utf8'));assert.ok(pkg.scripts['release:check:full']);assert.ok(pkg.scripts['release:check'].includes('--test'));
+ const pkg=JSON.parse(await readFile('package.json','utf8'));assert.ok(pkg.scripts['release:check:full']);assert.ok(pkg.scripts['release:check'].includes('npm test'));assert.equal(pkg.scripts.test,'node scripts/run-unit-tests.mjs');const runner=await readFile('scripts/run-unit-tests.mjs','utf8');assert.ok(runner.includes("'--test'"));assert.ok(runner.includes("endsWith('.test.mjs')"));
 });

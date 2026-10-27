@@ -55,3 +55,41 @@ test('PayPal evidence requires active subscription, matching plan, settled USD t
  assert.equal(paypalPaidEvidence({...valid,subscription:{...subscription,status:'APPROVAL_PENDING'}}),null);
  assert.equal(paypalPaidEvidence({...valid,planId:'P-OTHER'}),null);
 });
+const ppEnv={...env,LUO_PAYPAL_ENV:'sandbox',LUO_AGENT_PAYPAL_WEBHOOK_ENABLED:'true',LUO_PAYPAL_WEBHOOK_ID:'test_webhook_id_123',LUO_PAYPAL_CLIENT_ID:'sandbox_client_'.padEnd(45,'c'),LUO_PAYPAL_CLIENT_SECRET:'sandbox_secret_'.padEnd(45,'s'),LUO_PAYPAL_PLAN_STANDARD_REGULAR:'P-STANDARD123456',LUO_PAYPAL_PLAN_PRO_REGULAR:'P-PRO123456789',LUO_PAYPAL_PLAN_MAXIMUM_REGULAR:'P-MAX123456789'};
+const ppHeaders=Object.fromEntries(['paypal-auth-algo','paypal-cert-url','paypal-transmission-id','paypal-transmission-sig','paypal-transmission-time'].map(k=>[k,'fixture']));
+const ppIntent={...intent,reference:'I-ABCDEF12345',promo:false,first_invoice_cents:1200};
+const ppSub={id:ppIntent.reference,custom_id:intent.id,status:'ACTIVE',plan_id:ppEnv.LUO_PAYPAL_PLAN_STANDARD_REGULAR,subscriber:{payer_id:'PAYER12345'},billing_info:{last_payment:{time:new Date().toISOString()},next_billing_time:new Date(Date.now()+30*86400000).toISOString()}};
+function ppFixture({transactions,status='ACTIVE',snapshot=ppIntent,verificationError=false}={}){
+ const calls=[];
+ const db={rpc:async(name,args)=>{calls.push([name,args]);return {data:name==='luo_agent_checkout_snapshot'?snapshot:name==='luo_agent_suspend_paid_identity'?'paused':'active'}}};
+ const fetcher=async(url)=>{
+  calls.push(['fetch',url]);
+  if(verificationError)throw Error('provider down');
+  return {ok:true,json:async()=>url.endsWith('/token')?{access_token:'fixture_token_'.padEnd(40,'x')}:url.includes('verify-webhook-signature')?{verification_status:'SUCCESS'}:url.includes('/transactions?')?{transactions:transactions??[{id:'TX1234',status:'COMPLETED',time:ppSub.billing_info.last_payment.time,amount:{value:'12.00',currency_code:'USD'}}]}:{...ppSub,status}};
+ };
+ return {calls,handler:createPaymentWebhookHandler({provider:'paypal',env:ppEnv,clientFactory:()=>db,fetcher,logger:{error(){}}})};
+}
+async function ppDeliver(handler,type,headers=ppHeaders){const out=res();await handler({method:'POST',headers,rawBody:Buffer.from(JSON.stringify({id:'WH-EVENT12345',event_type:type,resource:{id:ppSub.id,billing_agreement_id:ppSub.id}}))},out);return out}
+test('PayPal missing verification headers make no provider or database requests',async()=>{
+ const {handler,calls}=ppFixture();const out=await ppDeliver(handler,'PAYMENT.SALE.COMPLETED',{});assert.equal(out.statusCode,400);assert.deepEqual(calls,[]);
+});
+test('PayPal verification outages request retry and never grant access',async()=>{
+ const {handler,calls}=ppFixture({verificationError:true});const out=await ppDeliver(handler,'PAYMENT.SALE.COMPLETED');assert.equal(out.statusCode,503);assert.equal(out.body.error.code,'VERIFICATION_RETRY');assert.equal(calls.some(x=>x[0].startsWith('luo_agent')),false);
+});
+test('authenticated refunds and reversals suspend the matching identity even while subscription remains ACTIVE',async()=>{
+ for(const type of ['PAYMENT.SALE.REFUNDED','PAYMENT.SALE.REVERSED']){
+  const {handler,calls}=ppFixture();const out=await ppDeliver(handler,type);
+  assert.equal(out.statusCode,200);assert.equal(out.body.activation,false);
+  assert.equal(calls.filter(x=>x[0]==='luo_agent_suspend_paid_identity').length,1);
+  assert.equal(calls.find(x=>x[0]==='luo_agent_suspend_paid_identity')[1].p_state,'paused');
+  assert.equal(calls.some(x=>x[0]==='luo_agent_record_reconciled_checkout'),false);
+ }
+});
+test('PayPal events cannot suspend an unrelated checkout or activate refunded transactions',async()=>{
+ const unrelated=ppFixture({snapshot:{...ppIntent,reference:'I-UNRELATED123'}});await ppDeliver(unrelated.handler,'PAYMENT.SALE.REFUNDED');assert.equal(unrelated.calls.some(x=>x[0]==='luo_agent_suspend_paid_identity'),false);
+ const refunded=ppFixture({transactions:[{status:'REFUNDED',time:ppSub.billing_info.last_payment.time,amount:{value:'12.00',currency_code:'USD'}}]});const out=await ppDeliver(refunded.handler,'PAYMENT.SALE.COMPLETED');assert.equal(out.body.activation,false);assert.equal(refunded.calls.some(x=>x[0]==='luo_agent_record_reconciled_checkout'),false);
+});
+test('PayPal settled payment alone activates and cancellation removes access',async()=>{
+ const paid=ppFixture();const out=await ppDeliver(paid.handler,'PAYMENT.SALE.COMPLETED');assert.equal(out.body.activation,true);assert.equal(paid.calls.find(x=>x[0]==='luo_agent_record_reconciled_checkout')[1].p_amount,1200);
+ const canceled=ppFixture({status:'CANCELLED'});const ended=await ppDeliver(canceled.handler,'BILLING.SUBSCRIPTION.CANCELLED');assert.equal(ended.body.activation,false);assert.equal(canceled.calls.find(x=>x[0]==='luo_agent_suspend_paid_identity')[1].p_state,'canceled');
+});

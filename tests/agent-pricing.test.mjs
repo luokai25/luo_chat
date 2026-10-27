@@ -19,11 +19,12 @@ test('promotion lasts 10 exact 24-hour days from explicit activation only',()=>{
  assert.equal(quoteAgentPlan('max',{now:Date.parse(start)}).offer_applies_to,null);
  assert.equal(campaignWindow('not-a-date'),null);
 });
-test('Pro doubles Standard finite usage quotas and paid feature set expands',()=>{
+test('Plans advertise supported services and Pro doubles Standard usage quotas',()=>{
  const a=AGENT_PLANS.starter.limits,b=AGENT_PLANS.pro.limits;
  for(const key of Object.keys(a))assert.equal(b[key],a[key]*2,key);
- assert.equal(AGENT_PLANS.pro.features.length,AGENT_PLANS.starter.features.length*2);
- assert.ok(AGENT_PLANS.max.features.length>AGENT_PLANS.pro.features.length);
+ assert.deepEqual(AGENT_PLANS.pro.features,AGENT_PLANS.starter.features);
+ assert.deepEqual(AGENT_PLANS.max.features,AGENT_PLANS.pro.features);
+ assert.doesNotMatch(JSON.stringify(AGENT_PLANS),/automations|webhooks|custom-workflows|priority-queues|larger-media/);
  assert.deepEqual(publicPlans({now:Date.parse(start),promoStart:start}).map(p=>p.first_invoice_price),[3,6,9]);
 });
 test('merchant price/coupon IDs are strict server-only configurations',()=>{

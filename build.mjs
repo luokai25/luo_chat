@@ -17,6 +17,8 @@ if(process.env.VERCEL_ENV==='preview'&&['feature/reels-immersive-20261025','rele
 // Optional read-only PayPal merchant preflight. Never creates a payment.
 if(process.env.VERCEL_ENV==='production'&&process.env.LUO_AGENT_LIVE_PREFLIGHT_REQUIRED==='true')
  await import('./scripts/check-agent-live-paypal.mjs');
+if(process.env.VERCEL_ENV==='production'&&process.env.LUO_AGENT_LAUNCH_SMOKE_REQUIRED==='true')
+ await import('./scripts/check-agent-launch-smoke.mjs');
 const release=JSON.parse(await readFile('package.json','utf8')).version;
 if(!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(release))throw Error('A valid release version is required.');
 await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});await cp('public','dist',{recursive:true});
