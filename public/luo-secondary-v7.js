@@ -18,12 +18,15 @@ function shortcutHelp(){
  const search=make('input','luo-v7-shortcut-search');search.type='search';
  search.placeholder='Search keyboard shortcuts';search.setAttribute('aria-label','Filter keyboard shortcuts');
  const status=make('p','luo-v7-shortcut-status');status.setAttribute('aria-live','polite');
- list.before(search,status);
+ const empty=make('p','luo-v7-shortcut-empty','No matching shortcuts. Try a different search.');
+ empty.hidden=true;empty.setAttribute('role','status');
+ list.before(search,status);list.after(empty);
  const rows=[...list.querySelectorAll(':scope > div')];
  function render(){
   const typed=search.value.trim().toLocaleLowerCase();const term=typed==='escape'?'esc':typed;let shown=0;
   for(const row of rows){row.hidden=!!term&&![...row.querySelectorAll('dt,dd')].some(field=>field.textContent.toLocaleLowerCase().includes(term));if(!row.hidden)shown++;}
   status.textContent=shown+' keyboard shortcut'+(shown===1?'':'s')+' available';
+  empty.hidden=shown!==0;
  }
  search.addEventListener('input',render);
  search.addEventListener('keydown',event=>{
