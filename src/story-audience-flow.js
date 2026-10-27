@@ -3,6 +3,7 @@
 export function installStoryAudienceFlow({win,db,$,getUser,note}){
  const d=win.document,form=$('storyForm'),dialog=$('storyComposer');
  if(!form||!dialog)return {reset(){},signedOut(){},onCirclesLoaded(){}};
+ dialog.classList.add('luo-v9-story');
  const el=(tag,cls,text)=>{const n=d.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
  const btn=(label,action,cls='')=>{const n=el('button',cls,label);n.type='button';n.addEventListener('click',action);return n};
  const audience=$('storyAudience'),circle=$('storyCircle');
@@ -80,7 +81,7 @@ export function installStoryAudienceFlow({win,db,$,getUser,note}){
  function open(name){
   if(!current())return;
   if(name==='public'){notice('Public Stories require a server privacy upgrade and are not available yet.');return}
-  if(name==='editor'){if(page!=='editor'&&!apply())return;go('editor');return}
+  if(name==='editor'){go('editor');sync(true);return}
   if(name==='contacts')cameFrom='audience';
   go(name);
   if(['audience','contacts','close'].includes(name))void ensureContacts();
