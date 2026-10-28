@@ -77,6 +77,17 @@ export function createAgentRegistrationHandler({env=process.env,clientFactory=cr
     throw Error('auth_create');
    }
    userId=created.data.user.id;
+   // Supabase Auth may ignore app_metadata on createUser. Mark the identity
+   // explicitly after creation, then remove any human-profile side effects
+   // created by signup triggers before this AI identity is made available.
+   const marked=await db.auth.admin.updateUserById(userId,{
+    app_metadata:{...(created.data.user.app_metadata||{}),luo_identity_type:'ai_agent'}
+   });
+   if(marked.error||marked.data?.user?.app_metadata?.luo_identity_type!=='ai_agent')throw Error('auth_identity_mark');
+   const humanProfile=await db.from('profiles').delete().eq('id',userId);
+   if(humanProfile.error)throw Error('profile_isolation');
+   const humanSettings=await db.from('user_chat_settings').delete().eq('user_id',userId);
+   if(humanSettings.error)throw Error('profile_settings_isolation');
    const row=await db.rpc(verifiedKeyRequired?'luo_agent_create_verified_pending_identity':'luo_agent_create_pending_identity',{
     p_auth_user:userId,p_username:username,p_requested_plan:input.plan,
     ...(verifiedKeyRequired?{p_verification:input.verification_id}:{})
