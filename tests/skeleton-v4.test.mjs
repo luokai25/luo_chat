@@ -132,7 +132,7 @@ test('private profile loading and comment loading never invent user content',asy
   const status=x.d.createElement('p');status.id='personStatus';status.textContent='Loading profile…';
   const content=x.d.createElement('div');content.id='personBody';
   dialog.append(status,content);
-  await sleep(170);
+  await until(()=>content.querySelector('.sk-profile-card'));
   assert.ok(content.querySelector('.sk-profile-card'));
   assert.equal(content.querySelectorAll('h3,button,article').length,0);
   status.textContent='This profile is unavailable.';
