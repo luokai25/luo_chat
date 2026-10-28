@@ -140,7 +140,7 @@ test('private profile loading and comment loading never invent user content',asy
   assert.equal(content.querySelector('.luo-skeleton-stage'),null);
   const comments=add(x.d,'dialog','luo-feed-comments');comments.setAttribute('open','');
   comments.innerHTML='<div class="luo-feed-comment-list"></div><p class="luo-feed-feedback">Loading comments…</p>';
-  await sleep(170);
+  await until(()=>comments.querySelectorAll('.sk-comment-row').length===4);
   assert.equal(comments.querySelectorAll('.sk-comment-row').length,4);
   comments.querySelector('.luo-feed-feedback').textContent='No comments yet';
   await sleep(225);
