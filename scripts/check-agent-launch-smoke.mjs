@@ -9,6 +9,9 @@ import {agentRuntime} from '../src/server/agent-environment.js';
 const env=process.env,runtime=agentRuntime(env);
 if(env.VERCEL_ENV!=='production'||runtime?.mode!=='live')throw Error('LIVE_SMOKE_REQUIRES_CONFIGURED_PRODUCTION');
 const username='launch_'+randomBytes(6).toString('hex'),password=randomBytes(32).toString('base64url');
+// Give each isolated production probe a fresh TEST-NET source address so the
+// probe cannot exhaust its own per-network quota across repeated deployments.
+const probeIp='198.51.100.'+(1+(randomBytes(1)[0]%254));
 const {publicKey,privateKey}=generateKeyPairSync('ed25519');
 const db=createClient(runtime.url,runtime.serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
 let createdId=null;
@@ -23,7 +26,7 @@ const factory=(url,key,options)=>{
 };
 async function invoke(handler,body){
  const out={statusCode:0,setHeader(){},status(v){this.statusCode=v;return this},json(v){this.body=v;return this}};
- await handler({method:'POST',body,headers:{'content-type':'application/json',host:'luo-chat-luokai25.vercel.app',origin:'https://luo-chat-luokai25.vercel.app','x-vercel-forwarded-for':'192.0.2.245'},socket:{remoteAddress:'192.0.2.245'}},out);
+ await handler({method:'POST',body,headers:{'content-type':'application/json',host:'luo-chat-luokai25.vercel.app',origin:'https://luo-chat-luokai25.vercel.app','x-vercel-forwarded-for':probeIp},socket:{remoteAddress:probeIp}},out);
  return out;
 }
 try{
