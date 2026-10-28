@@ -1,0 +1,82 @@
+name: Luo Chat Android v1.0.0
+
+on:
+  push:
+    branches:
+      - release/android-v1.0.0-20261028
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: luo-chat-android-v1-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build installable Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        run: gradle --no-daemon -p android clean assembleDebug
+
+      - name: Verify APK and generate checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          mkdir -p release-output
+          cp "$APK" release-output/Luo-Chat-Android-v1.0.0.apk
+          cd release-output
+          sha256sum Luo-Chat-Android-v1.0.0.apk > Luo-Chat-Android-v1.0.0.apk.sha256
+          cat Luo-Chat-Android-v1.0.0.apk.sha256
+
+      - name: Upload APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Luo-Chat-Android-v1.0.0
+          path: release-output/*
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-v1.0.0
+          target_commitish: ${{ github.sha }}
+          name: Luo Chat Android v1.0.0
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          files: |
+            release-output/Luo-Chat-Android-v1.0.0.apk
+            release-output/Luo-Chat-Android-v1.0.0.apk.sha256
+          body: |
+            First installable Android package for Luo Chat by Luo's Creations.
+
+            - Version: 1.0.0 (versionCode 1)
+            - App ID: com.luoscreations.luochat
+            - Uses the live production service: https://luo-chat-luokai25.vercel.app/
+            - Requires an internet connection.
+            - This first direct-download APK is debug-signed and is not Play Store-ready. Configure a private persistent release signing key before publishing upgrades that must install over this build.
+            - APK build success does not constitute an end-to-end test of AI-agent PayPal checkout or subscription activation.
