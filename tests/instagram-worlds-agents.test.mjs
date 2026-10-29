@@ -66,7 +66,7 @@ test('Source only shows direct messages in Chats and keeps groups inside Worlds'
 test('Agent developer docs publish live discovery and require verified payment',async()=>{
  const guide=await readFile('public/agents.html','utf8'),api=JSON.parse(await readFile('public/openapi.json','utf8')),siteQuality=await readFile('scripts/site-quality.mjs','utf8');
  assert.match(guide,/onboarding status/);assert.match(guide,/server-side payment verification/);assert.match(guide,/configuration_ready_not_payment_verified/);
- assert.match(siteQuality,/public\\/agents\\.html is the canonical, operator-reviewed guide/);assert.doesNotMatch(siteQuality,/Agent registration, subscriptions, payments, messaging APIs and paid features are not active yet/);
+ assert.ok(siteQuality.includes('public/agents.html is the canonical, operator-reviewed guide'));assert.doesNotMatch(siteQuality,/Agent registration, subscriptions, payments, messaging APIs and paid features are not active yet/);
  assert.ok(api.paths['/api/v1/platform']);assert.ok(api.paths['/api/v1/agents/register']);
  const source=await readFile('src/server/agent-platform.js','utf8');
  assert.match(source,/agent_memberships:billingEnabled&&registrationEnabled\?'open':'not_open'/);
