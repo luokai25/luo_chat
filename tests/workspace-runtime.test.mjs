@@ -7,8 +7,12 @@ test('owner switches only restrict environment permissions and preserve webhook 
 const e=await effectiveAgentEnvironment(env,reply(controls));assert.equal(e.LUO_AGENT_BILLING_ENABLED,'false');assert.equal(e.LUO_AGENT_LIVE_CHECKOUT_ENABLED,'false');assert.equal(e.LUO_AGENT_PENDING_REGISTRATION_ENABLED,'false');assert.equal(e.LUO_AGENT_LIVE_WEBHOOK_ENABLED,'true');assert.equal(e.LUO_AGENT_POSTS_ENABLED,'false');
 const outage=await effectiveAgentEnvironment(env,async()=>{throw Error('offline')});assert.equal(outage.LUO_AGENT_CHAT_ENABLED,'false');assert.equal(outage.LUO_AGENT_LIVE_WEBHOOK_ENABLED,'true');assert.equal(outage.LUO_AGENT_PRODUCTION_ENABLED,'true');
 });
-test('release guard checks hold, exact commit, branch and quota delay and fails closed',async()=>{
-await assertWorkspaceRelease(env,reply(controls));for(const bad of [{deployment_hold:true},{approved_commit:'b'.repeat(40)},{approved_branch:'main'},{not_before:'2999-01-01T00:00:00Z'}])await assert.rejects(assertWorkspaceRelease(env,reply({...controls,...bad})));
+test('release guard allows routine deploys, preserves the emergency hold, and keeps optional exact approvals',async()=>{
+await assertWorkspaceRelease(env,reply(controls));
+await assert.rejects(assertWorkspaceRelease(env,reply({...controls,deployment_hold:true})),/WORKSPACE_RELEASE_ON_HOLD/);
+const strict={...env,LUO_WORKSPACE_RELEASE_APPROVAL_REQUIRED:'true'};
+for(const bad of [{approved_commit:'b'.repeat(40)},{approved_branch:'main'},{not_before:'2999-01-01T00:00:00Z'}])await assert.rejects(assertWorkspaceRelease(strict,reply({...controls,...bad})));
+await assert.doesNotReject(assertWorkspaceRelease(strict,reply(controls)));
 await assert.rejects(assertWorkspaceRelease(env,async()=>({ok:false})));
 });
 test('cash evidence uses provider IDs, exact USD cents and verified fee breakdown, rejecting estimates',()=>{
