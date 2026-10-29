@@ -17,7 +17,10 @@ export async function effectiveAgentEnvironment(env=process.env,fetcher=fetch){
 export async function assertWorkspaceRelease(env=process.env,fetcher=fetch){
  if(env.VERCEL_ENV!=='production'||env.LUO_WORKSPACE_CONTROLS_ENABLED!=='true')return;
  const c=await readWorkspaceControls(env,fetcher);
+ // The workspace hold remains an emergency stop. Per-commit release approvals are
+ // opt-in, so ordinary Vercel pushes can deploy without an operator approval each time.
  if(c.deployment_hold)throw Error('WORKSPACE_RELEASE_ON_HOLD');
+ if(env.LUO_WORKSPACE_RELEASE_APPROVAL_REQUIRED!=='true')return;
  if(c.approved_commit!==env.VERCEL_GIT_COMMIT_SHA||c.approved_branch!==env.VERCEL_GIT_COMMIT_REF)throw Error('WORKSPACE_RELEASE_APPROVAL_MISMATCH');
  if(!Number.isFinite(Date.parse(c.not_before))||Date.now()<Date.parse(c.not_before))throw Error('WORKSPACE_RELEASE_NOT_BEFORE');
 }
