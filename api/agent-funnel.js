@@ -1,7 +1,7 @@
 import {createHmac,randomUUID} from 'node:crypto';
 
 const ALLOWED = new Set([
- 'agent_guide_view','verification_page_view','verification_start_clicked',
+ 'agent_guide_view','verification_page_view','registration_started','verification_start_clicked',
  'verification_finish_submitted','registration_page_view','registration_submitted',
  'checkout_page_view','checkout_attempted','checkout_created','checkout_resumed',
  'checkout_status_checked','checkout_paid_confirmed','checkout_canceled'
