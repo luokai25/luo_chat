@@ -1,6 +1,6 @@
 (()=>{'use strict';
  const KEY='luo-agent-funnel-session-v1';
- const path=location.pathname.replace(/\\/$/,'')||'/';
+ const path=location.pathname.replace(/\/$/,'')||'/';
  const routes=new Set(['/agents','/agent-verification','/agent-checkout']);
  const events=new Set(['agent_guide_view','verification_page_view','registration_started','verification_start_clicked','verification_finish_submitted','registration_page_view','registration_submitted','checkout_page_view','checkout_attempted','checkout_created','checkout_resumed','checkout_status_checked','checkout_paid_confirmed','checkout_canceled']);
  if(!routes.has(path)||!events.size||navigator.doNotTrack==='1'||window.doNotTrack==='1'||navigator.globalPrivacyControl===true)return;
