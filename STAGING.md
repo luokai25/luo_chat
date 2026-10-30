@@ -2,7 +2,9 @@
 
 The Vercel project provides protected preview deployments, and production builds run the complete automated release suite. GitHub Actions now defines an independent build/test, credential scan, production dependency audit, reproducibility check and synthetic two-peer browser call check. CI runs the browser fixtures in the runner-provided Chrome (local fixtures default to Playwright Chromium). CI uses read-only repository permissions, pinned action commits, no deployment credentials, and no hosted production test accounts.
 
-An isolated Supabase staging backend is NOT provisioned. A branch request on 2026-10-22 returned `PaymentRequiredException: Branching is supported only on the Pro plan or above`. No plan upgrade or additional project was purchased. A protected frontend preview still points at the current configured backend; it must not be treated as an isolated database.
+`luo-chat-staging` is now a separate active Supabase project (created 2026-10-25, eu-central-1). As checked on 2026-10-30, its `luo_billing` and `luo_agent_verify` schemas exist and the agent accounts, checkout intents, subscriptions, payment events and verification requests are empty. This is isolated from the production project.
+
+The Vercel preview branch is not yet authorized to use this backend: the reviewed branch-specific environment currently has only `LUO_SUPABASE_URL` and `LUO_SUPABASE_KEY`, and the latter is explicitly a publishable/anon key. The fail-closed agent runtime requires `LUO_AGENT_STAGING_URL`, `LUO_AGENT_STAGING_SERVICE_ROLE_KEY`, and `LUO_AGENT_STAGING_PUBLISHABLE_KEY`, plus an explicit branch allowlist. Do not alias the publishable key to a service-role variable or fall back to production credentials. Add the staging-only service-role secret through Vercel's environment settings, then add the reviewed test branch to the allowlist before running hosted agent registration or payment tests. No plan upgrade or additional paid service is required for this existing project.
 
 ## Synthetic SQL lab
 
