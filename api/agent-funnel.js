@@ -14,7 +14,7 @@ export function createAgentFunnelHandler({env=process.env,fetcher=fetch,now=Date
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
   if(req.method!=='POST'){res.setHeader('Allow','POST');return json(res,405,{error:'Method not allowed'})}
   if(req.headers?.origin!=='https://luo-chat-luokai25.vercel.app')return json(res,403,{error:'Origin not allowed'});
-  if(!/^application\\/json(?:\\s*;|$)/i.test(req.headers?.['content-type']||''))return json(res,415,{error:'JSON required'});
+  if(!/^application\/json(?:\s*;|$)/i.test(req.headers?.['content-type']||''))return json(res,415,{error:'JSON required'});
   let b=req.body;
   try{if(typeof b==='string'){if(Buffer.byteLength(b)>1024)throw Error();b=JSON.parse(b)}}catch{return json(res,400,{error:'Invalid payload'})}
   if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).some(k=>!['event','session_id','path','campaign'].includes(k))
