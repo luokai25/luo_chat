@@ -11,7 +11,7 @@ const STEPS={
  'POST billing/stripe-webhook':'agent_stripe_webhook_processed'
 };
 const digest=(salt,value)=>createHmac('sha256',salt).update(String(value)).digest('hex');
-function bodyOf(value){if(value&&typeof value==='object'&&!Array.isArray(value))return value;try{return JSON.parse(Buffer.from(value||'').toString('utf8'))}catch{return {}}}
+function bodyOf(value){if(Buffer.isBuffer(value)||typeof value==='string'){try{return JSON.parse(Buffer.from(value||'').toString('utf8'))}catch{return {}}}if(value&&typeof value==='object'&&!Array.isArray(value))return value;return {}}
 export async function captureAgentApiFunnel({env=process.env,fetcher=fetch,route,method,statusCode,requestBody,responseBody,rawBody}={}){
  const step=STEPS[method+' '+route];if(!step)return;
  const key=env.LUO_POSTHOG_KEY,salt=env.LUO_TELEMETRY_SALT;
