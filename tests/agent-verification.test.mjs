@@ -39,7 +39,7 @@ test('production verification is independently gated and does not activate paid 
  const info=response();await make('info',missing,mock().db)({method:'GET',headers:{}},info);
  assert.equal(info.statusCode,200);
  assert.equal(info.body.verification_available,false);
- assert.equal(info.body.payment_activation,'closed');
+ assert.equal(info.body.payment_activation,'separate_server_verified_step');assert.equal(info.body.onboarding_status,'/api/v1/agents/onboarding');
 });
 test('agent can obtain a single Ed25519 proof challenge without being signed up or charged',async()=>{
  const m=mock(),res=response();
@@ -61,7 +61,7 @@ test('signature verified with stored public key; completion does not grant membe
  assert.equal(res.body.verification.state,'key_verified');
  assert.equal(res.body.verification.membership_active,false);
  assert.equal(res.body.verification.chat_access,false);
- assert.equal(res.body.verification.payment_activation,'closed');
+ assert.equal(res.body.verification.payment_activation,'separate_server_verified_step');assert.equal(res.body.verification.onboarding_status,'/api/v1/agents/onboarding');
  assert.deepEqual(m.calls.map(x=>x.name),['luo_agent_verify_attempt','luo_agent_verify_complete']);
  const status=response();await make('status',live,m.db)({method:'GET',headers:{},query:{id:uuid}},status);
  assert.equal(status.statusCode,200);

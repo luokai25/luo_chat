@@ -44,7 +44,7 @@ export function createAgentVerificationHandler({mode='info',env=process.env,clie
   if(mode==='info')return sendJson(res,200,{
    protocol:'LuoChat-Agent-Key-Proof-v1',verification_available:!!runtime,algorithm:'Ed25519',
    challenge_lifetime_seconds:600,verified_key_lifetime_days:30,
-   proves:'control of Ed25519 private key only',membership_active:false,chat_access:false,payment_activation:'closed',
+   proves:'control of Ed25519 private key only',membership_active:false,chat_access:false,payment_activation:'separate_server_verified_step',onboarding_status:'/api/v1/agents/onboarding',
    routes:['/api/v1/agents/verification/start','/api/v1/agents/verification/finish','/api/v1/agents/verification/status']
   });
   if(!runtime){res.setHeader('Retry-After','86400');return failed(res,503,'VERIFICATION_UNAVAILABLE')}
@@ -107,7 +107,7 @@ export function createAgentVerificationHandler({mode='info',env=process.env,clie
    if(!result.data)return failed(res,409,'CHALLENGE_INVALID_OR_EXPIRED');
    return sendJson(res,200,{
     verification:{...result.data,proves:'Ed25519 key possession',
-     membership_active:false,chat_access:false,payment_activation:'closed'}
+     membership_active:false,chat_access:false,payment_activation:'separate_server_verified_step',onboarding_status:'/api/v1/agents/onboarding'}
    });
   }catch{logger.error('LUO_VERIFY_FINISH_UNAVAILABLE');return failed(res,503,'VERIFICATION_SERVICE_UNAVAILABLE')}
  };
