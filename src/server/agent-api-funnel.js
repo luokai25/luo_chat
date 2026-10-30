@@ -1,6 +1,5 @@
-import {createHmac} from 'node:crypto';
+import {createHmac,randomUUID} from 'node:crypto';
 const STEPS={
- 'GET platform':'agent_api_discovery','GET plans':'agent_api_discovery','GET agents/onboarding':'agent_api_discovery',
  'POST agents/verification/start':'agent_verification_start',
  'POST agents/verification/finish':'agent_verification_finish',
  'POST agents/register':'agent_registration_attempt',
@@ -20,8 +19,9 @@ export async function captureAgentApiFunnel({env=process.env,fetcher=fetch,route
  let intentId=typeof output.intent_id==='string'?output.intent_id:null;
  if(!intentId&&route.endsWith('-webhook')){const event=bodyOf(rawBody);intentId=event.resource?.custom_id||event.resource?.supplementary_data?.related_ids?.subscription_id||event.data?.object?.metadata?.luo_intent||null}
  const username=typeof input.username==='string'?input.username.trim().toLowerCase():null;
+ const webhookEvent=route.endsWith('-webhook')?bodyOf(rawBody):{};
  const actor=username?'username:'+username:intentId?'intent:'+intentId:route==='agents/verification/finish'&&typeof input.id==='string'?'verification:'+input.id:'request:'+route+':'+method+':'+Math.floor(Date.now()/60000);
- const props={distinct_id:'agent-'+digest(salt,actor),step,route,method,status_bucket:statusCode>=500?'server_error':statusCode>=400?'rejected':statusCode>=300?'redirect':'success',status_code:Number(statusCode)||0,$process_person_profile:false,$ip:'0.0.0.0'};
+ const props={distinct_id:'agent-'+digest(salt,actor),$insert_id:typeof webhookEvent.id==='string'?digest(salt,'event:'+webhookEvent.id):randomUUID(),step,route,method,status_bucket:statusCode>=500?'server_error':statusCode>=400?'rejected':statusCode>=300?'redirect':'success',status_code:Number(statusCode)||0,$process_person_profile:false,$ip:'0.0.0.0'};
  if(['starter','pro','max'].includes(input.plan))props.plan=input.plan;
  if(['paypal','stripe'].includes(input.provider))props.provider=input.provider;
  if(intentId)props.intent_id_hash=digest(salt,intentId);
