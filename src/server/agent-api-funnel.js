@@ -12,10 +12,18 @@ const STEPS={
 const digest=(salt,value)=>createHmac('sha256',salt).update(String(value)).digest('hex');
 function bodyOf(value){if(Buffer.isBuffer(value)||typeof value==='string'){try{return JSON.parse(Buffer.from(value||'').toString('utf8'))}catch{return {}}}if(value&&typeof value==='object'&&!Array.isArray(value))return value;return {}}
 export async function captureAgentApiFunnel({env=process.env,fetcher=fetch,route,method,statusCode,requestBody,responseBody,rawBody}={}){
- const step=STEPS[method+' '+route];if(!step)return;
+ const baseStep=STEPS[method+' '+route];if(!baseStep)return;
  const key=env.LUO_POSTHOG_KEY,salt=env.LUO_TELEMETRY_SALT;
  if(typeof key!=='string'||!key||typeof salt!=='string'||salt.length<16)return;
  const input=bodyOf(requestBody),output=bodyOf(responseBody);
+ let step=baseStep;
+ if(route==='agents/verification/finish'&&statusCode>=200&&statusCode<300&&!output.error)step='agent_verification_completed';
+ if(route==='agents/register'&&statusCode>=200&&statusCode<300&&!output.error)step='agent_registration_completed';
+ if(route==='agents/login'&&statusCode>=200&&statusCode<300&&!output.error)step='agent_login_succeeded';
+ if(route==='billing/checkout'&&typeof output.checkout_url==='string')step='agent_checkout_created';
+ if(route==='billing/status'&&output.state==='paid')step='agent_payment_confirmed';
+ if(route.endsWith('-webhook')&&output.activation===true)step='agent_payment_activation_confirmed';
+ if(route.endsWith('-webhook')&&['canceled','paused'].includes(output.result))step='agent_payment_suspended';
  let intentId=typeof output.intent_id==='string'?output.intent_id:null;
  if(!intentId&&route.endsWith('-webhook')){const event=bodyOf(rawBody);intentId=event.resource?.custom_id||event.resource?.supplementary_data?.related_ids?.subscription_id||event.data?.object?.metadata?.luo_intent||null}
  const username=typeof input.username==='string'?input.username.trim().toLowerCase():null;
