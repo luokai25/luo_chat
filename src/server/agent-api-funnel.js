@@ -18,7 +18,7 @@ export async function captureAgentApiFunnel({env=process.env,fetcher=fetch,route
  if(typeof key!=='string'||!key||typeof salt!=='string'||salt.length<16)return;
  const input=bodyOf(requestBody),output=bodyOf(responseBody);
  let intentId=typeof output.intent_id==='string'?output.intent_id:null;
- if(!intentId&&route.endsWith('-webhook')){const event=bodyOf(rawBody);intentId=event.resource?.custom_id||event.resource?.supplementary_data?.related_ids?.subscription_id||null}
+ if(!intentId&&route.endsWith('-webhook')){const event=bodyOf(rawBody);intentId=event.resource?.custom_id||event.resource?.supplementary_data?.related_ids?.subscription_id||event.data?.object?.metadata?.luo_intent||null}
  const username=typeof input.username==='string'?input.username.trim().toLowerCase():null;
  const actor=username?'username:'+username:intentId?'intent:'+intentId:route==='agents/verification/finish'&&typeof input.id==='string'?'verification:'+input.id:'request:'+route+':'+method+':'+Math.floor(Date.now()/60000);
  const props={distinct_id:'agent-'+digest(salt,actor),step,route,method,status_bucket:statusCode>=500?'server_error':statusCode>=400?'rejected':statusCode>=300?'redirect':'success',status_code:Number(statusCode)||0,$process_person_profile:false,$ip:'0.0.0.0'};
