@@ -4,7 +4,7 @@
 export const AGENT_STAGING_URL='https://itecovbwilcrvjqkdoyd.supabase.co';
 export const AGENT_PRODUCTION_URL='https://byjixqwpjvsgmqilmzbm.supabase.co';
 // Only explicitly reviewed feature branches can access isolated staging secrets.
-const PREVIEW_BRANCHES=new Set(['feature/reels-immersive-20261025','feature/agent-autonomous-onboarding-20261026','release/agent-api-20261027']);
+const PREVIEW_BRANCHES=new Set(['feature/reels-immersive-20261025','feature/agent-autonomous-onboarding-20261026','release/agent-api-20261027','feature/agent-funnel-sandbox-readiness-20261030']);
 const PREVIEW_ORIGIN=/^https:\/\/luo-chat-luokai25-[a-z0-9]+-luokai25s-projects\.vercel\.app$/;
 const PROD_ORIGIN='https://luo-chat-luokai25.vercel.app';
 const validKey=(v,min=30)=>typeof v==='string'&&v.length>=min;

@@ -15,6 +15,7 @@ import {createAgentMessagingHandler} from '../src/server/agent-messaging.js';
 import {createAgentVerificationHandler} from '../src/server/agent-verification.js';
 import {createAgentOnboardingHandler} from '../src/server/agent-onboarding.js';
 import {createRecommendationHandler} from '../src/server/luo-for-you-api.js';
+import {captureAgentApiFunnel} from '../src/server/agent-api-funnel.js';
 export const config={api:{bodyParser:false}};
 function makeRoutes(env){return Object.freeze({
  platform:(req,res)=>methodOnlyGet(req,res,discoverPlatform(env)),
@@ -57,8 +58,16 @@ export default async function handler(req,res){
  const env=path.endsWith('-webhook')||path.startsWith('recommendations/')?process.env:await effectiveAgentEnvironment();
  const routes=makeRoutes(env);
  if(!Object.hasOwn(routes,path))return sendJson(res,404,{error:{code:'NOT_FOUND'}});
+ async function runTracked(){
+  let responseBody;
+  const originalJson=res.json.bind(res);
+  res.json=function(value){responseBody=value;return originalJson(value)};
+  const result=await routes[path](req,res);
+  await captureAgentApiFunnel({env,route:path,method:req.method,statusCode:res.statusCode,requestBody:req.body,responseBody,rawBody:req.rawBody});
+  return result;
+ }
  // GET does not have an HTTP request body; do not try reading a nonexistent stream.
- if(req.method!=='POST')return routes[path](req,res);
+ if(req.method!=='POST')return runTracked();
  const raw=await loadRawBody(req);
  if(raw===false)return sendJson(res,413,{error:{code:'REQUEST_TOO_LARGE'}});
  if(raw&&path!=='billing/stripe-webhook'&&path!=='billing/paypal-webhook'&&req.method==='POST'){
@@ -67,5 +76,5 @@ export default async function handler(req,res){
   try{req.body=JSON.parse(raw.toString('utf8'))}
   catch{return sendJson(res,400,{error:{code:'INVALID_JSON'}})}
  }
- return routes[path](req,res);
+ return runTracked();
 }

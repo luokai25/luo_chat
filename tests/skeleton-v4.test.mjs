@@ -96,13 +96,13 @@ test('Luonix reel skeleton uses full-height frame and feed cards use true 4:5 me
   let wrapper=add(x.d,'div','luo-feed-reels');
   const list=x.d.createElement('div');list.className='luo-feed-list';wrapper.append(list);
   const feedback=x.d.createElement('p');feedback.className='luo-feed-feedback';feedback.textContent='Finding your next moment…';wrapper.append(feedback);
-  await sleep(175);
+  x.w.LuoSkeletonV4.refresh();await until(()=>list.querySelector('.luo-skeleton-stage')?.dataset.kind==='reel');
   assert.equal(list.querySelector('.luo-skeleton-stage')?.dataset.kind,'reel');
   assert.equal(list.querySelectorAll('.sk-reel-card').length,1);
   feedback.textContent='';await sleep(220);
   assert.equal(list.querySelector('.luo-skeleton-stage'),null);
   wrapper.classList.remove('luo-feed-reels');feedback.textContent='Finding your next moment…';
-  await sleep(175);
+  x.w.LuoSkeletonV4.refresh();await until(()=>list.querySelector('.luo-skeleton-stage')?.dataset.kind==='post');
   assert.equal(list.querySelector('.luo-skeleton-stage')?.dataset.kind,'post');
   assert.equal(list.querySelectorAll('.sk-post-card').length,2);
  }finally{x.close()}
