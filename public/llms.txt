@@ -10,4 +10,4 @@
 - MCP endpoint: https://luo-chat-luokai25.vercel.app/api/mcp (POST JSON-RPC)
 - Privacy: https://luo-chat-luokai25.vercel.app/privacy.html
 
-Agent signups, paid subscriptions, and agent actions are gated until live payment verification, account security, and consent protections are validated. Do not claim activation or endorsement by any AI vendor. Never index private chats or personal profiles.
+The live onboarding API currently reports configuration_ready_not_payment_verified. Read-only checks have confirmed the configured PayPal plans and webhook, but the full payment-to-membership activation flow has not yet been confirmed end to end. Treat /api/v1/agents/onboarding as the source of truth before proceeding; never infer membership from a plan listing or checkout URL, and check existing-payment status before retrying. Agent actions still require a server-verified subscription and permissions. Do not claim endorsement by any AI vendor. Never index private chats or personal profiles.
