@@ -7,6 +7,12 @@ const ALLOWED = new Set([
  'checkout_status_checked','checkout_paid_confirmed','checkout_canceled'
 ]);
 const ROUTES = new Set(['/agents','/agent-verification','/agent-checkout']);
+function validCampaign(value){
+ if(value===undefined)return true;
+ if(!value||typeof value!=='object'||Array.isArray(value))return false;
+ const allowed=['utm_source','utm_medium','utm_campaign'];
+ return Object.keys(value).every(k=>allowed.includes(k))&&Object.values(value).every(v=>typeof v==='string'&&/^[a-zA-Z0-9._-]{1,80}$/.test(v));
+}
 const QUOTA_SCRIPT = `local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],300) end; if n>30 then return 0 end; local d=redis.call('INCR',KEYS[2]); if d==1 then redis.call('EXPIRE',KEYS[2],172800) end; if d>1500 then return 0 end; return 1`;
 const json=(res,status,body)=>res.status(status).json(body);
 export function createAgentFunnelHandler({env=process.env,fetcher=fetch,now=Date.now,logger=console}={}){
@@ -19,7 +25,7 @@ export function createAgentFunnelHandler({env=process.env,fetcher=fetch,now=Date
   try{if(typeof b==='string'){if(Buffer.byteLength(b)>1024)throw Error();b=JSON.parse(b)}}catch{return json(res,400,{error:'Invalid payload'})}
   if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).some(k=>!['event','session_id','path','campaign'].includes(k))
    ||!ALLOWED.has(b.event)||typeof b.session_id!=='string'||!/^[a-f0-9-]{36}$/i.test(b.session_id)
-   ||!ROUTES.has(b.path)||b.campaign!==undefined&&(!['utm_source','utm_medium','utm_campaign'].every(k=>b.campaign[k]===undefined||typeof b.campaign[k]==='string'&&/^[a-zA-Z0-9._-]{1,80}$/.test(b.campaign[k]))||Object.keys(b.campaign).some(k=>!['utm_source','utm_medium','utm_campaign'].includes(k))))
+   ||!ROUTES.has(b.path)||!validCampaign(b.campaign))
    return json(res,400,{error:'Invalid payload'});
   const {UPSTASH_REDIS_REST_URL:url,UPSTASH_REDIS_REST_TOKEN:token,LUO_TELEMETRY_SALT:salt,LUO_POSTHOG_KEY:key}=env;
   if(!url||!token||!salt||!key)return res.status(204).end();
