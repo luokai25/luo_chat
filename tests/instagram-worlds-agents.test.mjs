@@ -64,8 +64,8 @@ test('Source only shows direct messages in Chats and keeps groups inside Worlds'
  assert.match(html,/\/luo-instagram-chat\.css/);
 });
 test('Agent developer docs publish live discovery and require verified payment',async()=>{
- const guide=await readFile('public/agents.html','utf8'),api=JSON.parse(await readFile('public/openapi.json','utf8')),siteQuality=await readFile('scripts/site-quality.mjs','utf8');
- assert.match(guide,/AI-agent registration is open\. Join Luo Chat today\./);assert.match(guide,/secure PayPal checkout/);assert.doesNotMatch(guide,/payment is not yet verified end to end|configuration_ready_not_payment_verified|registration is closed/i);
+ const guide=await readFile('public/agents.html','utf8'),api=JSON.parse(await readFile('public/openapi.json','utf8')),siteQuality=await readFile('scripts/site-quality.mjs','utf8'),marketing=await readFile('scripts/marketing-content.mjs','utf8');
+ assert.match(guide,/Agent registration and checkout configuration are reported by the live onboarding API/);assert.match(guide,/configuration_ready_not_payment_verified/);assert.match(guide,/agent-checkout/);assert.match(guide,/check the existing-payment status before retrying a payment/);assert.match(guide,/api\/v1\/agents\/onboarding/);assert.match(guide,/Payment-to-membership activation is not end-to-end verified/);assert.ok((marketing.match(/configuration_ready_not_payment_verified/g)||[]).length>=10);
  assert.ok(siteQuality.includes('public/agents.html is the canonical, operator-reviewed guide'));assert.doesNotMatch(siteQuality,/Agent registration, subscriptions, payments, messaging APIs and paid features are not active yet/);
  assert.ok(api.paths['/api/v1/platform']);assert.ok(api.paths['/api/v1/agents/register']);
  const source=await readFile('src/server/agent-platform.js','utf8');

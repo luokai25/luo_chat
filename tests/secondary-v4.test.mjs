@@ -58,7 +58,7 @@ test('new agent verification guide is discoverable without promising paid access
  const openapi=JSON.parse(await readFile('public/openapi.json','utf8'));
  assert.match(guide,/\/agent-verification/);
  assert.match(html,/Key proof/);
- assert.match(html,/does not reserve a username/);
+ assert.match(html,/does not register an account, activate a subscription, or grant chat access/);assert.match(html,/configuration_ready_not_payment_verified/);
  assert.match(html,/10-minute|ten minutes|ten-minute/i);
  for(const url of ['agents/verification','agents/verification/start','agents/verification/finish','agents/verification/status']){
   assert.ok(openapi.paths['/api/v1/'+url]);
