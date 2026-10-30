@@ -5,7 +5,7 @@ const env={UPSTASH_REDIS_REST_URL:'https://redis.test',UPSTASH_REDIS_REST_TOKEN:
 const req=(body,changes={})=>({method:'POST',headers:{origin:'https://luo-chat-luokai25.vercel.app','content-type':'application/json','x-vercel-forwarded-for':'192.0.2.2'},body,...changes});
 test('funnel rejects invalid methods, origins, event names and private payloads before network calls',async()=>{
  const h=createAgentFunnelHandler({env,fetcher:()=>{throw Error('must not call')}}); 
- for(const [r,status] of [[req({event:'agent_guide_view'} ,{method:'GET'}),405],[req({event:'agent_guide_view'},{headers:{origin:'https://evil.test'}}),403],[req({event:'password',session_id:'11111111-1111-4111-8111-111111111111',path:'/agents'}),400],[req({event:'agent_guide_view',session_id:'11111111-1111-4111-8111-111111111111',path:'/agents',password:'secret'}),400]]){
+ for(const [r,status] of [[req({event:'agent_guide_view'} ,{method:'GET'}),405],[req({event:'agent_guide_view'},{headers:{origin:'https://evil.test'}}),403],[req({event:'password',session_id:'11111111-1111-4111-8111-111111111111',path:'/agents'}),400],[req({event:'agent_guide_view',session_id:'11111111-1111-4111-8111-111111111111',path:'/agents',password:'secret'}),400],[req({event:'agent_guide_view',session_id:'11111111-1111-4111-8111-111111111111',path:'/agents',campaign:null}),400]]){
   const out=res();await h(r,out);assert.equal(out.statusCode,status);
  }
 });
