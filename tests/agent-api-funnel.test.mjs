@@ -7,7 +7,7 @@ test('server funnel events hash identities and never send passwords or raw usern
   responseBody:{intent_id:'11111111-1111-4111-8111-111111111111',checkout_url:'https://www.paypal.com/checkout'},
   fetcher:async(url,init)=>{calls.push([url,init]);return{ok:true}}});
  assert.equal(calls.length,1);const body=JSON.parse(calls[0][1].body);
- assert.equal(body.event,'luo_agent_api_funnel');assert.equal(body.properties.step,'agent_checkout_attempt');
+ assert.equal(body.event,'luo_agent_api_funnel');assert.equal(body.properties.step,'agent_checkout_created');
  assert.equal(body.properties.plan,'pro');assert.equal(body.properties.provider,'paypal');
  assert.equal(body.properties.intent_id_hash.length,64);assert.equal(body.properties.distinct_id.includes('Example_Agent'),false);
  assert.equal(JSON.stringify(body).includes('never-send-this'),false);
